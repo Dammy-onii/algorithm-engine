@@ -1,0 +1,79 @@
+{
+  "id": "straight-line",
+  "number": 1,
+  "name": "The Straight Run",
+  "difficulty": 1,
+  "worldKey": "challenge-straight",
+  "tagline": "Give the robot its first instruction.",
+  "narrative": "A robot sits at the entrance of a straight corridor, staring east. It has no intelligence — no rules, no idea what to do. Left alone, it will wait there indefinitely. The exit is four tiles ahead. All it needs to do is move forward. Your job is to write its very first rule: a single instruction that tells it to keep going as long as the path is clear.",
+  "objective": "Get the robot to the exit at the far end of the corridor and hold there for 3 ticks.",
+  "learningObjective": "Understanding the basic structure of a rule: a condition (when) and an action (do).",
+  "intelligenceExplanation": "Right now this brain has no rules at all. A brain without rules does nothing — the robot simply waits forever. A rule has two parts: a WHEN condition (what situation triggers it) and a DO action (what the robot does when triggered). You need to add one rule to get this robot moving. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
+  "hint": "Two rules. One to move: WHEN there is no wall ahead -> DO step. One to finish: WHEN atGoal -> DO hold, with a higher priority so it wins once the robot arrives.",
+  "hints": [
+    "The robot only acts when a rule tells it to. It needs at least one rule.",
+    "Add a rule: WHEN there is no wall ahead → DO step. Give it a low priority.",
+    "Then add WHEN atGoal → DO hold at a higher priority so it settles once it arrives."
+  ],
+  "availableBricks": [
+    "step",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "atGoal",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "reach-goal",
+          "priority": 10,
+          "description": "Reach the exit of the corridor."
+        }
+      ]
+    },
+    "states": {
+      "initial": "move",
+      "states": [
+        {
+          "id": "move",
+          "description": "Keep going forward."
+        }
+      ]
+    },
+    "rules": {
+      "rules": []
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Move one tile forward."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Stay put for one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "reach",
+      "label": "Reach the exit and settle on it",
+      "check": "reached"
+    },
+    {
+      "id": "tidy",
+      "label": "Solve it with 2 rules or fewer",
+      "check": "reached && rules <= 2",
+      "bonus": true
+    }
+  ]
+}

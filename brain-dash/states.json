@@ -1,0 +1,7 @@
+{
+  "initial": "explore",
+  "states": [
+    { "id": "explore", "description": "Follow corridors, dashing forward when clear." },
+    { "id": "seek", "description": "Goal in sight — step straight to it." }
+  ]
+}

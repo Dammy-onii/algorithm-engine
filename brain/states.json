@@ -1,0 +1,13 @@
+{
+  "initial": "explore",
+  "states": [
+    {
+      "id": "explore",
+      "description": "Follow the left-hand wall to traverse the maze."
+    },
+    {
+      "id": "seek",
+      "description": "The goal is in sight; head straight for it."
+    }
+  ]
+}

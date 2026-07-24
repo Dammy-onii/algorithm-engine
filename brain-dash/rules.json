@@ -1,0 +1,69 @@
+{
+  "rules": [
+    {
+      "id": "settle-at-goal",
+      "when": "atGoal",
+      "do": "hold",
+      "priority": 200,
+      "description": "Standing on the goal — hold position until the arrival is confirmed. Applies in every state."
+    },
+    {
+      "id": "explore-spot-goal",
+      "state": "explore",
+      "when": "goalAhead",
+      "do": "step",
+      "setState": "seek",
+      "priority": 100,
+      "description": "Goal in straight view — switch to seeking."
+    },
+    {
+      "id": "explore-dash",
+      "state": "explore",
+      "when": "!wallAhead",
+      "do": "dash",
+      "priority": 60,
+      "description": "Clear ahead — DASH forward up to 3 tiles (multi-step brick)."
+    },
+    {
+      "id": "explore-hug-left",
+      "state": "explore",
+      "when": "!wallLeft",
+      "do": "pivot-left",
+      "priority": 50,
+      "description": "Blocked ahead, left opens — turn into it."
+    },
+    {
+      "id": "explore-turn-right",
+      "state": "explore",
+      "when": "!wallRight",
+      "do": "pivot-right",
+      "priority": 40,
+      "description": "Blocked ahead and left — turn right."
+    },
+    {
+      "id": "explore-dead-end",
+      "state": "explore",
+      "when": "always",
+      "do": "about-face",
+      "priority": 10,
+      "description": "Dead end — ABOUT-FACE (multi-step brick: two turns)."
+    },
+    {
+      "id": "seek-advance",
+      "state": "seek",
+      "when": "goalAhead",
+      "do": "step",
+      "priority": 100,
+      "description": "Goal still ahead — step toward it."
+    },
+    {
+      "id": "seek-lost",
+      "state": "seek",
+      "when": "always",
+      "do": "about-face",
+      "setState": "explore",
+      "priority": 10,
+      "description": "Lost the goal — turn around and resume exploring."
+    }
+  ]
+}

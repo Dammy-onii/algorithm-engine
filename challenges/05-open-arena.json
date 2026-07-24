@@ -1,0 +1,109 @@
+{
+  "id": "open-arena",
+  "number": 5,
+  "name": "Two Minds, One Robot",
+  "difficulty": 2,
+  "worldKey": "challenge-arena",
+  "tagline": "Design a robot that thinks in modes.",
+  "narrative": "The Open Arena has no winding corridors to follow. It is a 9×9 space with scattered pillars — many valid paths, no single obvious route. A robot that only knows how to wander will eventually find the goal, but it will waste most of its energy doing it. The key insight is that navigation has two distinct phases: exploring when the goal is not in sight, and locking on when it is. These are different problems that call for different strategies, and a robot should know which one it is solving at any given moment. That is what a state machine does — it gives the robot the ability to change its mind based on circumstances.",
+  "objective": "Reach the goal in the Open Arena using a two-state brain (Explore and Seek), then hold for 3 ticks.",
+  "learningObjective": "Designing a state machine with transitions. Understanding that the same conditions can trigger different behavior depending on the active state — and that state transitions are how a robot changes strategy mid-run.",
+  "intelligenceExplanation": "This brain already has two states: Explore and Seek. It also has two goals defined. But it has no rules — so neither state actually does anything yet. Your job is to give each state its own set of rules. In Explore mode, the robot should wander and look for the goal. When it spots the goal (goalVisible), it should switch to Seek. In Seek mode, it should move directly toward the goal and switch back to Explore if it loses sight. The same condition (`goalAhead`) means something different depending on which state is active — that is the power of a state machine. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
+  "hint": "Start with two rules for Explore: (1) when `goalAhead`, step and setState to Seek (priority 100). (2) when `!wallAhead`, step (priority 50). Add fallback turn rules. For Seek: when `goalAhead`, step (priority 100); when `always`, pivot-right and setState back to Explore (priority 10).",
+  "availableBricks": [
+    "step",
+    "pivot-left",
+    "pivot-right",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "wallLeft",
+    "wallRight",
+    "goalVisible",
+    "goalAhead",
+    "atGoal",
+    "visitedAhead",
+    "energy",
+    "always"
+  ],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "reach-goal",
+          "priority": 10,
+          "description": "Reach the goal."
+        },
+        {
+          "id": "conserve-energy",
+          "priority": 5,
+          "activeWhen": "energy < 50",
+          "description": "Watch energy levels."
+        }
+      ]
+    },
+    "states": {
+      "initial": "explore",
+      "states": [
+        {
+          "id": "explore",
+          "description": "Wander and search for the goal."
+        },
+        {
+          "id": "seek",
+          "description": "Goal is visible — head straight for it."
+        }
+      ]
+    },
+    "rules": {
+      "rules": []
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Engine primitive: move one tile forward."
+        },
+        {
+          "id": "pivot-left",
+          "action": "turnLeft",
+          "description": "Engine primitive: turn 90° counter-clockwise."
+        },
+        {
+          "id": "pivot-right",
+          "action": "turnRight",
+          "description": "Engine primitive: turn 90° clockwise."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Engine primitive: do nothing this tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "reach",
+      "label": "Reach the goal in the arena",
+      "check": "reached"
+    },
+    {
+      "id": "modes",
+      "label": "Use two states",
+      "check": "reached && states >= 2",
+      "bonus": true
+    },
+    {
+      "id": "saver",
+      "label": "Finish with energy above 60",
+      "check": "reached && energy > 60",
+      "bonus": true
+    }
+  ]
+}

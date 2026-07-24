@@ -1,0 +1,69 @@
+{
+  "rules": [
+    {
+      "id": "settle-at-goal",
+      "when": "atGoal",
+      "do": "hold",
+      "priority": 200,
+      "description": "Standing on the goal — hold position until the arrival is confirmed. Applies in every state."
+    },
+    {
+      "id": "explore-spot-goal",
+      "state": "explore",
+      "when": "goalAhead",
+      "do": "step",
+      "setState": "seek",
+      "priority": 100,
+      "description": "Goal came into straight view — switch to seeking and step toward it."
+    },
+    {
+      "id": "explore-advance",
+      "state": "explore",
+      "when": "!wallAhead",
+      "do": "step",
+      "priority": 60,
+      "description": "Path ahead is clear — keep moving forward (straight beats turning)."
+    },
+    {
+      "id": "explore-hug-left",
+      "state": "explore",
+      "when": "!wallLeft",
+      "do": "pivot-left",
+      "priority": 50,
+      "description": "Blocked ahead but the left opens up — turn into it (left-hand bias)."
+    },
+    {
+      "id": "explore-turn-right",
+      "state": "explore",
+      "when": "!wallRight",
+      "do": "pivot-right",
+      "priority": 40,
+      "description": "Blocked ahead and left — the right is open, turn there."
+    },
+    {
+      "id": "explore-dead-end",
+      "state": "explore",
+      "when": "always",
+      "do": "pivot-right",
+      "priority": 10,
+      "description": "Dead end — turn around (two right turns over two ticks)."
+    },
+    {
+      "id": "seek-advance",
+      "state": "seek",
+      "when": "goalAhead",
+      "do": "step",
+      "priority": 100,
+      "description": "Goal still straight ahead — keep moving toward it."
+    },
+    {
+      "id": "seek-lost",
+      "state": "seek",
+      "when": "always",
+      "do": "pivot-right",
+      "setState": "explore",
+      "priority": 10,
+      "description": "Lost sight of the goal — resume corridor-following."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "initial": "wander",
+  "states": [
+    { "id": "wander", "description": "Naively push forward; turn right at walls." }
+  ]
+}

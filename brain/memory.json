@@ -1,0 +1,3 @@
+{
+  "notes": "Left-hand wall follower. Memory is unused by this brain but is loaded and shown in the debug panel to prove the channel works."
+}

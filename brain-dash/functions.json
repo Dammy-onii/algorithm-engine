@@ -1,0 +1,18 @@
+{
+  "functions": [
+    { "id": "step", "action": "moveForward", "description": "Advance one tile." },
+    { "id": "pivot-left", "action": "turnLeft", "description": "Turn 90° left." },
+    { "id": "pivot-right", "action": "turnRight", "description": "Turn 90° right." },
+    { "id": "hold", "action": "wait", "description": "Stay put for one tick." },
+    {
+      "id": "about-face",
+      "steps": ["pivot-right", "pivot-right"],
+      "description": "Multi-step brick: turn around (composed of two pivots)."
+    },
+    {
+      "id": "dash",
+      "steps": ["step", "step", "step"],
+      "description": "Multi-step brick: move forward up to three tiles."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "id": "advance",
+      "when": "!wallAhead",
+      "do": "step",
+      "priority": 20,
+      "description": "If there is no wall ahead, move forward."
+    },
+    {
+      "id": "turn",
+      "when": "always",
+      "do": "pivot-right",
+      "priority": 10,
+      "description": "If there is a wall ahead, turn right. (Often gets stuck — by design.)"
+    }
+  ]
+}

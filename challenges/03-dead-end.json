@@ -1,0 +1,103 @@
+{
+  "id": "dead-end",
+  "number": 3,
+  "name": "No Way Out",
+  "difficulty": 1,
+  "worldKey": "small",
+  "tagline": "Handle the situation no single rule can predict.",
+  "narrative": "The maze ahead has multiple corridors. Some of them loop back. Some end in dead ends — three walls and nowhere to go. The robot's current two-rule brain works in simple corridors, but put it in a real maze and it will spin in a corner forever. Real navigation requires reasoning about combinations of conditions, not just single flags. When both the path ahead is blocked and the left is a wall, something specific needs to happen — and that something needs its own dedicated rule.",
+  "objective": "Navigate the 7x7 maze from start to goal, then hold on the goal for 3 ticks.",
+  "learningObjective": "Combining conditions with AND (`&&`) and reasoning about the priority order when multiple rules could match.",
+  "intelligenceExplanation": "This brain has two rules: move forward when clear, and turn right when blocked. That handles single corners, but in a maze with dead ends it will oscillate — turning right, finding a wall, turning right again, looping. You need to add a rule that handles the dead-end case: both ahead and right are walls. A left turn, or an about-face, breaks the cycle. Order the rules by specificity: most specific conditions at the top, most general fallbacks at the bottom. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
+  "hint": "Use `wallAhead && wallRight` as the condition for a new rule that pivots left. Make its priority higher than the existing turn-right rule.",
+  "availableBricks": [
+    "step",
+    "pivot-left",
+    "pivot-right",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "wallLeft",
+    "wallRight",
+    "atGoal",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "reach-goal",
+          "priority": 10,
+          "description": "Navigate to the exit."
+        }
+      ]
+    },
+    "states": {
+      "initial": "navigate",
+      "states": [
+        {
+          "id": "navigate",
+          "description": "Navigate the maze."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "move-forward",
+          "when": "!wallAhead",
+          "do": "step",
+          "priority": 10,
+          "description": "Move forward when clear."
+        },
+        {
+          "id": "turn-right",
+          "when": "wallAhead",
+          "do": "pivot-right",
+          "priority": 20,
+          "description": "Turn right when blocked ahead."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Move one tile forward."
+        },
+        {
+          "id": "pivot-left",
+          "action": "turnLeft",
+          "description": "Turn 90° counter-clockwise."
+        },
+        {
+          "id": "pivot-right",
+          "action": "turnRight",
+          "description": "Turn 90° clockwise."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Stay put for one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "reach",
+      "label": "Escape the maze and settle on the goal",
+      "check": "reached"
+    },
+    {
+      "id": "lean",
+      "label": "Solve it with 4 rules or fewer",
+      "check": "reached && rules <= 4",
+      "bonus": true
+    }
+  ]
+}

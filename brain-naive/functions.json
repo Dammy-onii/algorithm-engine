@@ -1,0 +1,6 @@
+{
+  "functions": [
+    { "id": "step", "action": "moveForward", "description": "Move one tile forward." },
+    { "id": "pivot-right", "action": "turnRight", "description": "Turn 90° clockwise." }
+  ]
+}
