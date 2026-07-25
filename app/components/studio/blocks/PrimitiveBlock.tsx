@@ -13,6 +13,9 @@ const PRIMITIVE_META: Record<string, { label: string; icon: string; shortKey: st
   turnLeft:    { label: "Turn Left",    icon: "↺", shortKey: "L" },
   turnRight:   { label: "Turn Right",   icon: "↻", shortKey: "R" },
   wait:        { label: "Wait",         icon: "■", shortKey: "W" },
+  pickUp:      { label: "Pick Up",      icon: "□", shortKey: "P" },
+  deliver:     { label: "Deliver",      icon: "●", shortKey: "D" },
+  charge:      { label: "Charge",       icon: "⚡", shortKey: "C" },
 };
 
 /**
@@ -25,6 +28,9 @@ const BRICK_ALIAS: Record<string, string> = {
   "pivot-left": "turnLeft",
   "pivot-right": "turnRight",
   hold: "wait",
+  "pick-up": "pickUp",
+  deliver: "deliver",
+  charge: "charge",
 };
 
 /** Resolve a token (action type or brick id) to primitive metadata, or null if

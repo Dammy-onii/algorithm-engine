@@ -11,7 +11,7 @@ import { SimStatus, SimStep } from "@/lib/engine/types";
 const STATUS_LABEL: Record<SimStatus, string> = {
   idle: "Idle",
   running: "Running",
-  reached: "✓ Reached goal",
+  reached: "✓ Completed",
   stuck: "✗ Stuck",
   "out-of-energy": "✗ Out of energy",
 };
@@ -37,6 +37,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function DebugPanel({ step }: { step: SimStep }) {
   const { observation: obs, trace } = step;
+  const domainFacts = Object.entries(obs.domain);
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -100,6 +101,17 @@ export function DebugPanel({ step }: { step: SimStep }) {
           }
         />
       </section>
+
+      {domainFacts.length > 0 && (
+        <section className="mb-3">
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            Domain facts
+          </h3>
+          {domainFacts.map(([name, value]) => (
+            <Row key={name} label={name} value={typeof value === "boolean" ? (value ? "yes" : "no") : value} />
+          ))}
+        </section>
+      )}
 
       <section>
         <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">

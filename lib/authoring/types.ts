@@ -68,6 +68,14 @@ export interface VisualState {
   description: string;
 }
 
+/** An editor-only category for keeping a large rule set understandable. */
+export interface VisualRuleFolder {
+  id: string;
+  name: string;
+  /** Editor-only visibility preference. Collapsing never changes rule order. */
+  collapsed?: boolean;
+}
+
 export interface VisualRule {
   id: string;
   /** null = rule applies in any state. */
@@ -79,6 +87,8 @@ export interface VisualRule {
   setState: string | null;
   priority: number;
   description: string;
+  /** Optional editor-only category. It does not affect engine evaluation. */
+  folderId?: string;
 }
 
 export interface VisualFunction {
@@ -116,10 +126,14 @@ export interface VisualBrain {
   initial: string;
   states: VisualState[];
   rules: VisualRule[];
+  /** Optional for backwards-compatible saved brains created before folders. */
+  ruleFolders?: VisualRuleFolder[];
   functions: VisualFunction[];
   /** User-defined named conditions (composable perception). */
   derived: VisualDerivedCondition[];
   memory: Record<string, unknown>;
+  /** Optional local Code-mode controller source. Omitted means visual rules run. */
+  controllerCode?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,7 +145,7 @@ export interface VisualBrain {
  * Level 1: only pre-built bricks available; Functions tab locked.
  * Level 2: Functions tab unlocked; user composes custom bricks.
  */
-export type ChallengeLevel = 1 | 2;
+export type ChallengeLevel = 1 | 2 | 3;
 
 /**
  * A machine-checkable objective. `check` is an expression evaluated against the
@@ -149,11 +163,54 @@ export interface ChallengeObjective {
   bonus?: boolean;
 }
 
+/**
+ * One item in a challenge's live task flow — the plain-English "to-do list" a
+ * learner watches tick off *while the simulation runs*, rather than reading a
+ * wall of prose up front. `check` is the same expression grammar objectives use,
+ * evaluated every tick against the run's live metrics + the current observation
+ * (so a step can say `carryingPackage`, `deliveredCount >= 1`, `reached`, …).
+ *
+ * A step with no `check` is informational (always shown as pending guidance).
+ * This is world-agnostic: maze, warehouse and finance all describe their work
+ * as steps, so the same flow UI serves every simulation type.
+ */
+export interface TaskStep {
+  id: string;
+  label: string;
+  check?: string;
+  /** Optional one-line "how" for this specific step. */
+  hint?: string;
+}
+
+/**
+ * How a challenge is placed in the catalogue. Difficulty for a simulation
+ * platform is not a single axis, so instead of a lone "Level N" we locate a
+ * challenge as Domain → Simulation → Tier → Grade, where each grade introduces
+ * new *decision complexity*, not just more data. All fields are optional and
+ * fall back to the legacy `pack` / `stage` / `difficulty` fields.
+ */
+export interface ChallengeTaxonomy {
+  /** e.g. "Maze", "Warehouse", "Finance". */
+  domain?: string;
+  /** e.g. "Navigation", "Fulfilment", "Payment Routing". */
+  simulation?: string;
+  tier?: "tutorial" | "easy" | "medium" | "hard";
+  /** Position on the complexity ladder within a tier (1, 5, 10, 20, …). */
+  grade?: number;
+}
+
 export interface ChallengeData {
   id: string;
+  /**
+   * Simulation pack this challenge belongs to (e.g. "maze", "warehouse"). The
+   * content registry groups challenges by this field — no id-prefix guessing.
+   */
+  pack: string;
   number: number;
   name: string;
   difficulty: ChallengeLevel;
+  /** Presentation grouping within a world-specific learning path. */
+  stage?: "practice" | "easy" | "medium" | "hard";
   /** References a key in the worlds registry. */
   worldKey: string;
   /** One-line hook shown on the challenge card. */
@@ -194,6 +251,19 @@ export interface ChallengeData {
   statesUnlocked?: boolean;
   /** Machine-checked objectives that tick off from the run's outcome. */
   objectives?: ChallengeObjective[];
+
+  // --- Structured brief (Milestone 4) — optional, layered over the free-text
+  //     fields above so existing challenges keep working while new ones (and
+  //     new simulation types) render the same progressive-disclosure flow. ---
+
+  /** The single-line "what to do", shown first. Falls back to `objective`. */
+  brief?: string;
+  /** One-line scenario framing shown under the brief. Falls back to `tagline`. */
+  context?: string;
+  /** The live task checklist. When absent, the required objectives stand in. */
+  steps?: TaskStep[];
+  /** Catalogue placement (domain/simulation/tier/grade). Falls back to legacy fields. */
+  taxonomy?: ChallengeTaxonomy;
   /** The starting brain (partially built or empty). Stored as raw BrainSource JSON. */
   scaffoldBrain: {
     goals: { goals: { id: string; priority: number; description?: string }[] };

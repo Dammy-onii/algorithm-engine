@@ -1,5 +1,6 @@
 {
   "id": "straight-line",
+  "pack": "maze",
   "number": 1,
   "name": "The Straight Run",
   "difficulty": 1,
@@ -8,12 +9,12 @@
   "narrative": "A robot sits at the entrance of a straight corridor, staring east. It has no intelligence — no rules, no idea what to do. Left alone, it will wait there indefinitely. The exit is four tiles ahead. All it needs to do is move forward. Your job is to write its very first rule: a single instruction that tells it to keep going as long as the path is clear.",
   "objective": "Get the robot to the exit at the far end of the corridor and hold there for 3 ticks.",
   "learningObjective": "Understanding the basic structure of a rule: a condition (when) and an action (do).",
-  "intelligenceExplanation": "Right now this brain has no rules at all. A brain without rules does nothing — the robot simply waits forever. A rule has two parts: a WHEN condition (what situation triggers it) and a DO action (what the robot does when triggered). You need to add one rule to get this robot moving. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
-  "hint": "Two rules. One to move: WHEN there is no wall ahead -> DO step. One to finish: WHEN atGoal -> DO hold, with a higher priority so it wins once the robot arrives.",
+  "intelligenceExplanation": "Right now this brain has no rules at all. A brain without rules does nothing — the robot simply waits forever. A rule has two parts: a WHEN condition (what situation triggers it) and a DO action (what the robot does when triggered). You need to add one rule to get this robot moving. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so put WHEN atGoal -> DO hold above the movement rule.",
+  "hint": "Two rules. Put WHEN atGoal -> DO hold first, then add WHEN there is no wall ahead -> DO step.",
   "hints": [
     "The robot only acts when a rule tells it to. It needs at least one rule.",
-    "Add a rule: WHEN there is no wall ahead → DO step. Give it a low priority.",
-    "Then add WHEN atGoal → DO hold at a higher priority so it settles once it arrives."
+    "Add a rule: WHEN there is no wall ahead → DO step.",
+    "Put WHEN atGoal → DO hold above it so it settles once it arrives."
   ],
   "availableBricks": [
     "step",

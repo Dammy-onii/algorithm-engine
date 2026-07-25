@@ -80,5 +80,7 @@ export function buildObservation(world: World): Observation {
     visitedAhead: agent.visited.has(key(aheadPos)),
     visitedCount: agent.visited.size,
     energy: agent.energy,
+    // Domain-specific facts come from the active world module.
+    domain: world.module.observe(world),
   };
 }

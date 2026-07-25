@@ -17,11 +17,11 @@ import { VisualBrain, VisualCondition } from "../types";
 import { Simulation, BrainSource, WorldSource } from "@/lib/engine/simulation";
 import { EntitiesData, WorldData } from "@/lib/engine/types";
 
-import { CHALLENGES } from "@/challenges/index";
+import { CHALLENGES } from "@/content/challenges";
 import { WORLDS, findWorld } from "@/app/lib/datasets";
 
-import entities from "@/world/entities.json";
-import maze from "@/world/maze.json";
+import entities from "@/content/worlds/entities.json";
+import maze from "@/content/worlds/maze.json";
 
 // ---------------------------------------------------------------------------
 // Condition compilation
@@ -133,12 +133,12 @@ describe("compile / decompile round-trip", () => {
     expect(round.goals.map((g) => g.id)).toEqual(["reach-goal"]);
     expect(round.memory).toEqual({ visits: 0 });
 
-    // Rules keep id, target state, function, transition and priority.
+    // Rules keep their authored file order, target state, function and transition.
+    expect(round.rules.map((rule) => rule.id)).toEqual(["advance", "spot"]);
     const advance = round.rules.find((r) => r.id === "advance")!;
     expect(advance.state).toBe("explore");
     expect(advance.functionId).toBe("step");
     expect(advance.setState).toBeNull();
-    expect(advance.priority).toBe(60);
 
     const spot = round.rules.find((r) => r.id === "spot")!;
     expect(spot.setState).toBe("seek");

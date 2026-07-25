@@ -44,7 +44,7 @@ export function BrainIntelligence({ brain, intelligenceExplanation }: Props) {
                 </span>
               )}
               <span>{line.sentence}</span>
-              <span className="ml-auto shrink-0 font-mono text-zinc-400">P{line.priority}</span>
+              <span className="ml-auto shrink-0 font-mono text-zinc-400">#{line.order}</span>
             </div>
           ))}
         </div>

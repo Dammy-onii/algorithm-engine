@@ -1,0 +1,11 @@
+{
+  "functions": [
+    { "id": "step", "action": "moveForward", "description": "Drive one aisle tile forward." },
+    { "id": "pivot-left", "action": "turnLeft", "description": "Turn left into an open aisle." },
+    { "id": "pivot-right", "action": "turnRight", "description": "Turn right at the end of a rack." },
+    { "id": "pick-up", "action": "pickUp", "description": "Load a package from the current pick face." },
+    { "id": "deliver", "action": "deliver", "description": "Unload a matching package at this dock." },
+    { "id": "charge", "action": "charge", "description": "Recharge at a charging bay." },
+    { "id": "hold", "action": "wait", "description": "Wait one tick." }
+  ]
+}

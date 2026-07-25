@@ -1,0 +1,52 @@
+{
+  "id": "finance-provider-health",
+  "pack": "finance",
+  "number": 16,
+  "name": "Real-Time Provider Health",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "finance-provider-health",
+  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "medium", "grade": 1 },
+  "tagline": "The best provider won't stay the best.",
+  "brief": "Provider A is best — until it goes offline mid-run. Route so the queue keeps clearing after it drops.",
+  "context": "A is cheap and reliable at first, then goes offline partway through. B is steady the whole time.",
+  "narrative": "The starter rule assumes Provider A is always the best and hardcodes it. That holds for the first few payments — then A goes offline and every payment sent to it fails. A real routing engine watches live health and adapts. Route so that when A is down, the queue keeps moving through B.",
+  "objective": "Process every payment with at most one failure as provider health changes.",
+  "learningObjective": "Continuous decisions: re-decide every tick from live state instead of committing to one plan.",
+  "intelligenceExplanation": "The provider cards update every tick. A is the preferred provider while it is online, then it drops. Put the live A rule above the B fallback so the agent changes route only when A is unavailable.",
+  "hint": "Put WHEN onlineA → route-a above WHEN onlineB → route-b.",
+  "hints": [
+    "Watch Provider A's card — it goes offline partway through the run.",
+    "A fixed 'always route A' rule can't adapt. Use a live condition: WHEN onlineA → DO route-a.",
+    "Put WHEN onlineB → DO route-b underneath it, so B takes over after A drops."
+  ],
+  "steps": [
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
+    { "id": "adapt", "label": "At most one failed payment through the health change", "check": "allProcessed && failed <= 1" }
+  ],
+  "availableBricks": ["route-a", "route-b", "hold"],
+  "availableConditions": ["hasTransaction", "onlineA", "onlineB", "successA", "successB", "canRouteA", "canRouteB", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "process", "priority": 1, "description": "Process every payment." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Route incoming payments." }] },
+    "rules": {
+      "rules": [
+        { "id": "always-a", "when": "hasTransaction", "do": "route-a", "priority": 30, "description": "Naive: always route to A (breaks when A goes offline)." }
+      ]
+    },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Send the payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Send the payment through Provider B." },
+        { "id": "hold", "action": "hold", "description": "Hold the payment for a tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "adapt", "label": "At most one failed payment", "check": "allProcessed && failed <= 1" },
+    { "id": "smooth", "label": "Keep total cost at or below $2.00", "check": "allProcessed && totalCost <= 2", "bonus": true }
+  ]
+}

@@ -2,7 +2,9 @@
 
 Resumable tracker. Legend: ⬜ not started · 🟨 in progress · ✅ done
 
-_Last updated: 2026-07-24 — progression core + light mode + defaults-in-tabs shipped._
+_Last updated: 2026-07-25 — learner flow & readability pass shipped (structured
+brief schema, live task checklist, results screen, stepper, onboarding, Grade
+taxonomy)._
 
 ## Task board
 
@@ -11,10 +13,18 @@ _Last updated: 2026-07-24 — progression core + light mode + defaults-in-tabs s
 | 1 | Curriculum registry (concepts, prerequisites, helpers) | `lib/curriculum/concepts.ts` | ✅ |
 | 2 | Progression gating (linear unlock by completion) | `concepts.ts` + `ChallengeSelector.tsx` | ✅ |
 | 3 | Curriculum map UI (step, concept, locked/available/done) | `ChallengeSelector.tsx` | ✅ |
-| 4 | "You just learned X" callout on first completion | `app/page.tsx` | ✅ |
-| 5 | Escalating staged hints (attempts-driven nudge) | `AuthoringPanel.tsx`, `challenges/*` | ✅ |
+| 4 | "You just learned X" callout on first completion | `AppShell.tsx` | ✅ |
+| 5 | Escalating staged hints (attempts-driven nudge) | `ProblemBrief.tsx`, `challenges/*` | ✅ |
 | 6 | Curriculum tests | `lib/curriculum/__tests__/concepts.test.ts` | ✅ |
-| 7 | Docs (MILESTONE4, PROGRESS_M4, roadmap status) | `docs/*` | ✅ |
+| 7 | Docs (MILESTONE4, PROGRESS_M4, CHALLENGE_SCHEMA, roadmap) | `docs/*` | ✅ |
+| 11 | Structured brief schema (brief/context/steps/taxonomy) + normalizer | `types.ts`, `challengeBrief.ts` | ✅ |
+| 12 | Progressive-disclosure problem brief | `ProblemBrief.tsx` | ✅ |
+| 13 | Live task checklist (ticks off during the run) | `TaskChecklist.tsx`, `objectives.ts` | ✅ |
+| 14 | Results screen (objectives + Next level) | `ResultsPanel.tsx`, `AppShell.tsx` | ✅ |
+| 15 | Compact progress stepper | `ProgressStepper.tsx` | ✅ |
+| 16 | First-run onboarding banner | `AppShell.tsx` | ✅ |
+| 17 | Grade taxonomy across brief + selector | `challengeBrief.ts`, `ChallengeSelector.tsx` | ✅ |
+| 18 | Brief/flow tests | `lib/authoring/__tests__/challengeBrief.test.ts` | ✅ |
 | 8 | Skill-tree visualization with prerequisite edges | TBD | ⬜ |
 | 9 | Per-concept mastery from bonus objectives | TBD | ⬜ |
 | 10 | Adaptive harder variants | TBD | ⬜ |
@@ -35,9 +45,24 @@ _Last updated: 2026-07-24 — progression core + light mode + defaults-in-tabs s
   - **States** — provided default states shown read-only with descriptions + how each
     is used by the rules; authoring gated by `statesUnlocked`.
 
+## Learner flow & readability pass (2026-07-25)
+
+Addresses the "problem statement is overwhelming; give a proper task-completion
+flow" feedback — and does it through a **world-agnostic** structured schema so
+the same flow serves maze, warehouse, and the coming finance world. Full write-up
+in [MILESTONE4.md](./MILESTONE4.md); schema reference in
+[CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md).
+
+- Brief is now progressive: headline + context always; prose behind "Learn more";
+  hints in a drawer. "Current intelligence" collapsed below the editor.
+- Live task checklist ticks off during the run (`steps` or required objectives).
+- Results screen: objectives (required ✓ / bonus ★) + **Next level →**.
+- Compact progress stepper + first-run onboarding banner.
+- Grade taxonomy (`Tutorial · Grade 1`) replaces "Level N" in brief + selector.
+
 ## Verification
 
-- `npm run build` ✅ · `npm run lint` ✅ · `npm test` ✅ **48 tests**
+- `npm run build` ✅ · `npm run lint` ✅ · `npm test` ✅ **70 tests**
 - Browser: light/dark toggle; locked challenges dimmed + unselectable; completing a
   challenge unlocks the next and fires the concept callout; staged hints reveal in
   order; Functions tab lists bricks on locked challenges.

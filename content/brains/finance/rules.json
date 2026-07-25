@@ -1,0 +1,8 @@
+{
+  "rules": [
+    { "id": "route-best-a", "when": "onlineA && (!onlineB || expectedCostA <= expectedCostB) && (!onlineC || expectedCostA <= expectedCostC)", "do": "route-a", "priority": 30, "description": "Route via A when its displayed expected cost is no higher than every online alternative." },
+    { "id": "route-best-b", "when": "onlineB && (!onlineA || expectedCostB < expectedCostA) && (!onlineC || expectedCostB <= expectedCostC)", "do": "route-b", "priority": 30, "description": "Route via B when its displayed expected cost is lower than A and no higher than C." },
+    { "id": "route-best-c", "when": "onlineC && (!onlineA || expectedCostC < expectedCostA) && (!onlineB || expectedCostC < expectedCostB)", "do": "route-c", "priority": 30, "description": "Route via C when its displayed expected cost is lower than every online alternative." },
+    { "id": "idle", "when": "always", "do": "hold", "priority": 0, "description": "Hold when no provider can take the payment." }
+  ]
+}

@@ -21,7 +21,7 @@ unchanged. Next.js only provides the *rendering shell and controls* in `app/`.
 ```
 ┌────────────────────────────────────────────┐
 │ app/  (Next.js + React — rendering shell)  │  ← the ONLY framework layer
-│   page.tsx, renderer, debug panel, controls│
+│   route pages, AppShell, renderer, controls│
 └───────────────────────┬────────────────────┘
                         │ imports
 ┌───────────────────────▼────────────────────┐
@@ -30,7 +30,7 @@ unchanged. Next.js only provides the *rendering shell and controls* in `app/`.
 └───────────────────────┬────────────────────┘
                         │ loads (data only)
 ┌───────────────────────▼────────────────────┐
-│ brain/*.json   world/*.json  (data)        │
+│ content/brains/*/*.json   content/worlds/* │
 └────────────────────────────────────────────┘
 ```
 
@@ -40,12 +40,14 @@ See [`MILESTONES.md`](./MILESTONES.md#target-architecture) for the full engine t
 Top level:
 
 ```
-app/            Next.js App Router UI (client simulation shell)
-lib/engine/     Framework-agnostic simulation & decision engine
-brain/          Agent instruction files (the "brain") — data
-world/          World/maze definitions — data
-docs/           This documentation
-public/         Static assets
+app/                  Next.js App Router UI and route segments
+content/worlds/       World/maze definitions — authored data
+content/brains/       Agent instruction files — authored data
+content/challenges/   Challenge descriptors — authored data
+lib/engine/           Framework-agnostic simulation & decision engine
+lib/content/          Content catalog API
+docs/                 This documentation
+public/               Static assets
 ```
 
 ## Running

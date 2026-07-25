@@ -1,0 +1,23 @@
+{
+  "name": "YamusaPay — Mind the Offline Provider",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "seed": 1,
+    "failurePenalty": 5,
+    "providers": [
+      { "id": "A", "name": "Provider A", "fee": 0.1, "successRate": 100, "latency": 200, "online": false },
+      { "id": "B", "name": "Provider B", "fee": 0.15, "successRate": 100, "latency": 250, "online": true },
+      { "id": "C", "name": "Provider C", "fee": 0.2, "successRate": 100, "latency": 300, "online": true }
+    ],
+    "transactions": [
+      { "id": "tx-001", "amount": 100, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-002", "amount": 90, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-003", "amount": 140, "type": "consumer", "destination": "Bank Z" }
+    ]
+  }
+}

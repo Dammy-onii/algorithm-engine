@@ -137,7 +137,15 @@ export function decompileBrain(src: BrainSource): VisualBrain {
   }[];
 
   // Built-in = single-step wrappers for the four engine primitives
-  const PRIMITIVE_ACTIONS = new Set(["moveForward", "turnLeft", "turnRight", "wait"]);
+  const PRIMITIVE_ACTIONS = new Set([
+    "moveForward",
+    "turnLeft",
+    "turnRight",
+    "wait",
+    "pickUp",
+    "deliver",
+    "charge",
+  ]);
   const functions: VisualFunction[] = rawFunctions.map((f) => ({
     id: f.id,
     description: f.description ?? "",
@@ -156,13 +164,14 @@ export function decompileBrain(src: BrainSource): VisualBrain {
     description?: string;
   }[];
 
-  const rules: VisualRule[] = rawRules.map((r) => ({
+  // Preserve file order. It is the engine's `if / else-if / else` flow order.
+  const rules: VisualRule[] = rawRules.map((r, index) => ({
     id: r.id,
     state: r.state ?? null,
     condition: decompileCondition(r.when),
     functionId: r.do,
     setState: r.setState ?? null,
-    priority: r.priority ?? 0,
+    priority: r.priority ?? rawRules.length - index,
     description: r.description ?? "",
   }));
 
@@ -177,6 +186,7 @@ export function decompileBrain(src: BrainSource): VisualBrain {
     initial: src.states.initial,
     states,
     rules,
+    ruleFolders: [],
     functions,
     derived,
     memory: src.memory as Record<string, unknown>,

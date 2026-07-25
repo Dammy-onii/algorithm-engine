@@ -1,0 +1,35 @@
+{
+  "name": "YamusaPay — Real-Time Provider Health",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "seed": 5,
+    "failurePenalty": 5,
+    "providers": [
+      {
+        "id": "A",
+        "name": "Provider A",
+        "fee": 0.1,
+        "successRate": 99,
+        "latency": 200,
+        "online": true,
+        "schedule": [{ "atTick": 4, "online": false }]
+      },
+      { "id": "B", "name": "Provider B", "fee": 0.2, "successRate": 98, "latency": 300, "online": true }
+    ],
+    "transactions": [
+      { "id": "tx-001", "amount": 100, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-002", "amount": 100, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-003", "amount": 100, "type": "consumer", "destination": "Bank Y" },
+      { "id": "tx-004", "amount": 100, "type": "consumer", "destination": "Bank Y" },
+      { "id": "tx-005", "amount": 100, "type": "consumer", "destination": "Bank Z" },
+      { "id": "tx-006", "amount": 100, "type": "consumer", "destination": "Bank Z" },
+      { "id": "tx-007", "amount": 100, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-008", "amount": 100, "type": "consumer", "destination": "Bank Y" }
+    ]
+  }
+}

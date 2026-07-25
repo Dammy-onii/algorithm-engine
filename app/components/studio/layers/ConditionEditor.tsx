@@ -13,6 +13,7 @@
 
 import { useState } from "react";
 import { VisualDerivedCondition } from "@/lib/authoring/types";
+import { allDomainFlagSpecs } from "@/lib/engine/worlds/registry";
 
 const FIELD =
   "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
@@ -32,6 +33,7 @@ const FLAG_DOCS: { id: string; type: "bool" | "number"; meaning: string }[] = [
   { id: "always", type: "bool", meaning: "Constant true — the fallback case" },
   { id: "never", type: "bool", meaning: "Constant false" },
 ];
+const ALL_FLAG_DOCS = [...FLAG_DOCS, ...allDomainFlagSpecs()];
 
 interface Props {
   derived: VisualDerivedCondition[];
@@ -46,6 +48,17 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
   const [newDesc, setNewDesc] = useState("");
 
   const available = new Set(availableConditions);
+  // Only this challenge's flags are documented; other worlds' vocabulary never
+  // leaks in. Derived conditions the user has named are usable too.
+  const challengeFlagDocs = ALL_FLAG_DOCS.filter((f) => available.has(f.id));
+  const suggestions = [
+    ...availableConditions,
+    ...derived.map((d) => d.id).filter((id) => id.trim()),
+  ].filter((v, i, a) => a.indexOf(v) === i);
+
+  /** Append a flag token to the composer expression (click-to-write). */
+  const insertToken = (token: string) =>
+    setNewExpr((e) => (e.trim() ? `${e.trimEnd()} ${token}` : token));
 
   const add = () => {
     if (!newId.trim() || !newExpr.trim()) return;
@@ -82,30 +95,26 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
         </p>
       </div>
 
-      {/* 1 — Engine flags (read-only reference) */}
+      {/* 1 — Engine flags (read-only reference) — only this challenge's senses */}
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Engine flags · locked (what the robot can sense)
+          Engine flags · locked (what the robot can sense here)
         </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <tbody>
-              {FLAG_DOCS.map((f) => {
-                const inChallenge = available.has(f.id);
-                return (
+        {challengeFlagDocs.length === 0 ? (
+          <p className="text-sm italic text-zinc-400">
+            This challenge exposes no sensing flags yet.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <tbody>
+                {challengeFlagDocs.map((f) => (
                   <tr
                     key={f.id}
                     className="border-b border-zinc-100 last:border-0 dark:border-zinc-800"
                   >
                     <td className="py-1.5 pr-3 align-top">
-                      <span
-                        className={[
-                          "font-mono font-medium",
-                          inChallenge
-                            ? "text-zinc-900 dark:text-zinc-100"
-                            : "text-zinc-400",
-                        ].join(" ")}
-                      >
+                      <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">
                         {f.id}
                       </span>
                     </td>
@@ -113,19 +122,12 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
                       {f.type}
                     </td>
                     <td className="py-1.5 align-top text-zinc-500">{f.meaning}</td>
-                    <td className="py-1.5 pl-2 text-right align-top">
-                      {!inChallenge && (
-                        <span className="whitespace-nowrap text-[10px] uppercase tracking-wide text-zinc-400">
-                          not in this challenge
-                        </span>
-                      )}
-                    </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* 2 — User-defined conditions */}
@@ -157,6 +159,7 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
                     className={`${FIELD} flex-1 font-mono text-xs`}
                     value={d.expr}
                     placeholder="wallAhead && wallLeft && wallRight"
+                    list="ae-condition-suggestions"
                     onChange={(e) => update(i, { expr: e.target.value })}
                   />
                   <button
@@ -196,9 +199,29 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
             className={`${FIELD} flex-1 font-mono text-xs`}
             placeholder="wallAhead && wallLeft && wallRight"
             value={newExpr}
+            list="ae-condition-suggestions"
             onChange={(e) => setNewExpr(e.target.value)}
           />
         </div>
+
+        {/* Autocomplete: click an existing condition to write it into the expression */}
+        {suggestions.length > 0 && (
+          <div className="mb-2 flex flex-wrap items-center gap-1">
+            <span className="mr-1 text-[11px] uppercase tracking-wide text-zinc-400">Insert</span>
+            {suggestions.map((flag) => (
+              <button
+                key={flag}
+                type="button"
+                onClick={() => insertToken(flag)}
+                className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100"
+                title={`Insert ${flag}`}
+              >
+                {flag}
+              </button>
+            ))}
+          </div>
+        )}
+
         <input
           className={`${FIELD} mb-3 w-full text-xs`}
           placeholder="Description (optional)"
@@ -218,6 +241,13 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
           reference other conditions. Errors are reported on Apply &amp; Run.
         </p>
       </div>
+
+      {/* Autocomplete source for every condition expression field above. */}
+      <datalist id="ae-condition-suggestions">
+        {suggestions.map((flag) => (
+          <option key={flag} value={flag} />
+        ))}
+      </datalist>
     </div>
   );
 }

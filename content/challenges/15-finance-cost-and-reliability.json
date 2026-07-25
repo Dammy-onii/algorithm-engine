@@ -1,0 +1,49 @@
+{
+  "id": "finance-cost-and-reliability",
+  "pack": "finance",
+  "number": 15,
+  "name": "Cost and Reliability",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "finance-cost-and-reliability",
+  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "easy", "grade": 5 },
+  "tagline": "Balance the fee against the failures.",
+  "brief": "Three online providers with different fees and reliabilities — route to keep total cost low.",
+  "context": "A is cheap but 85% reliable, B is dear but 99%, C sits in between. A failed payment costs $5.",
+  "narrative": "Every provider is online, so availability is no longer the question — value is. Cheapest by fee (A) fails often enough that the $5 penalties pile up; the safest (B) is reliable but pricey. Route by expected cost so the total stays low across the whole queue.",
+  "objective": "Process every payment and keep total cost at or below $3.00.",
+  "learningObjective": "Weighted decisions: pick the option that minimizes a combined cost function, not a single field.",
+  "intelligenceExplanation": "The provider cards show each expected-cost value (fee plus expected failure cost). In this fixed scenario B has the lower expected cost. Route through B to minimize total spend.",
+  "hint": "Use the provider whose displayed expected cost is lowest here: WHEN onlineB → DO route-b.",
+  "hints": [
+    "Availability isn't the issue now — every provider is online. Compare the displayed expected costs.",
+    "B has the lowest expected cost in this fixed setup: author WHEN onlineB → DO route-b.",
+    "The displayed expected cost includes the $5 failure penalty."
+  ],
+  "steps": [
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
+    { "id": "budget", "label": "Total cost at or below $3.00", "check": "allProcessed && totalCost <= 3" }
+  ],
+  "availableBricks": ["route-a", "route-b", "route-c", "hold"],
+  "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "expectedCostA", "expectedCostB", "expectedCostC", "successA", "successB", "successC", "feeA", "feeB", "feeC", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "process", "priority": 1, "description": "Process every payment." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Route incoming payments." }] },
+    "rules": { "rules": [{ "id": "idle", "when": "always", "do": "hold", "priority": 0, "description": "Hold until you add a routing rule." }] },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Send the payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Send the payment through Provider B." },
+        { "id": "route-c", "action": "routeToC", "description": "Send the payment through Provider C." },
+        { "id": "hold", "action": "hold", "description": "Hold the payment for a tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "budget", "label": "Total cost at or below $3.00", "check": "allProcessed && totalCost <= 3" },
+    { "id": "excellent", "label": "Total cost at or below $1.60", "check": "allProcessed && totalCost <= 1.6", "bonus": true }
+  ]
+}

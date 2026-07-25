@@ -1,0 +1,4 @@
+{
+  "initial": "operate",
+  "states": [{ "id": "operate", "description": "Route incoming payments as they arrive." }]
+}

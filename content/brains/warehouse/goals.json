@@ -1,0 +1,9 @@
+{
+  "goals": [
+    {
+      "id": "fulfil-order",
+      "priority": 10,
+      "description": "Collect and deliver every waiting package."
+    }
+  ]
+}

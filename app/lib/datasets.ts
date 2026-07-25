@@ -9,30 +9,53 @@
 import { BrainSource, WorldSource } from "@/lib/engine/simulation";
 import { EntitiesData, WorldData } from "@/lib/engine/types";
 
-import maze from "@/world/maze.json";
-import mazeRooms from "@/world/maze-rooms.json";
-import challengeStraight from "@/world/challenge-straight.json";
-import challengeCorner from "@/world/challenge-corner.json";
-import challengeArena from "@/world/challenge-arena.json";
-import entities from "@/world/entities.json";
+import maze from "@/content/worlds/maze.json";
+import mazeRooms from "@/content/worlds/maze-rooms.json";
+import mazeProper from "@/content/worlds/maze-proper.json";
+import challengeStraight from "@/content/worlds/challenge-straight.json";
+import challengeCorner from "@/content/worlds/challenge-corner.json";
+import challengeArena from "@/content/worlds/challenge-arena.json";
+import warehouseFirstDelivery from "@/content/worlds/warehouse-first-delivery.json";
+import warehousePackageSorting from "@/content/worlds/warehouse-package-sorting.json";
+import warehouseContinuousOperations from "@/content/worlds/warehouse-continuous-operations.json";
+import warehouseEnergyManagement from "@/content/worlds/warehouse-energy-management.json";
+import financeBasicRoute from "@/content/worlds/finance-basic-route.json";
+import financeSkipOffline from "@/content/worlds/finance-skip-offline.json";
+import financeReliabilityIntro from "@/content/worlds/finance-reliability-intro.json";
+import financeRouteSelection from "@/content/worlds/finance-route-selection.json";
+import financeCostAndReliability from "@/content/worlds/finance-cost-and-reliability.json";
+import financeProviderHealth from "@/content/worlds/finance-provider-health.json";
+import entities from "@/content/worlds/entities.json";
 
-import goals from "@/brain/goals.json";
-import states from "@/brain/states.json";
-import rules from "@/brain/rules.json";
-import functions from "@/brain/functions.json";
-import memory from "@/brain/memory.json";
+import goals from "@/content/brains/default/goals.json";
+import states from "@/content/brains/default/states.json";
+import rules from "@/content/brains/default/rules.json";
+import functions from "@/content/brains/default/functions.json";
+import memory from "@/content/brains/default/memory.json";
 
-import nGoals from "@/brain-naive/goals.json";
-import nStates from "@/brain-naive/states.json";
-import nRules from "@/brain-naive/rules.json";
-import nFunctions from "@/brain-naive/functions.json";
-import nMemory from "@/brain-naive/memory.json";
+import nGoals from "@/content/brains/naive/goals.json";
+import nStates from "@/content/brains/naive/states.json";
+import nRules from "@/content/brains/naive/rules.json";
+import nFunctions from "@/content/brains/naive/functions.json";
+import nMemory from "@/content/brains/naive/memory.json";
 
-import dGoals from "@/brain-dash/goals.json";
-import dStates from "@/brain-dash/states.json";
-import dRules from "@/brain-dash/rules.json";
-import dFunctions from "@/brain-dash/functions.json";
-import dMemory from "@/brain-dash/memory.json";
+import dGoals from "@/content/brains/dash/goals.json";
+import dStates from "@/content/brains/dash/states.json";
+import dRules from "@/content/brains/dash/rules.json";
+import dFunctions from "@/content/brains/dash/functions.json";
+import dMemory from "@/content/brains/dash/memory.json";
+
+import wGoals from "@/content/brains/warehouse/goals.json";
+import wStates from "@/content/brains/warehouse/states.json";
+import wRules from "@/content/brains/warehouse/rules.json";
+import wFunctions from "@/content/brains/warehouse/functions.json";
+import wMemory from "@/content/brains/warehouse/memory.json";
+
+import fGoals from "@/content/brains/finance/goals.json";
+import fStates from "@/content/brains/finance/states.json";
+import fRules from "@/content/brains/finance/rules.json";
+import fFunctions from "@/content/brains/finance/functions.json";
+import fMemory from "@/content/brains/finance/memory.json";
 
 const sharedEntities = entities as EntitiesData;
 
@@ -60,6 +83,11 @@ export const WORLDS: WorldOption[] = [
     source: { world: mazeRooms as WorldData, entities: sharedEntities },
   },
   {
+    key: "maze-proper",
+    label: "The Branching Maze (11×11)",
+    source: { world: mazeProper as WorldData, entities: sharedEntities },
+  },
+  {
     key: "challenge-straight",
     label: "Straight Corridor (7×3)",
     source: { world: challengeStraight as WorldData, entities: sharedEntities },
@@ -73,6 +101,56 @@ export const WORLDS: WorldOption[] = [
     key: "challenge-arena",
     label: "Open Arena (9×9)",
     source: { world: challengeArena as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "warehouse-first-delivery",
+    label: "Warehouse Practice — First Delivery",
+    source: { world: warehouseFirstDelivery as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "warehouse-package-sorting",
+    label: "Warehouse Practice — Package Sorting (5×5)",
+    source: { world: warehousePackageSorting as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "warehouse-continuous-operations",
+    label: "Warehouse Easy — Continuous Operations (6×6)",
+    source: { world: warehouseContinuousOperations as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "warehouse-energy-management",
+    label: "Warehouse Medium — Energy Management (6×6)",
+    source: { world: warehouseEnergyManagement as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-basic-route",
+    label: "Finance Tutorial — Route the Payment",
+    source: { world: financeBasicRoute as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-skip-offline",
+    label: "Finance Tutorial — Mind the Offline Provider",
+    source: { world: financeSkipOffline as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-reliability-intro",
+    label: "Finance Tutorial — Cheap Can Cost More",
+    source: { world: financeReliabilityIntro as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-route-selection",
+    label: "Finance Easy — Basic Route Selection",
+    source: { world: financeRouteSelection as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-cost-and-reliability",
+    label: "Finance Easy — Cost and Reliability",
+    source: { world: financeCostAndReliability as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-provider-health",
+    label: "Finance Medium — Real-Time Provider Health",
+    source: { world: financeProviderHealth as WorldData, entities: sharedEntities },
   },
 ];
 
@@ -102,6 +180,28 @@ export const BRAINS: BrainOption[] = [
       rules: nRules,
       functions: nFunctions,
       memory: nMemory,
+    } as BrainSource,
+  },
+  {
+    key: "warehouse-practice",
+    label: "Warehouse Operator (delivers order)",
+    source: {
+      goals: wGoals,
+      states: wStates,
+      rules: wRules,
+      functions: wFunctions,
+      memory: wMemory,
+    } as BrainSource,
+  },
+  {
+    key: "finance-router",
+    label: "Payment Router (best value)",
+    source: {
+      goals: fGoals,
+      states: fStates,
+      rules: fRules,
+      functions: fFunctions,
+      memory: fMemory,
     } as BrainSource,
   },
 ];

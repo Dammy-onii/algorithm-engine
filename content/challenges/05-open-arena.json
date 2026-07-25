@@ -1,8 +1,10 @@
 {
   "id": "open-arena",
+  "pack": "maze",
   "number": 5,
   "name": "Two Minds, One Robot",
-  "difficulty": 2,
+  "difficulty": 3,
+  "stage": "medium",
   "worldKey": "challenge-arena",
   "tagline": "Design a robot that thinks in modes.",
   "narrative": "The Open Arena has no winding corridors to follow. It is a 9×9 space with scattered pillars — many valid paths, no single obvious route. A robot that only knows how to wander will eventually find the goal, but it will waste most of its energy doing it. The key insight is that navigation has two distinct phases: exploring when the goal is not in sight, and locking on when it is. These are different problems that call for different strategies, and a robot should know which one it is solving at any given moment. That is what a state machine does — it gives the robot the ability to change its mind based on circumstances.",

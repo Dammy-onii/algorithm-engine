@@ -1,0 +1,129 @@
+{
+  "id": "warehouse-continuous-operations",
+  "pack": "warehouse",
+  "number": 8,
+  "name": "Warehouse — Continuous Operations",
+  "difficulty": 2,
+  "stage": "easy",
+  "worldKey": "warehouse-continuous-operations",
+  "tagline": "Collect work without overfilling the robot.",
+  "narrative": "The 11×5 fulfilment loop has a central rack block, long travel aisles, and two pick faces. Red and blue stations each hold three orders, but expose only one package at a time. As soon as the robot picks one, the next appears. The robot carries two packages, so the task is no longer a single trip: it must stop picking up once full and unload work before returning to the stations.",
+  "objective": "Process all six station orders using two-package cargo capacity.",
+  "learningObjective": "Continuous work, carrying capacity, and planning before a delivery run.",
+  "intelligenceExplanation": "The route is available but no work rules exist. Add a pickup rule guarded by packageHere AND capacityRemaining > 0. Add separate red and blue delivery rules so the robot does not repeatedly try to unload red cargo at Blue Outbound. When an item is picked, the next package appears at that station immediately; the debug panel shows packages remaining and free cargo slots.",
+  "hint": "Use WHEN packageHere AND capacityRemaining > 0 → pick-up. Then use deliveryRedHere AND carryingRed → deliver, and repeat for blue. All work rules should outrank movement.",
+  "availableBricks": [
+    "step",
+    "pivot-right",
+    "pick-up",
+    "deliver",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "wallRight",
+    "packageHere",
+    "capacityRemaining",
+    "packagesRemaining",
+    "deliveryRedHere",
+    "deliveryBlueHere",
+    "carryingRed",
+    "carryingBlue",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "process-orders",
+          "priority": 10,
+          "description": "Deliver every order from both stations."
+        }
+      ]
+    },
+    "states": {
+      "initial": "operate",
+      "states": [
+        {
+          "id": "operate",
+          "description": "Travel the shelf-bounded route."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "continue-aisle",
+          "when": "!wallAhead",
+          "do": "step",
+          "priority": 60,
+          "description": "Continue through a clear aisle."
+        },
+        {
+          "id": "turn-at-shelf-end",
+          "when": "wallAhead && !wallRight",
+          "do": "pivot-right",
+          "priority": 40,
+          "description": "Turn right at the end of an aisle."
+        },
+        {
+          "id": "idle-safely",
+          "when": "always",
+          "do": "hold",
+          "priority": 0,
+          "description": "Safe fallback."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Move one aisle tile."
+        },
+        {
+          "id": "pivot-right",
+          "action": "turnRight",
+          "description": "Turn right."
+        },
+        {
+          "id": "pick-up",
+          "action": "pickUp",
+          "description": "Load a package."
+        },
+        {
+          "id": "deliver",
+          "action": "deliver",
+          "description": "Unload matching cargo."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Wait one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "process",
+      "label": "Deliver all six station orders",
+      "check": "reached"
+    },
+    {
+      "id": "capacity",
+      "label": "Use the full two-package capacity",
+      "check": "reached && ticks <= 60",
+      "bonus": true
+    },
+    {
+      "id": "focused",
+      "label": "Use five rules or fewer",
+      "check": "reached && rules <= 5",
+      "bonus": true
+    }
+  ]
+}

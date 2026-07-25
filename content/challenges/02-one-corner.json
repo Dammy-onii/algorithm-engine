@@ -1,5 +1,6 @@
 {
   "id": "one-corner",
+  "pack": "maze",
   "number": 2,
   "name": "The First Corner",
   "difficulty": 1,
@@ -8,8 +9,8 @@
   "narrative": "The corridor ahead ends in a wall. If the robot only knows how to move forward, it will walk until it hits that wall and then freeze — paralysed because it has no rule for what to do next. Walls are not failures; they are information. You need to teach the robot that when the path ahead is blocked, it should turn and look for an open direction. This is the moment a robot stops being a projectile and starts being a navigator.",
   "objective": "Guide the robot around the corner to the goal and hold there for 3 ticks.",
   "learningObjective": "Writing multiple rules with different priorities, and using the `wallAhead` condition to react to the environment.",
-  "intelligenceExplanation": "This brain already has one rule: move forward if the path is clear. But when the robot reaches the wall at the end of the corridor, no rule fires — it stalls. You need to add a second rule that handles the wall case. Think about which rule should have higher priority: the one that handles a blocked path or the one that moves forward. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
-  "hint": "Add a second rule: when `wallAhead`, do `pivot-right`. Give it a priority higher than the move-forward rule so turning takes precedence.",
+  "intelligenceExplanation": "This brain already has one rule: move forward if the path is clear. But when the robot reaches the wall at the end of the corridor, no rule fires — it stalls. Add a second rule that handles the wall case and place it before the general movement rule. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so put WHEN atGoal -> DO hold first.",
+  "hint": "Add a second rule: when `wallAhead`, do `pivot-right`. Place it above the move-forward rule so turning takes precedence.",
   "availableBricks": [
     "step",
     "pivot-right",

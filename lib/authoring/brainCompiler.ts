@@ -63,7 +63,6 @@ export function compileBrain(visual: VisualBrain): BrainSource {
         when: compileCondition(r.condition),
         do: r.functionId,
         ...(r.setState !== null ? { setState: r.setState } : {}),
-        priority: r.priority,
         ...(r.description ? { description: r.description } : {}),
       })),
     },

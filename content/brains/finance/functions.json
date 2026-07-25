@@ -1,0 +1,8 @@
+{
+  "functions": [
+    { "id": "route-a", "action": "routeToA", "description": "Send the payment through Provider A." },
+    { "id": "route-b", "action": "routeToB", "description": "Send the payment through Provider B." },
+    { "id": "route-c", "action": "routeToC", "description": "Send the payment through Provider C." },
+    { "id": "hold", "action": "hold", "description": "Hold the payment for a tick." }
+  ]
+}

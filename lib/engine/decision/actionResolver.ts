@@ -9,14 +9,24 @@
  * transition. The simulation then runs that plan one action per tick.
  */
 
-import { ActionType, Brain, Observation } from "../types";
-import { contextFromObservation } from "./condition";
+import { ActionType, Brain, Observation, Rule } from "../types";
+import { contextFromObservation, evaluateCondition } from "./condition";
 import { selectGoal } from "./goalManager";
 import { resolveState, isValidState } from "./stateMachine";
 import { selectRule } from "./ruleEngine";
 import { planForFunction } from "./functionExecutor";
 
 const DEFAULT_PLAN: ActionType[] = ["wait"];
+
+/**
+ * Preconditions for the base movement primitives, as condition expressions over
+ * observation flags. Turning and waiting are always possible, so only the one
+ * blockable primitive is listed. World modules add their own domain-action
+ * preconditions via `WorldModule.actionPreconditions`.
+ */
+export const BASE_ACTION_PRECONDITIONS: Readonly<Record<string, string>> = {
+  moveForward: "!wallAhead",
+};
 
 export interface Decision {
   goalId: string | null;
@@ -29,19 +39,52 @@ export interface Decision {
   nextState: string;
 }
 
+/** Whether one primitive action may be attempted in the current observation. */
+export function isActionExecutable(
+  action: ActionType,
+  observation: Observation,
+  actionPreconditions: Readonly<Record<string, string>> = {},
+  derived: Readonly<Record<string, string>> = {},
+): boolean {
+  const precondition = actionPreconditions[action];
+  if (!precondition) return true;
+  try {
+    return evaluateCondition(precondition, contextFromObservation(observation), derived);
+  } catch {
+    // Invalid world metadata must not make a simulation crash mid-run. Loader
+    // validation remains the primary error surface for authored expressions.
+    return true;
+  }
+}
+
 export function resolveAction(
   brain: Brain,
   observation: Observation,
   currentState: string,
+  /**
+   * Action → precondition expression, merged from the base primitives and the
+   * active world module. When supplied, selection skips a rule whose first
+   * action is currently impossible. Omit to disable the check.
+   */
+  actionPreconditions: Readonly<Record<string, string>> = {},
 ): Decision {
   const ctx = contextFromObservation(observation);
   const derived = brain.derivedConditions;
 
   const goal = selectGoal(brain.goals, ctx, derived);
   const state = resolveState(brain.states, currentState);
-  const rule = selectRule(brain.rules, state.id, ctx, derived);
 
-  // No rule matched → safe default so the loop always produces an action.
+  // A rule is executable when the first primitive of its plan is possible now.
+  // Later primitives are checked again just before they execute by Simulation.
+  const isExecutable = (r: Rule): boolean => {
+    const action = planForFunction(brain, r.do)[0];
+    return isActionExecutable(action, observation, actionPreconditions, derived);
+  };
+
+  const rule = selectRule(brain.rules, state.id, ctx, derived, isExecutable);
+
+  // Nothing applies. The engine waits rather than attempting an impossible
+  // action; the trace deliberately has no rule/function because no branch ran.
   if (!rule) {
     return {
       goalId: goal?.id ?? null,

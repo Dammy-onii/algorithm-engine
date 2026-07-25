@@ -1,0 +1,40 @@
+/**
+ * World-module registry — resolves a WorldData `kind` to its WorldModule.
+ *
+ * This is the code-side registry of *known* world types. A content pack's
+ * manifest references a module by id (e.g. "warehouse"); the app only ever
+ * resolves ids it already ships. New world types register here.
+ */
+
+import type { DomainFlagSpec, WorldModule } from "./module";
+import { mazeModule } from "./maze";
+import { warehouseModule } from "./warehouse";
+import { financeModule } from "./finance";
+
+const MODULES: Record<string, WorldModule> = {
+  [mazeModule.id]: mazeModule,
+  [warehouseModule.id]: warehouseModule,
+  [financeModule.id]: financeModule,
+};
+
+/** Resolve a world module by kind, defaulting to the maze (base grid). */
+export function resolveWorldModule(kind: string | undefined): WorldModule {
+  return MODULES[kind ?? "maze"] ?? mazeModule;
+}
+
+/** Every module's domain-flag names, unioned — the known condition vocabulary. */
+export function allDomainFlags(): string[] {
+  return [...new Set(allDomainFlagSpecs().map((flag) => flag.id))];
+}
+
+/** Flag metadata for editors and other presentation layers. */
+export function allDomainFlagSpecs(): DomainFlagSpec[] {
+  return Object.values(MODULES).flatMap((module) => module.domainFlags);
+}
+
+/** Every action contributed by a shipped world module. */
+export function allDomainActions(): string[] {
+  return [...new Set(Object.values(MODULES).flatMap((module) => module.domainActions))];
+}
+
+export { mazeModule, warehouseModule, financeModule };

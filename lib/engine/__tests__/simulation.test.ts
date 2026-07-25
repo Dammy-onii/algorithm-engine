@@ -5,27 +5,28 @@ import { evaluateCondition } from "../decision/condition";
 import { compileFunctionPlans } from "../runtime/loader";
 import { EntitiesData, WorldData } from "../types";
 
-import maze from "../../../world/maze.json";
-import mazeRooms from "../../../world/maze-rooms.json";
-import entities from "../../../world/entities.json";
+import maze from "@/content/worlds/maze.json";
+import mazeRooms from "@/content/worlds/maze-rooms.json";
+import branchingMaze from "@/content/worlds/maze-proper.json";
+import entities from "@/content/worlds/entities.json";
 
-import goals from "../../../brain/goals.json";
-import states from "../../../brain/states.json";
-import rules from "../../../brain/rules.json";
-import functions from "../../../brain/functions.json";
-import memory from "../../../brain/memory.json";
+import goals from "@/content/brains/default/goals.json";
+import states from "@/content/brains/default/states.json";
+import rules from "@/content/brains/default/rules.json";
+import functions from "@/content/brains/default/functions.json";
+import memory from "@/content/brains/default/memory.json";
 
-import nGoals from "../../../brain-naive/goals.json";
-import nStates from "../../../brain-naive/states.json";
-import nRules from "../../../brain-naive/rules.json";
-import nFunctions from "../../../brain-naive/functions.json";
-import nMemory from "../../../brain-naive/memory.json";
+import nGoals from "@/content/brains/naive/goals.json";
+import nStates from "@/content/brains/naive/states.json";
+import nRules from "@/content/brains/naive/rules.json";
+import nFunctions from "@/content/brains/naive/functions.json";
+import nMemory from "@/content/brains/naive/memory.json";
 
-import dGoals from "../../../brain-dash/goals.json";
-import dStates from "../../../brain-dash/states.json";
-import dRules from "../../../brain-dash/rules.json";
-import dFunctions from "../../../brain-dash/functions.json";
-import dMemory from "../../../brain-dash/memory.json";
+import dGoals from "@/content/brains/dash/goals.json";
+import dStates from "@/content/brains/dash/states.json";
+import dRules from "@/content/brains/dash/rules.json";
+import dFunctions from "@/content/brains/dash/functions.json";
+import dMemory from "@/content/brains/dash/memory.json";
 
 const wallFollower: BrainSource = {
   goals,
@@ -96,6 +97,48 @@ describe("simulation engine", () => {
   it("same engine + same brain solves a DIFFERENT maze with no code change", () => {
     const sim = run(mazeRooms as WorldData, wallFollower);
     expect(sim.status).toBe("reached");
+  });
+
+  it("solves the Branching Maze with an ordered right-wall flow", () => {
+    const orderedWallFollower: BrainSource = {
+      goals: { goals: [{ id: "reach", priority: 1 }] },
+      states: { initial: "explore", states: [{ id: "explore" }] },
+      functions: {
+        functions: [
+          { id: "step", action: "moveForward" },
+          { id: "right", action: "turnRight" },
+          { id: "left", action: "turnLeft" },
+          { id: "hold", action: "wait" },
+          { id: "right-and-step", steps: ["right", "step"] },
+          { id: "left-and-step", steps: ["left", "step"] },
+          { id: "turn-around-and-step", steps: ["right", "right", "step"] },
+        ],
+      },
+      rules: {
+        rules: [
+          { id: "settle", when: "atGoal", do: "hold" },
+          { id: "take-right", when: "!wallRight", do: "right-and-step" },
+          { id: "go-forward", when: "!wallAhead", do: "step" },
+          { id: "take-left", when: "!wallLeft", do: "left-and-step" },
+          { id: "dead-end", when: "always", do: "turn-around-and-step" },
+        ],
+      },
+      memory: {},
+    };
+
+    const sim = run(branchingMaze as WorldData, orderedWallFollower);
+    expect(sim.status).toBe("reached");
+    expect(sim.world.atGoal()).toBe(true);
+    expect(sim.world.tick).toBeLessThanOrEqual(80);
+  });
+
+  it("rejects a domain action when the active world module does not expose it", () => {
+    const invalid = structuredClone(wallFollower);
+    invalid.functions.functions.push({ id: "pick-up", action: "pickUp" });
+    invalid.rules.rules[0].do = "pick-up";
+    const source: WorldSource = { world: maze as WorldData, entities: entities as EntitiesData };
+
+    expect(() => new Simulation(source, invalid)).toThrow(/unavailable in world 'maze'/);
   });
 
   it("swapping to the naive brain changes the outcome (proves data-driven brains)", () => {

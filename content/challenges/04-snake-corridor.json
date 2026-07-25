@@ -1,5 +1,6 @@
 {
   "id": "snake-corridor",
+  "pack": "maze",
   "number": 4,
   "name": "Build Your Own Strategy",
   "difficulty": 2,

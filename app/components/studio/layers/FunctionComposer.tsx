@@ -20,6 +20,9 @@ const PRIMITIVES = [
   { id: "pivot-left",  action: "turnLeft",    label: "Turn Left"    },
   { id: "pivot-right", action: "turnRight",   label: "Turn Right"   },
   { id: "hold",        action: "wait",        label: "Wait"         },
+  { id: "pick-up",     action: "pickUp",      label: "Pick Up"      },
+  { id: "deliver",     action: "deliver",     label: "Deliver"      },
+  { id: "charge",      action: "charge",      label: "Charge"       },
 ] as const;
 
 const FIELD = "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
@@ -67,6 +70,14 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
       ? availableBricks
       : builtIn.map((f) => f.id);
 
+  // The composer's step palette is restricted to this challenge's primitives —
+  // a maze level never offers pickUp/deliver, a warehouse level never offers a
+  // primitive it doesn't expose. No cross-world vocabulary leaks in.
+  const stepPrimitives =
+    availableBricks.length > 0
+      ? PRIMITIVES.filter((p) => availableBricks.includes(p.id))
+      : PRIMITIVES;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3 text-xs leading-relaxed text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
@@ -75,7 +86,7 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
         </p>
         <p>
           A function (or &quot;brick&quot;) is a named action the robot can perform. The
-          engine ships four built-in primitives — everything the robot can physically
+          engine ships built-in primitives — everything the robot can physically
           do. {composable
             ? "You can also compose your own multi-step bricks from them below."
             : "Composing your own multi-step bricks unlocks in a later challenge."}
@@ -172,7 +183,7 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
         <div className="mb-3">
           <p className="mb-1.5 text-xs text-zinc-500">Click a primitive to add it as a step:</p>
           <div className="flex flex-wrap gap-2">
-            {PRIMITIVES.map((p) => (
+            {stepPrimitives.map((p) => (
               <PrimitiveBlock
                 key={p.id}
                 actionType={p.action}

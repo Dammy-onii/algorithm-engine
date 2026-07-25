@@ -1,0 +1,53 @@
+{
+  "id": "finance-skip-offline",
+  "pack": "finance",
+  "number": 12,
+  "name": "Mind the Offline Provider",
+  "difficulty": 1,
+  "stage": "practice",
+  "worldKey": "finance-skip-offline",
+  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "tutorial", "grade": 2 },
+  "tagline": "The cheapest route is a dead one.",
+  "brief": "Route to the cheapest provider that is actually online — the cheapest overall is offline.",
+  "context": "Provider A has the lowest fee but it is offline. Sending payments there fails.",
+  "narrative": "The starter rule routes everything to Provider A because it is cheapest by fee. But A is offline — a payment can't go through a provider that isn't there. Fix the routing so payments only go to a provider that can actually process them, and still keep the cost down.",
+  "objective": "Process every payment with no failures by avoiding the offline provider.",
+  "learningObjective": "Constraints before optimization: filter to what is possible, then choose the cheapest of those.",
+  "intelligenceExplanation": "The provider cards establish that A is cheaper but offline, while B is online. Replace the broken route-to-A rule with the available fallback provider.",
+  "hint": "Route to the available fallback: WHEN onlineB → DO route-b.",
+  "hints": [
+    "Look at the provider cards — one is marked offline. Routing there fails.",
+    "The starter rule sends everything to A. Change it: WHEN onlineB → DO route-b.",
+    "B is the cheaper available provider in this fixed scenario."
+  ],
+  "steps": [
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
+    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" }
+  ],
+  "availableBricks": ["route-a", "route-b", "route-c", "hold"],
+  "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "feeA", "feeB", "feeC", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "process", "priority": 1, "description": "Process every payment." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Route incoming payments." }] },
+    "rules": {
+      "rules": [
+        { "id": "route-cheapest-fee", "when": "hasTransaction", "do": "route-a", "priority": 30, "description": "Naive: route to A because it has the lowest fee (but A is offline)." }
+      ]
+    },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Send the payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Send the payment through Provider B." },
+        { "id": "route-c", "action": "routeToC", "description": "Send the payment through Provider C." },
+        { "id": "hold", "action": "hold", "description": "Hold the payment for a tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "no-failures", "label": "No failed payments", "check": "allProcessed && failed == 0" },
+    { "id": "cheapest-online", "label": "Keep total cost at or below $0.46", "check": "allProcessed && totalCost <= 0.46", "bonus": true }
+  ]
+}

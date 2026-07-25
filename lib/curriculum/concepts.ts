@@ -35,8 +35,8 @@ export const CONCEPTS: Concept[] = [
   },
   {
     id: "conditions",
-    name: "Conditions & priority",
-    teaches: "Use several rules and let priority decide which one wins.",
+    name: "Conditions & rule order",
+    teaches: "Use several rules and let the first matching safe rule win.",
     taughtBy: "one-corner",
     prerequisites: ["sequencing"],
   },
@@ -60,6 +60,86 @@ export const CONCEPTS: Concept[] = [
     teaches: "Give the robot modes so the same sense means different things.",
     taughtBy: "open-arena",
     prerequisites: ["functions"],
+  },
+  {
+    id: "maze-navigation",
+    name: "Maze navigation",
+    teaches: "Use wall observations and ordered rules to navigate branches and dead ends.",
+    taughtBy: "branching-maze",
+    prerequisites: ["functions"],
+  },
+  {
+    id: "warehouse-interaction",
+    name: "Warehouse interaction",
+    teaches: "Turn a sensed package or delivery zone into a Pick Up or Deliver action.",
+    taughtBy: "warehouse-first-delivery",
+    // This is the first practice level in a separate world track, so it remains
+    // available from the beginning rather than being gated by the maze path.
+    prerequisites: [],
+  },
+  {
+    id: "warehouse-sorting",
+    name: "Package sorting",
+    teaches: "Use package and delivery-zone types to route cargo correctly.",
+    taughtBy: "warehouse-package-sorting",
+    prerequisites: ["warehouse-interaction"],
+  },
+  {
+    id: "warehouse-operations",
+    name: "Continuous operations",
+    teaches: "Balance a finite cargo capacity against replenishing work stations.",
+    taughtBy: "warehouse-continuous-operations",
+    prerequisites: ["warehouse-sorting"],
+  },
+  {
+    id: "warehouse-energy",
+    name: "Energy management",
+    teaches: "Plan charging around ongoing delivery work.",
+    taughtBy: "warehouse-energy-management",
+    prerequisites: ["warehouse-operations"],
+  },
+  {
+    id: "payment-routing",
+    name: "Payment routing",
+    teaches: "Route each payment through the cheapest available provider.",
+    taughtBy: "finance-basic-route",
+    // First level of a separate world track — open from the start.
+    prerequisites: [],
+  },
+  {
+    id: "provider-availability",
+    name: "Provider availability",
+    teaches: "Skip offline providers and route only where a payment can succeed.",
+    taughtBy: "finance-skip-offline",
+    prerequisites: ["payment-routing"],
+  },
+  {
+    id: "expected-cost",
+    name: "Expected cost",
+    teaches: "Weigh fee against failure risk — route by expected cost, not sticker price.",
+    taughtBy: "finance-reliability-intro",
+    prerequisites: ["provider-availability"],
+  },
+  {
+    id: "route-constraints",
+    name: "Constrained routing",
+    teaches: "Apply an availability constraint, then a cost preference, across many options.",
+    taughtBy: "finance-route-selection",
+    prerequisites: ["expected-cost"],
+  },
+  {
+    id: "weighted-routing",
+    name: "Weighted routing",
+    teaches: "Minimize a combined cost function over competing objectives.",
+    taughtBy: "finance-cost-and-reliability",
+    prerequisites: ["route-constraints"],
+  },
+  {
+    id: "adaptive-routing",
+    name: "Adaptive routing",
+    teaches: "Re-decide every tick from live state as provider health changes.",
+    taughtBy: "finance-provider-health",
+    prerequisites: ["weighted-routing"],
   },
 ];
 

@@ -1,5 +1,10 @@
 # Algorithm Engine — Roadmap
 
+> **Planning history.** Some sequencing and terminology below predate ordered
+> rules and Code mode. Current implemented behaviour and pending work are tracked
+> in [CHANGELOG.md](./CHANGELOG.md); use it together with the current reference
+> docs rather than treating this roadmap as an implementation contract.
+
 The long view. Milestones 1–2 are built; Milestone 3 is in progress. This document
 describes **all eight milestones** — what each proves, how it is achieved on top of
 the existing foundation, and how it can be presented in a way that is distinctly
@@ -22,7 +27,7 @@ the existing foundation, and how it can be presented in a way that is distinctly
 | 3 | Intelligence Composition | Users can build *abstractions*, not just configure an agent | 🟨 In progress (library pending) |
 | 4 | Learning & Progression | The platform can *teach* — complexity grows naturally | 🟨 In progress (core shipped) |
 | 5 | Hybrid Authoring | The same intelligence is authorable as blocks **or** code | ⬜ Planned |
-| 6 | Multiple Worlds | The engine is genuinely domain-agnostic | ⬜ Planned (not before M5) |
+| 6 | Multiple Worlds | The engine is genuinely domain-agnostic | 🟨 Warehouse Modes 1–4 shipped; non-grid Stage 2 and broader milestone in progress |
 | 7 | Real-Time Collaboration | Multiple people can co-author one agent | ⬜ Planned |
 | 8 | Competition | Teams compare intelligence live, with scoring + spectating | ⬜ Planned |
 
@@ -187,7 +192,7 @@ so a brain authored either way remains inspectable, scoreable, and competition-l
 
 ---
 
-## Milestone 6 — Multiple Worlds ⬜ (not before M5)
+## Milestone 6 — Multiple Worlds 🟨
 
 **Proves:** the engine is genuinely domain-agnostic — the biggest architectural claim.
 
@@ -197,6 +202,14 @@ Introduce a second environment that is a *different problem*, not a harder maze:
 warehouse automation, traffic routing, package delivery, robot-vacuum coverage, or
 search-and-rescue. The bar: the same decision architecture (goals → states → rules →
 functions → conditions → memory) works **without engine modification**.
+
+**Current vertical slice:** Warehouse Modes 1–4 are shipped at explicit project
+priority, ahead of the previously planned M5 sequencing. They use Stage 1 realistic
+grid aisle layouts, a `warehouse` world module, external package/delivery/station
+data, and warehouse capabilities (`pickUp`, `deliver`, `charge`). This proves the
+behavioural module boundary, but it does not yet satisfy the full M6 bar of a
+non-grid spatial world interface, dynamic warehouse systems, or multi-robot work.
+See [WAREHOUSE_AUTOMATION.md](./WAREHOUSE_AUTOMATION.md).
 
 - Generalize `world.ts` from a maze grid to a world *interface* (tiles, entities,
   legal actions, observation builder) that a maze is one implementation of.

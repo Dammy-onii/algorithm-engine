@@ -16,11 +16,11 @@ import { VisualBrain } from "../types";
 
 import { Simulation, BrainSource } from "@/lib/engine/simulation";
 import { EntitiesData, WorldData } from "@/lib/engine/types";
-import { CHALLENGES } from "@/challenges/index";
+import { CHALLENGES } from "@/content/challenges";
 import { findWorld } from "@/app/lib/datasets";
 
-import maze from "@/world/maze.json";
-import entities from "@/world/entities.json";
+import maze from "@/content/worlds/maze.json";
+import entities from "@/content/worlds/entities.json";
 
 const baseMetrics: RunMetrics = {
   reached: true,
@@ -34,6 +34,7 @@ const baseMetrics: RunMetrics = {
   functions: 1,
   states: 1,
   conditions: 0,
+  domain: {},
 };
 
 describe("evaluateObjectives", () => {

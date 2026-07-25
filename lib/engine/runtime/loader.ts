@@ -22,12 +22,14 @@ import {
   MemoryData,
   WorldData,
   TILE,
+  BASE_ACTIONS,
 } from "../types";
 import {
   BUILTIN_FLAGS,
   assertParsable,
   referencedIdentifiers,
 } from "../decision/condition";
+import { allDomainActions, allDomainFlags, resolveWorldModule } from "../worlds/registry";
 import { inBounds } from "../world/grid";
 import { World } from "../world/world";
 
@@ -53,14 +55,12 @@ export function validateWorldData(data: WorldData): void {
   if (data.tiles[data.goal.y][data.goal.x] === TILE.WALL) {
     fail("world.goal sits on a wall");
   }
+  const worldModule = resolveWorldModule(data.kind);
+  if (data.kind && worldModule.id !== data.kind) fail(`unknown world kind '${data.kind}'`);
+  worldModule.validate(data);
 }
 
-const PRIMITIVE_ACTIONS = new Set<ActionType>([
-  "moveForward",
-  "turnLeft",
-  "turnRight",
-  "wait",
-]);
+const PRIMITIVE_ACTIONS = new Set<ActionType>([...BASE_ACTIONS, ...allDomainActions()]);
 
 /**
  * Expand a function into a flat list of primitive actions, following `steps`
@@ -127,7 +127,10 @@ export function compileFunctionPlans(
 export function compileDerivedConditions(
   conditions: DerivedCondition[],
 ): Record<string, string> {
-  const builtins = new Set<string>(BUILTIN_FLAGS);
+  // Known vocabulary = base flags + every world module's domain flags. Validation
+  // stays permissive across worlds; the evaluator only sees the flags the active
+  // world actually produces at runtime.
+  const builtins = new Set<string>([...BUILTIN_FLAGS, ...allDomainFlags()]);
   const map: Record<string, string> = {};
 
   for (const c of conditions) {
@@ -199,6 +202,7 @@ export function buildBrain(
   const stateIds = new Set(states.states.map((s) => s.id));
   const knownFlags = new Set<string>([
     ...BUILTIN_FLAGS,
+    ...allDomainFlags(),
     ...Object.keys(derivedConditions),
   ]);
 
@@ -254,6 +258,15 @@ export function buildWorld(
   goalHoldTicks?: number,
 ): World {
   validateWorldData(worldData);
+  const worldModule = resolveWorldModule(worldData.kind);
+  const allowedActions = new Set<ActionType>([...BASE_ACTIONS, ...worldModule.domainActions]);
+  for (const [functionId, plan] of Object.entries(brain.functionPlans)) {
+    for (const action of plan) {
+      if (!allowedActions.has(action)) {
+        fail(`function '${functionId}' uses action '${action}', unavailable in world '${worldModule.id}'`);
+      }
+    }
+  }
   const entityList: EntityData[] = entities.entities ?? [];
   return new World(
     worldData,

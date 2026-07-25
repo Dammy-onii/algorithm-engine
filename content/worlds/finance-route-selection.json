@@ -1,0 +1,24 @@
+{
+  "name": "YamusaPay — Basic Route Selection",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "seed": 3,
+    "failurePenalty": 5,
+    "providers": [
+      { "id": "A", "name": "Provider A", "fee": 0.2, "successRate": 100, "latency": 210, "online": true },
+      { "id": "B", "name": "Provider B", "fee": 0.1, "successRate": 100, "latency": 260, "online": true },
+      { "id": "C", "name": "Provider C", "fee": 0.15, "successRate": 100, "latency": 300, "online": false }
+    ],
+    "transactions": [
+      { "id": "tx-001", "amount": 100, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-002", "amount": 130, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-003", "amount": 75, "type": "consumer", "destination": "Bank Y" },
+      { "id": "tx-004", "amount": 210, "type": "consumer", "destination": "Bank Z" }
+    ]
+  }
+}

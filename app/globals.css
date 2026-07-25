@@ -27,3 +27,45 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Finance flow adapts to the width of its renderer, not the browser viewport.
+   This matters because Studio places it inside a narrow simulation sidebar. */
+.finance-flow-container {
+  container-type: inline-size;
+}
+
+.finance-flow-track {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.finance-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.finance-flow-arrow-symbol {
+  font-size: 1rem;
+  line-height: 1;
+  transform: rotate(90deg);
+}
+
+@container (min-width: 44rem) {
+  .finance-flow-track {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) auto minmax(10rem, 1fr) auto minmax(12rem, 1.25fr);
+    align-items: stretch;
+  }
+
+  .finance-flow-arrow {
+    flex-direction: column;
+  }
+
+  .finance-flow-arrow-symbol {
+    transform: rotate(0deg);
+  }
+}

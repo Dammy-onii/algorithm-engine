@@ -1,0 +1,52 @@
+{
+  "id": "finance-reliability-intro",
+  "pack": "finance",
+  "number": 13,
+  "name": "Cheap Can Cost More",
+  "difficulty": 2,
+  "stage": "practice",
+  "worldKey": "finance-reliability-intro",
+  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "tutorial", "grade": 3 },
+  "tagline": "A failed payment isn't free.",
+  "brief": "Route by expected cost — the cheap provider fails often, and each failure costs $5.",
+  "context": "Provider A is cheap but only 80% reliable; a failed payment costs $5 in support. B costs more but rarely fails.",
+  "narrative": "The starter rule chases the lowest fee and sends everything to Provider A. But A fails one payment in five, and every failure costs $5 in support work — far more than B's higher fee. The real cost of a route is its fee plus its expected failure cost. Route by that instead.",
+  "objective": "Process every payment with at most one failure.",
+  "learningObjective": "Scoring: combine two competing signals (fee and reliability) into one expected-cost decision.",
+  "intelligenceExplanation": "The provider cards show the expected-cost numbers. In this fixed scenario B's displayed expected cost is lower, so make B your preferred route rather than chasing A's raw fee.",
+  "hint": "Route through the better fixed option: WHEN onlineB → DO route-b.",
+  "hints": [
+    "Compare the providers' expected cost, not just their fee — a cheap-but-flaky provider is expensive once failures are counted.",
+    "Swap the fee-chasing rule for WHEN onlineB → DO route-b.",
+    "B's displayed expected cost already reflects the $5 failure penalty."
+  ],
+  "steps": [
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
+    { "id": "reliable", "label": "At most one failed payment", "check": "allProcessed && failed <= 1" }
+  ],
+  "availableBricks": ["route-a", "route-b", "hold"],
+  "availableConditions": ["hasTransaction", "onlineA", "onlineB", "successA", "successB", "feeA", "feeB", "expectedCostA", "expectedCostB", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "process", "priority": 1, "description": "Process every payment." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Route incoming payments." }] },
+    "rules": {
+      "rules": [
+        { "id": "route-cheapest", "when": "onlineA", "do": "route-a", "priority": 30, "description": "Naive: route to A because its raw fee is lower, ignoring reliability." }
+      ]
+    },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Send the payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Send the payment through Provider B." },
+        { "id": "hold", "action": "hold", "description": "Hold the payment for a tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "reliable", "label": "At most one failed payment", "check": "allProcessed && failed <= 1" },
+    { "id": "cheap", "label": "Keep total cost at or below $1.60", "check": "allProcessed && totalCost <= 1.6", "bonus": true }
+  ]
+}

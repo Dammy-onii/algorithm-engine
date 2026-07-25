@@ -2,8 +2,8 @@
  * Shared engine types. Framework-agnostic — no React/Next imports here.
  *
  * These types define the two data contracts the engine consumes:
- *   - World data (the maze/environment)  → `world/*.json`
- *   - Brain data (the agent's intelligence) → `brain/*.json`
+ *   - World data (the maze/environment)  → `content/worlds/*.json`
+ *   - Brain data (the agent's intelligence) → `content/brains/<sample>/*.json`
  *
  * The engine executes intelligence; it never creates it. Everything the agent
  * "knows" arrives as an Observation, and everything it "does" is a single Action.
@@ -21,15 +21,26 @@ export interface Vec2 {
 /** Cardinal facing. Order matters: clockwise, used for turn math. */
 export type Direction = "N" | "E" | "S" | "W";
 
-/** The complete set of actions the engine knows how to execute. */
-export type ActionType = "moveForward" | "turnLeft" | "turnRight" | "wait";
+/** Shared movement primitives. World modules contribute their own actions. */
+export const BASE_ACTIONS = [
+  "moveForward",
+  "turnLeft",
+  "turnRight",
+  "wait",
+] as const;
+
+/**
+ * An action identifier. The core intentionally leaves this open: a world module
+ * may add domain actions without extending a shared union.
+ */
+export type ActionType = string;
 
 export interface Action {
   type: ActionType;
 }
 
 // ---------------------------------------------------------------------------
-// World data contract (world/*.json)
+// World data contract (content/worlds/*.json)
 // ---------------------------------------------------------------------------
 
 /** Tile codes as they appear in maze.json. */
@@ -45,6 +56,8 @@ export type TileKind = "empty" | "wall" | "start" | "goal" | "out";
 
 export interface WorldData {
   name: string;
+  /** World-module id. Omit for the original maze semantics. */
+  kind?: string;
   width: number;
   height: number;
   /** Row-major grid of tile codes; tiles[y][x]. */
@@ -91,10 +104,17 @@ export interface Observation {
   visitedCount: number;
   /** Remaining energy, or null when the world has no energy stat. */
   energy: number | null;
+  /**
+   * World-type-specific facts contributed by the active WorldModule. Empty `{}`
+   * for the base grid.
+   * Keeping these in an open bag is what lets a new world add senses without
+   * editing this type or the engine core.
+   */
+  domain: Record<string, number | boolean>;
 }
 
 // ---------------------------------------------------------------------------
-// Brain data contract (brain/*.json) — the user-authored "engine"
+// Brain data contract (content/brains/<sample>/*.json) — the user-authored "engine"
 // ---------------------------------------------------------------------------
 
 /**
@@ -137,7 +157,10 @@ export interface Rule {
   do: string;
   /** Optional state transition performed when the rule fires. */
   setState?: string;
-  /** Higher priority wins when multiple rules match. Defaults to 0. */
+  /**
+   * Legacy import field. Rules execute in their authored array order; this
+   * number is ignored. It remains optional so existing JSON brains load safely.
+   */
   priority?: number;
   description?: string;
 }

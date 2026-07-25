@@ -1,0 +1,48 @@
+{
+  "id": "branching-maze",
+  "pack": "maze",
+  "number": 6,
+  "name": "The Branching Maze",
+  "difficulty": 2,
+  "stage": "easy",
+  "worldKey": "maze-proper",
+  "tagline": "Read the walls, recover from dead ends, and find the exit.",
+  "narrative": "This is a maze, not a corridor with decorative walls. The exit lies beyond several junctions, and plausible-looking routes end abruptly. A robot that blindly repeats a turn will spend its run trapped in a branch. Build a small set of rules that responds to the walls it can sense and keeps making progress through the maze.",
+  "objective": "Reach the exit of the 11×11 Branching Maze, then hold on the goal for 3 ticks.",
+  "learningObjective": "Applying ordered rules and wall observations to navigate a branching layout with genuine dead ends.",
+  "intelligenceExplanation": "The robot has the navigation primitives but no strategy. It needs a first arrival rule, a rule for a blocked path, and a safe fallback for open space. The order matters: safety and arrival decisions must appear before ordinary movement. You may compose a reusable movement brick if it helps keep the rule set clear.",
+  "hint": "Start with WHEN atGoal → DO hold. Then decide what should happen when wallAhead is true before adding your forward-movement fallback. Test at each junction; a rule that works in a corridor may loop in a dead end.",
+  "hints": [
+    "Protect the goal first: an atGoal / hold rule at the top stops the robot from walking away.",
+    "A blocked route must be handled before the generic movement rule; use wallAhead and a pivot.",
+    "Try a consistent wall-following policy: take an open side when possible, otherwise go forward, otherwise turn away from the wall. Keep those rules in that order."
+  ],
+  "availableBricks": ["step", "pivot-left", "pivot-right", "hold"],
+  "availableConditions": ["wallAhead", "wallLeft", "wallRight", "goalVisible", "goalAhead", "atGoal", "visitedAhead", "energy", "always"],
+  "functionsUnlocked": true,
+  "statesUnlocked": false,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [{ "id": "reach-goal", "priority": 10, "description": "Reach the maze exit." }]
+    },
+    "states": {
+      "initial": "explore",
+      "states": [{ "id": "explore", "description": "Navigate the branching maze." }]
+    },
+    "rules": { "rules": [] },
+    "functions": {
+      "functions": [
+        { "id": "step", "action": "moveForward", "description": "Engine primitive: move one tile forward." },
+        { "id": "pivot-left", "action": "turnLeft", "description": "Engine primitive: turn 90° counter-clockwise." },
+        { "id": "pivot-right", "action": "turnRight", "description": "Engine primitive: turn 90° clockwise." },
+        { "id": "hold", "action": "wait", "description": "Engine primitive: do nothing this tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "reach", "label": "Reach the maze exit", "check": "reached" },
+    { "id": "steady", "label": "Hold at the exit", "check": "reached && ticks >= 3", "bonus": true },
+    { "id": "efficient", "label": "Finish within 80 ticks", "check": "reached && ticks <= 80", "bonus": true }
+  ]
+}

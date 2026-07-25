@@ -8,13 +8,13 @@
  *   - Condition row (chips for flag conditions, joined by AND or OR)
  *   - Brick picker (which function does the robot execute?)
  *   - Optional setState transition
- *   - Priority number
+ *   - Explicit top-to-bottom execution order
  *
- * Rules are sorted by priority (high → low) so the user always sees
- * them in the same order the engine evaluates them.
+ * Rules are rendered in their authored order: the top card is checked first.
  */
 
-import { VisualRule, VisualState, VisualFunction, VisualCondition, ConditionAtom, ConditionGuided, LogicalOp } from "@/lib/authoring/types";
+import { useState } from "react";
+import { VisualRule, VisualRuleFolder, VisualState, VisualFunction, VisualCondition, ConditionAtom, ConditionGuided, LogicalOp } from "@/lib/authoring/types";
 import { ConditionChip } from "../blocks/ConditionChip";
 
 const FIELD = "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
@@ -82,8 +82,14 @@ function ConditionEditor({ condition, availableConditions, onAtomAdd, onAtomUpda
         className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1 font-mono text-xs dark:border-zinc-700 dark:bg-zinc-800"
         value={raw.expr}
         placeholder="condition expression"
+        list="ae-rule-conditions"
         onChange={(e) => onConditionChange({ mode: "raw", expr: e.target.value })}
       />
+      <datalist id="ae-rule-conditions">
+        {availableConditions.map((flag) => (
+          <option key={flag} value={flag} />
+        ))}
+      </datalist>
       <button
         onClick={() => onConditionChange({ mode: "guided", group: { operator: "&&", atoms: [{ flag: "always", negated: false }] } })}
         className="text-xs text-zinc-400 hover:text-zinc-600"
@@ -98,6 +104,7 @@ function ConditionEditor({ condition, availableConditions, onAtomAdd, onAtomUpda
 
 interface Props {
   rules: VisualRule[];
+  folders: VisualRuleFolder[];
   states: VisualState[];
   functions: VisualFunction[];
   availableBricks: string[];
@@ -105,6 +112,8 @@ interface Props {
   /** Accepts a value or an updater — appends must use the updater form so two
    *  quick clicks on "Add rule" don't compute from the same stale array. */
   onChange: (rules: VisualRule[] | ((prev: VisualRule[]) => VisualRule[])) => void;
+  /** Folders are editor metadata: they organise cards but never change execution. */
+  onFoldersChange: (folders: VisualRuleFolder[]) => void;
 }
 
 function makeDefaultCondition(): VisualCondition {
@@ -119,33 +128,83 @@ function makeDefaultRule(states: VisualState[], functions: VisualFunction[], ind
     condition: makeDefaultCondition(),
     functionId: firstFn?.id ?? functions[0]?.id ?? "",
     setState: null,
-    priority: 10,
+    priority: 0, // retained only for old local drafts; the engine ignores it
     description: "",
   };
 }
 
-export function RuleBuilder({ rules, states, functions, availableBricks, availableConditions, onChange }: Props) {
-  // Keep each rule's original array index alongside it. Rules are *displayed* in
-  // priority order but *identified* by index — never by id, because the id is an
-  // editable field. Using the id as a React key would remount the card on every
-  // keystroke and steal focus mid-word.
-  const ordered = rules
-    .map((rule, index) => ({ rule, index }))
-    .sort((a, b) => (b.rule.priority ?? 0) - (a.rule.priority ?? 0));
+export function RuleBuilder({ rules, folders, states, functions, availableBricks, availableConditions, onChange, onFoldersChange }: Props) {
+  // The array is the flowchart. Do not sort it: top-to-bottom is execution order.
+  const ordered = rules;
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const commitOrder = (next: VisualRule[]) => onChange(next);
 
   const update = (index: number, patch: Partial<VisualRule>) => {
-    onChange(rules.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+    onChange(ordered.map((rule, i) => (i === index ? { ...rule, ...patch } : rule)));
   };
 
-  const remove = (index: number) => onChange(rules.filter((_, i) => i !== index));
+  const remove = (index: number) => onChange(ordered.filter((_, i) => i !== index));
+
+  const addFolder = () => {
+    const usedIds = new Set(folders.map((folder) => folder.id));
+    let number = folders.length + 1;
+    let id = `folder-${number}`;
+    while (usedIds.has(id)) {
+      number += 1;
+      id = `folder-${number}`;
+    }
+    onFoldersChange([...folders, { id, name: `Folder ${number}` }]);
+  };
+
+  const renameFolder = (id: string, name: string) =>
+    onFoldersChange(folders.map((folder) => (folder.id === id ? { ...folder, name } : folder)));
+
+  const toggleFolder = (id: string) =>
+    onFoldersChange(
+      folders.map((folder) =>
+        folder.id === id ? { ...folder, collapsed: !folder.collapsed } : folder
+      )
+    );
+
+  const removeFolder = (id: string) => {
+    // A folder is organisational only. Removing it never deletes its rules;
+    // those cards simply become unfiled.
+    onChange(rules.map((rule) => (rule.folderId === id ? { ...rule, folderId: undefined } : rule)));
+    onFoldersChange(folders.filter((folder) => folder.id !== id));
+  };
 
   const add = () => {
-    // Functional updater so rapid double-clicks each append to the *latest*
-    // array rather than both computing from the same stale one.
-    onChange((prev) => [...prev, makeDefaultRule(states, functions, prev.length)]);
+    // Functional updater so rapid double-clicks each prepend to the latest list.
+    // A new rule starts at the top: it is the first branch to be evaluated.
+    onChange((prev) => {
+      return [makeDefaultRule(states, functions, prev.length), ...prev];
+    });
   };
 
-  // Condition helpers — all keyed by index for the same reason as above.
+  const move = (from: number, to: number) => {
+    if (from === to) return;
+    const next = [...ordered];
+    const [rule] = next.splice(from, 1);
+    next.splice(to, 0, rule);
+    commitOrder(next);
+  };
+
+  const duplicate = (index: number) => {
+    const source = ordered[index];
+    const usedIds = new Set(ordered.map((rule) => rule.id));
+    const baseId = `${source.id || "rule"}-copy`;
+    let id = baseId;
+    let suffix = 2;
+    while (usedIds.has(id)) {
+      id = `${baseId}-${suffix}`;
+      suffix += 1;
+    }
+    const next = [...ordered];
+    next.splice(index + 1, 0, { ...source, id });
+    commitOrder(next);
+  };
+
+  // Condition helpers use the currently displayed flow order.
   const updateCondition = (index: number, cond: VisualCondition) =>
     update(index, { condition: cond });
 
@@ -220,11 +279,67 @@ export function RuleBuilder({ rules, states, functions, availableBricks, availab
           the action it performs.
         </p>
         <p className="mt-1.5">
-          If several rules&apos; conditions are true at once, the one with the highest{" "}
-          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">priority</strong>{" "}
-          number wins. Rules are listed below in that order — top one is checked first.
+          The engine checks cards from <strong>top to bottom</strong>. The first card
+          whose WHEN condition is true and whose next action is safe runs; the rest
+          are not checked that tick. Drag cards or use the arrows to change that flow.
         </p>
       </div>
+
+      <section className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900" aria-label="Rule folders">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Rule folders</h3>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Categorise cards without changing their global execution order.
+            </p>
+          </div>
+          <button
+            onClick={addFolder}
+            className="rounded border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-500 hover:text-zinc-900 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-zinc-100"
+          >
+            + Folder
+          </button>
+        </div>
+
+        {folders.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2">
+            {folders.map((folder) => {
+              const count = rules.filter((rule) => rule.folderId === folder.id).length;
+              return (
+                <div key={folder.id} className="flex items-center gap-2">
+                  <input
+                    className={`${FIELD} min-w-0 flex-1 text-xs`}
+                    aria-label={`Name for ${folder.name || "rule folder"}`}
+                    value={folder.name}
+                    placeholder="Folder name"
+                    onChange={(event) => renameFolder(folder.id, event.target.value)}
+                  />
+                  <span className="shrink-0 text-xs text-zinc-400">{count} {count === 1 ? "rule" : "rules"}</span>
+                  <button
+                    onClick={() => toggleFolder(folder.id)}
+                    className="shrink-0 text-xs text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+                    title={folder.collapsed ? "Show this folder's rules" : "Hide this folder's rules"}
+                  >
+                    {folder.collapsed ? "Expand" : "Collapse"}
+                  </button>
+                  <button
+                    onClick={() => removeFolder(folder.id)}
+                    className="text-xs text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+                    title="Remove folder and leave its rules unfiled"
+                  >
+                    Remove
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {folders.some((folder) => folder.collapsed) && (
+          <p className="mt-2 text-xs text-zinc-500">
+            Collapsed folders hide their cards only; their rules keep the same order and still run.
+          </p>
+        )}
+      </section>
 
       {ordered.length === 0 && (
         <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-4 text-center text-sm text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900">
@@ -232,15 +347,34 @@ export function RuleBuilder({ rules, states, functions, availableBricks, availab
         </div>
       )}
 
-      {ordered.map(({ rule, index }) => (
+      {ordered.map((rule, index) => {
+        const folder = rule.folderId ? folders.find((item) => item.id === rule.folderId) : undefined;
+        // Keep the global `ordered` list intact. A collapsed folder only hides
+        // its cards; it never filters, renumbers, or otherwise changes rules.
+        if (folder?.collapsed) return null;
+
+        return (
         <div
           key={index}
+          draggable
+          onDragStart={() => setDragIndex(index)}
+          onDragEnd={() => setDragIndex(null)}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={() => {
+            if (dragIndex !== null) move(dragIndex, index);
+            setDragIndex(null);
+          }}
           className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900"
         >
           {/* Header row */}
           <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-100 font-mono text-xs text-zinc-500 dark:bg-zinc-800">
-              {rule.priority}
+            <span className="cursor-grab select-none text-zinc-400 active:cursor-grabbing" title="Drag to change execution order">⋮⋮</span>
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-zinc-200 font-mono text-xs text-zinc-500 dark:border-zinc-700"
+              title="Execution order: the first matching rule runs"
+              aria-label={`Execution order ${index + 1}`}
+            >
+              {index + 1}
             </span>
             <input
               className={`${FIELD} flex-1 font-mono text-xs`}
@@ -248,14 +382,51 @@ export function RuleBuilder({ rules, states, functions, availableBricks, availab
               value={rule.id}
               onChange={(e) => update(index, { id: e.target.value })}
             />
-            <input
-              type="number"
-              title="Priority — higher wins when several rules match"
-              className={`${FIELD} w-16 text-center text-xs`}
-              value={rule.priority}
-              min={0}
-              onChange={(e) => update(index, { priority: Number(e.target.value) })}
-            />
+            <div className="flex items-center gap-0.5" aria-label="Rule ordering controls">
+              <button
+                onClick={() => move(index, 0)}
+                disabled={index === 0}
+                className="rounded px-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                title="Bring rule to the top"
+                aria-label="Bring rule to the top"
+              >
+                ⇈
+              </button>
+              <button
+                onClick={() => move(index, index - 1)}
+                disabled={index === 0}
+                className="rounded px-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                title="Move rule up"
+                aria-label="Move rule up"
+              >
+                ↑
+              </button>
+              <button
+                onClick={() => move(index, index + 1)}
+                disabled={index === ordered.length - 1}
+                className="rounded px-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                title="Move rule down"
+                aria-label="Move rule down"
+              >
+                ↓
+              </button>
+              <button
+                onClick={() => move(index, ordered.length - 1)}
+                disabled={index === ordered.length - 1}
+                className="rounded px-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                title="Send rule to the bottom"
+                aria-label="Send rule to the bottom"
+              >
+                ⇊
+              </button>
+            </div>
+            <button
+              onClick={() => duplicate(index)}
+              className="rounded px-1.5 py-0.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+              title="Duplicate rule"
+            >
+              Duplicate
+            </button>
             <button
               onClick={() => remove(index)}
               className="text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
@@ -266,6 +437,20 @@ export function RuleBuilder({ rules, states, functions, availableBricks, availab
           </div>
 
           {/* State filter */}
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <span className="shrink-0">Folder</span>
+            <select
+              className={`${FIELD} min-w-0 flex-1 text-xs`}
+              value={rule.folderId ?? ""}
+              onChange={(event) => update(index, { folderId: event.target.value || undefined })}
+            >
+              <option value="">Unfiled</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>{folder.name || "Untitled folder"}</option>
+              ))}
+            </select>
+          </div>
+
           {states.length > 1 && (
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <span className="shrink-0">In state</span>
@@ -354,7 +539,8 @@ export function RuleBuilder({ rules, states, functions, availableBricks, availab
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
 
       <button
         onClick={add}

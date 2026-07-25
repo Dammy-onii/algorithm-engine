@@ -1,5 +1,10 @@
 # Milestone 2 — Task Tracker
 
+> **Historical tracker.** This records the original Milestone 2 work and may use
+> superseded terminology. For current behaviour and active work, read
+> [CHANGELOG.md](./CHANGELOG.md), [RULES.md](./RULES.md), and
+> [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 > Updated live throughout the build. If this session stops, start from the first `[ ]` item.
 
 ## Phase 1 — Foundation (lib/authoring/)
@@ -74,7 +79,8 @@
       ids (`step`) while the palette renders action types (`moveForward`);
       `PrimitiveBlock` now resolves brick ids and renders user functions as named chips.
 - [x] Rules tab: "How a rule works" explainer (WHEN = what the robot senses,
-      DO = the action, priority breaks ties) + tooltips on WHEN/DO.
+      DO = the action; current behaviour uses authored top-to-bottom order) +
+      tooltips on WHEN/DO.
 - [x] States tab: rewritten explanation with a concrete two-mode example.
 - [x] **Win condition: settle on the goal.** `World.ticksAtGoal` + configurable
       `goalHoldTicks` (default 3). Stepping onto the goal no longer completes a run —
@@ -82,7 +88,7 @@
       `SimStep.goalHold` reports progress; debug panel shows "Holding on goal 2 / 3".
 - [x] All 5 challenges: `hold` brick + `atGoal` condition exposed, scaffold defines
       `hold`, objectives/explanations updated.
-- [x] Sample brains (`brain/`, `brain-dash/`) given a top-priority `atGoal → hold` rule.
+- [x] Sample brains given an `atGoal → hold` rule placed before movement fallbacks.
 - [x] Tests: 25/25 — including "reaching the goal is not enough" and configurable
       `goalHoldTicks`.
 - [x] Verified in browser: Challenge 1 solved with a 2-rule brain, "Holding on goal 3 / 3".

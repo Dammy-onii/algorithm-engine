@@ -1,0 +1,22 @@
+{
+  "name": "YamusaPay — Route the Payment",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "seed": 1,
+    "failurePenalty": 0,
+    "providers": [
+      { "id": "A", "name": "Provider A", "fee": 0.2, "successRate": 100, "latency": 200, "online": true },
+      { "id": "B", "name": "Provider B", "fee": 0.1, "successRate": 100, "latency": 300, "online": true }
+    ],
+    "transactions": [
+      { "id": "tx-001", "amount": 100, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-002", "amount": 120, "type": "consumer", "destination": "Bank X" },
+      { "id": "tx-003", "amount": 80, "type": "consumer", "destination": "Bank Y" }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "goals": [
+    { "id": "process", "priority": 1, "description": "Process every payment safely, cheaply, and reliably." }
+  ]
+}

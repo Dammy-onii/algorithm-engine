@@ -1,7 +1,7 @@
 /**
  * A tiny, safe expression evaluator for user-authored rule conditions.
  *
- * Users write conditions as plain strings in brain/rules.json, e.g.
+ * Users write conditions as plain strings in a brain's rules.json file, e.g.
  *   "wallAhead && !goalVisible"
  *   "goalVisible"
  *   "energy < 5 || stuckAhead"
@@ -32,6 +32,11 @@ export type DerivedMap = Record<string, string>;
 type Value = number | boolean;
 
 /** Names the engine itself provides. Derived conditions may not shadow these. */
+/**
+ * The base observation flags every world exposes. World-type-specific flags
+ * are contributed by the active WorldModule as a `domain` bag and merged at
+ * runtime — they are not listed here.
+ */
 export const BUILTIN_FLAGS = [
   "wallAhead",
   "wallLeft",
@@ -61,6 +66,8 @@ export function contextFromObservation(obs: Observation): EvalContext {
     visitedCount: obs.visitedCount,
     tick: obs.tick,
     energy: obs.energy ?? Infinity,
+    // World-type-specific flags come from the active module as a domain bag.
+    ...obs.domain,
     /** Goal is visible AND lies straight ahead in the facing direction. */
     goalAhead: obs.goalVisible && obs.goalDirection === obs.direction,
     always: true,

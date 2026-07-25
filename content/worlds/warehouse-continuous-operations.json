@@ -1,0 +1,52 @@
+{
+  "name": "Warehouse — Fulfilment Loop (Continuous Operations)",
+  "kind": "warehouse",
+  "width": 11,
+  "height": 5,
+  "start": { "x": 1, "y": 1 },
+  "goal": { "x": 1, "y": 3 },
+  "startDirection": "E",
+  "tiles": [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  ],
+  "warehouse": {
+    "carryingCapacity": 2,
+    "deliveryZones": [
+      {
+        "id": "red-outbound",
+        "position": { "x": 1, "y": 3 },
+        "acceptsType": "red",
+        "description": "Shipping lane for red orders."
+      },
+      {
+        "id": "blue-outbound",
+        "position": { "x": 9, "y": 3 },
+        "acceptsType": "blue",
+        "description": "Shipping lane for blue orders."
+      }
+    ],
+    "packages": [],
+    "stations": [
+      {
+        "id": "blue-station",
+        "position": { "x": 5, "y": 1 },
+        "type": "blue",
+        "total": 3,
+        "destinationId": "blue-outbound",
+        "description": "Pick station replenishing blue orders one at a time."
+      },
+      {
+        "id": "red-station",
+        "position": { "x": 7, "y": 3 },
+        "type": "red",
+        "total": 3,
+        "destinationId": "red-outbound",
+        "description": "Pick station replenishing red orders one at a time."
+      }
+    ]
+  }
+}

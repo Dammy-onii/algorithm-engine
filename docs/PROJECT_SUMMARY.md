@@ -66,11 +66,14 @@ is just a new *source of instructions* for the same engine.
 **One engine. Multiple interfaces.** The engine stays unchanged; only the source of
 the instructions evolves.
 
-## Current milestone
+## Current product state
 
-**Milestone 1 — Core Simulation & Decision Engine.** See
-[`MILESTONES.md`](./MILESTONES.md) for the full breakdown and
-[`PROGRESS.md`](./PROGRESS.md) for live build status.
+The original milestone documents record how the platform was built; they are not
+the current behaviour reference. Today the platform has multiple worlds,
+world modules, ordered visual rules, composed functions, and an optional
+object-oriented Code mode controller. Read [`CHANGELOG.md`](./CHANGELOG.md) for
+the latest implemented changes, [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the
+runtime contract, and [`RULES.md`](./RULES.md) for both authoring modes.
 
 ## Writing a brain
 

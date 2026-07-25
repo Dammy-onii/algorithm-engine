@@ -14,6 +14,7 @@
 
 import { ChallengeData } from "@/lib/authoring/types";
 import { conceptForChallenge, isChallengeUnlocked } from "@/lib/curriculum/concepts";
+import { taxonomyFor } from "@/lib/authoring/challengeBrief";
 
 interface Props {
   challenges: ChallengeData[];
@@ -25,12 +26,13 @@ interface Props {
 export function ChallengeSelector({ challenges, activeId, completedIds, onSelect }: Props) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1">
-      {challenges.map((c, i) => {
+      {challenges.map((c) => {
         const active = c.id === activeId;
         const done = completedIds.has(c.id);
         const unlocked = isChallengeUnlocked(c.id, completedIds);
         const concept = conceptForChallenge(c.id);
         const locked = !unlocked && !done;
+        const tax = taxonomyFor(c);
 
         return (
           <button
@@ -60,7 +62,7 @@ export function ChallengeSelector({ challenges, activeId, completedIds, onSelect
                   active && !locked ? "text-zinc-400 dark:text-zinc-500" : "text-zinc-400",
                 ].join(" ")}
               >
-                Step {i + 1}
+                {tax.badge}
               </span>
               {done ? (
                 <span

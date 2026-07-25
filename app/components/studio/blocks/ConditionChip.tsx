@@ -10,6 +10,9 @@
  */
 
 import { ConditionAtom, ComparisonOp } from "@/lib/authoring/types";
+import { allDomainFlagSpecs } from "@/lib/engine/worlds/registry";
+
+const DOMAIN_FLAGS = allDomainFlagSpecs();
 
 export const BOOLEAN_FLAGS = [
   "wallAhead", "wallLeft", "wallRight",
@@ -18,7 +21,7 @@ export const BOOLEAN_FLAGS = [
 ] as const;
 
 export const NUMERIC_FLAGS = ["energy", "visitedCount", "tick"] as const;
-export const ALL_FLAGS = [...BOOLEAN_FLAGS, ...NUMERIC_FLAGS] as const;
+export const ALL_FLAGS = [...BOOLEAN_FLAGS, ...NUMERIC_FLAGS, ...DOMAIN_FLAGS.map((flag) => flag.id)] as const;
 
 export const FLAG_LABELS: Record<string, string> = {
   wallAhead: "Wall Ahead",
@@ -33,6 +36,7 @@ export const FLAG_LABELS: Record<string, string> = {
   energy: "Energy",
   visitedCount: "Visited Count",
   tick: "Tick",
+  ...Object.fromEntries(DOMAIN_FLAGS.map((flag) => [flag.id, flag.label])),
 };
 
 const COMPARISON_OPS: ComparisonOp[] = ["<", "<=", ">", ">=", "==", "!="];
@@ -71,7 +75,7 @@ export function ConditionChip({ atom, availableFlags, onChange, onRemove }: Prop
         value={atom.flag}
         onChange={(e) => {
           const newFlag = e.target.value;
-          const willBeNumeric = (NUMERIC_FLAGS as readonly string[]).includes(newFlag);
+          const willBeNumeric = [...NUMERIC_FLAGS, ...DOMAIN_FLAGS.filter((flag) => flag.type === "number").map((flag) => flag.id)].includes(newFlag);
           if (willBeNumeric && !atom.comparison) {
             onChange({ flag: newFlag, negated: false, comparison: { op: "<", value: 0 } });
           } else if (!willBeNumeric && atom.comparison) {

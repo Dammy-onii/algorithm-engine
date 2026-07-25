@@ -1,5 +1,6 @@
 {
   "id": "dead-end",
+  "pack": "maze",
   "number": 3,
   "name": "No Way Out",
   "difficulty": 1,
@@ -7,9 +8,9 @@
   "tagline": "Handle the situation no single rule can predict.",
   "narrative": "The maze ahead has multiple corridors. Some of them loop back. Some end in dead ends — three walls and nowhere to go. The robot's current two-rule brain works in simple corridors, but put it in a real maze and it will spin in a corner forever. Real navigation requires reasoning about combinations of conditions, not just single flags. When both the path ahead is blocked and the left is a wall, something specific needs to happen — and that something needs its own dedicated rule.",
   "objective": "Navigate the 7x7 maze from start to goal, then hold on the goal for 3 ticks.",
-  "learningObjective": "Combining conditions with AND (`&&`) and reasoning about the priority order when multiple rules could match.",
-  "intelligenceExplanation": "This brain has two rules: move forward when clear, and turn right when blocked. That handles single corners, but in a maze with dead ends it will oscillate — turning right, finding a wall, turning right again, looping. You need to add a rule that handles the dead-end case: both ahead and right are walls. A left turn, or an about-face, breaks the cycle. Order the rules by specificity: most specific conditions at the top, most general fallbacks at the bottom. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
-  "hint": "Use `wallAhead && wallRight` as the condition for a new rule that pivots left. Make its priority higher than the existing turn-right rule.",
+  "learningObjective": "Combining conditions with AND (`&&`) and reasoning about ordered rules when multiple conditions could match.",
+  "intelligenceExplanation": "This brain has two rules: move forward when clear, and turn right when blocked. That handles single corners, but in a maze with dead ends it will oscillate — turning right, finding a wall, turning right again, looping. Add a rule that handles the dead-end case: both ahead and right are walls. A left turn, or an about-face, breaks the cycle. Order the rules by specificity: most specific conditions at the top, most general fallbacks at the bottom. Put WHEN atGoal -> DO hold first so the robot settles at its destination.",
+  "hint": "Use `wallAhead && wallRight` as the condition for a new rule that pivots left. Place it above the existing turn-right rule.",
   "availableBricks": [
     "step",
     "pivot-left",

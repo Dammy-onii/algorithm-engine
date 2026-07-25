@@ -9,7 +9,7 @@
 import { ReactNode } from "react";
 import { SimStep } from "@/lib/engine/types";
 import { World } from "@/lib/engine/world/world";
-import { MazeRenderer } from "@/app/components/MazeRenderer";
+import { WorldLegend, WorldRenderer } from "@/app/components/renderers/WorldRenderer";
 import { DebugPanel } from "@/app/components/DebugPanel";
 
 interface Props {
@@ -30,8 +30,8 @@ export function SimStage({ world, step, layout = "stacked", footer }: Props) {
   return (
     <div className={wrap}>
       <div className="flex flex-col items-center gap-3">
-        <MazeRenderer world={world} />
-        <SimLegend />
+        <WorldRenderer world={world} />
+        <WorldLegend world={world} />
       </div>
       <div className="flex flex-col gap-4">
         <DebugPanel step={step} />
@@ -41,25 +41,4 @@ export function SimStage({ world, step, layout = "stacked", footer }: Props) {
   );
 }
 
-export function SimLegend() {
-  return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
-      <Legend color="bg-zinc-700" label="wall" />
-      <Legend color="bg-zinc-300" label="visited" />
-      <Legend color="bg-white ring-2 ring-inset ring-zinc-900" label="goal" />
-      <Legend color="bg-zinc-100 ring-1 ring-inset ring-zinc-400" label="start" />
-      <span className="flex items-center gap-1">
-        <span className="font-semibold text-zinc-900 dark:text-zinc-100">▶</span> robot
-      </span>
-    </div>
-  );
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="flex items-center gap-1">
-      <span className={`inline-block h-3 w-3 rounded-sm ${color}`} />
-      {label}
-    </span>
-  );
-}
+export { WorldLegend as SimLegend } from "@/app/components/renderers/WorldRenderer";

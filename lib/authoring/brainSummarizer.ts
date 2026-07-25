@@ -70,7 +70,7 @@ function ruleToSentence(rule: VisualRule, functionLabel: string): string {
 export interface BrainSummaryLine {
   state: string | null; // null = any state
   sentence: string;
-  priority: number;
+  order: number;
 }
 
 export interface BrainSummary {
@@ -93,12 +93,10 @@ export function summarizeBrain(brain: VisualBrain): BrainSummary {
     return f.id;
   };
 
-  const sorted = [...brain.rules].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-
-  const lines: BrainSummaryLine[] = sorted.map((r) => ({
+  const lines: BrainSummaryLine[] = brain.rules.map((r, index) => ({
     state: r.state,
     sentence: ruleToSentence(r, fnLabel(r.functionId)),
-    priority: r.priority ?? 0,
+    order: index + 1,
   }));
 
   const isEmpty = brain.rules.length === 0;

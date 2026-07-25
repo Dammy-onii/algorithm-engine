@@ -46,7 +46,6 @@ export function MazeRenderer({ world }: { world: World }) {
           const isGoal = goal.x === x && goal.y === y;
           const isStart = start.x === x && start.y === y;
           const visited = agent.visited.has(key(here));
-
           // Fixed grayscale board — identical in light and dark mode. The dark
           // frame with light tiles reads clearly against either page background.
           let cls = "bg-zinc-100"; // empty (walkable)
@@ -62,14 +61,17 @@ export function MazeRenderer({ world }: { world: World }) {
               title={`(${x},${y})`}
             >
               {isAgent ? (
-                <svg
-                  viewBox="0 0 10 10"
-                  className="h-[46%] w-[46%] fill-zinc-900"
-                  style={{ transform: `rotate(${ROTATION[agent.direction]}deg)` }}
-                  aria-label={`robot facing ${agent.direction}`}
-                >
-                  <path d="M2 1 L9 5 L2 9 Z" />
-                </svg>
+                <span className="relative flex h-full w-full items-center justify-center">
+                  <svg
+                    viewBox="0 0 10 10"
+                    className="h-[46%] w-[46%] fill-zinc-900"
+                    style={{ transform: `rotate(${ROTATION[agent.direction]}deg)` }}
+                    aria-label={`robot facing ${agent.direction}`}
+                  >
+                    <path d="M2 1 L9 5 L2 9 Z" />
+                  </svg>
+                  {agent.cargo.length > 0 && <span className="absolute bottom-[10%] right-[10%] h-[22%] w-[22%] rounded-[1px] border border-zinc-900 bg-white" aria-label={`${agent.cargo.length} item carried`} />}
+                </span>
               ) : isGoal ? (
                 <span className="h-[28%] w-[28%] rounded-full bg-zinc-900" />
               ) : null}

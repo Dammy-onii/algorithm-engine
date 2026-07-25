@@ -1,0 +1,49 @@
+{
+  "id": "finance-route-selection",
+  "pack": "finance",
+  "number": 14,
+  "name": "Basic Route Selection",
+  "difficulty": 2,
+  "stage": "easy",
+  "worldKey": "finance-route-selection",
+  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "easy", "grade": 1 },
+  "tagline": "Three providers, one right choice.",
+  "brief": "From three providers — one of them offline — route every payment through the cheapest online one.",
+  "context": "Providers A, B and C are connected. C is offline. Choose the lowest fee among those that are online.",
+  "narrative": "YamusaPay now has three providers. C is offline and must never be used. Among the rest, pick the lowest fee and clear the queue without a single failed payment. This is the everyday job of a routing engine: filter to what works, then optimize.",
+  "objective": "Process every payment with no failures, using the cheapest online provider.",
+  "learningObjective": "Rule engines: apply an availability constraint, then a cost preference, across several options.",
+  "intelligenceExplanation": "Start from empty. The provider cards show that B is the lower-fee available provider while C is offline. Author the routing rule that clears the queue.",
+  "hint": "WHEN onlineB → DO route-b. B is the cheaper available provider here.",
+  "hints": [
+    "One provider is offline — do not route there.",
+    "Author WHEN onlineB → DO route-b.",
+    "B stays online and is the cheaper provider here."
+  ],
+  "steps": [
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
+    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" }
+  ],
+  "availableBricks": ["route-a", "route-b", "route-c", "hold"],
+  "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "feeA", "feeB", "feeC", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "process", "priority": 1, "description": "Process every payment." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Route incoming payments." }] },
+    "rules": { "rules": [{ "id": "idle", "when": "always", "do": "hold", "priority": 0, "description": "Hold until you add a routing rule." }] },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Send the payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Send the payment through Provider B." },
+        { "id": "route-c", "action": "routeToC", "description": "Send the payment through Provider C." },
+        { "id": "hold", "action": "hold", "description": "Hold the payment for a tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "no-failures", "label": "No failed payments", "check": "allProcessed && failed == 0" },
+    { "id": "cheapest", "label": "Keep total cost at or below $0.41", "check": "allProcessed && totalCost <= 0.41", "bonus": true }
+  ]
+}

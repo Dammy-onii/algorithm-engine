@@ -2,7 +2,7 @@
 
 This is the guide to writing an agent's **brain**: the five data files the engine
 executes. You can edit all five live in the browser (the tabbed editor under the
-simulation) or on disk in `brain/*.json`. The engine never changes — your brain is
+simulation) or on disk in `content/brains/<sample>/*.json`. The engine never changes — your brain is
 what makes the robot behave.
 
 - New here? Read [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) first.
@@ -31,6 +31,51 @@ Each tick, the engine runs them top-to-bottom to produce **one** action:
 Observation → Goal → State → Rule → Function → Action
 ```
 
+## Code mode — an object-oriented controller
+
+Studio's **Code** tab is an optional alternative to visual rules. It is intended
+for interview and hackathon exercises where the participant should author an
+algorithm as a class rather than arrange cards. A controller has one required
+method, `decide(observation)`, which the simulation calls **once on every tick**.
+It returns exactly one primitive action:
+
+Code mode becomes active on **Apply & Run** when the Code editor contains source;
+clear that editor and apply again to return to the visual-rule brain. The two
+decision sources never run together.
+
+```js
+class RightHandFollower {
+  pendingMove = false;
+
+  decide(observation) {
+    if (observation.atGoal) return "wait";
+    if (this.pendingMove) {
+      this.pendingMove = false;
+      return "moveForward";
+    }
+    if (!observation.wallRight) {
+      this.pendingMove = true;
+      return "turnRight";
+    }
+    if (!observation.wallAhead) return "moveForward";
+    return "turnLeft";
+  }
+}
+
+return new RightHandFollower();
+```
+
+Instance fields persist between ticks. That is how an algorithm can make a
+two-tick behaviour such as “turn right, then move forward” without visual-card
+ordering. The observation is fresh on every call, so the controller can react to
+new walls, energy, packages, provider health, or other domain facts.
+
+The controller never mutates the world directly. The engine validates its action,
+turns an unsafe action into `wait`, updates the world once, and produces the
+normal trace/objectives. Code mode currently runs locally in Studio; a hosted
+multi-user interview runner must execute the same `AgentController` contract in
+an isolated worker or container.
+
 ---
 
 ## Anatomy of a rule
@@ -56,12 +101,75 @@ A rule lives in `rules.json` and reacts to the current situation:
 | `do` | ✅ | Id of the function (brick) to run — must exist in `functions.json`. |
 | `state` | — | Only consider this rule while in that state. Omit = any state. |
 | `setState` | — | On firing, also switch into this state (must exist in `states.json`). |
-| `priority` | — | When several rules' `when` are true, the highest priority wins. Default `0`. |
+| `priority` | — | **Legacy only.** Older JSON brains may retain this field, but it is ignored. Rule position is the decision order. |
 | `description` | — | Free text for humans. |
 
-**How a rule is chosen:** the engine takes the rules whose `state` matches the
-active state (plus rules with no `state`), sorts them by `priority` (high → low),
-and fires the **first** one whose `when` is `true`. If none match, the agent waits.
+**How a rule is chosen:** the engine reads matching-state rules in the exact
+order they appear in `rules.json` (and the Studio card list). It fires the
+**first** one whose `when` is `true` **and whose next action is currently safe**.
+If none apply, the agent waits. This is an `if / else-if / else` flow, not a
+numeric-priority competition.
+
+```text
+1. WHEN atGoal       → hold
+2. WHEN !wallRight   → rightAndStep
+3. WHEN !wallAhead   → step
+4. WHEN !wallLeft    → leftAndStep
+5. WHEN always       → turnAroundAndStep
+```
+
+Studio displays `#1`, `#2`, and so on beside each card. Dragging a card or using
+the top/up/down/bottom controls changes only this authored order. Rule folders
+never change it.
+
+### Guarded flow — why an impossible action never runs
+
+Order alone is not enough to produce intelligent behaviour. Consider an
+unguarded top rule `WHEN always → moveForward` followed by `WHEN always →
+turnRight`. In a dead end the first branch wants to move forward — but it can't.
+A naive engine would keep selecting that impossible move and bash the wall
+forever.
+
+The engine separates the two questions:
+
+> **Conditions and action guards decide what is possible. Rule order decides
+> which possible response is tried first.**
+
+Every action has a **precondition** — a condition expression over the same
+observation flags:
+
+| Action | Precondition |
+|--------|--------------|
+| `moveForward` | `!wallAhead` |
+| `turnLeft` / `turnRight` / `wait` | always possible |
+| `pickUp` | `packageHere && capacityRemaining > 0` |
+| `deliver` | `deliveryHere && carryingPackage` |
+| `charge` | `chargingHere` |
+
+Base guards live in the engine; each world module may contribute its own via
+`WorldModule.actionPreconditions`. When selecting a rule, the engine skips any
+whose first action isn't currently possible and continues down the flow — so in
+the dead-end example it turns instead of looping. If *no* matching rule's action
+is possible, it waits.
+
+This is backward-compatible with explicit guards: a rule written as
+`WHEN !wallAhead → step` simply won't match when blocked, which the guard already
+handled. Preconditions are the safety net that makes ordered flow robust — you can
+still write guards to express *intent*, but you can no longer get stuck bashing a
+wall because an earlier rule named an impossible action.
+
+### Rule folders in Studio
+
+Studio can group cards into named **rule folders** such as “Safety”, “Navigation”,
+or “Warehouse delivery”. Create, rename, or remove folders in the Rules tab, then
+choose a folder on each rule card. A folder's **Collapse** control hides its
+assigned cards; **Expand** makes them visible again. Removing a folder leaves its
+rules intact and returns them to **Unfiled**.
+
+Folders are editor metadata saved with the visual brain in the browser. They are
+not compiled into `rules.json` and never alter a rule's condition or execution
+order. Collapse is only a visibility preference: hidden cards remain in the
+global list and the engine still evaluates it from top to bottom.
 
 ---
 
@@ -90,7 +198,7 @@ small, safe language (not JavaScript — no arbitrary code runs).
 **Examples:**
 
 ```
-"always"                        // fires whenever reached in priority order
+"always"                        // fires whenever reached in rule order
 "!wallAhead"                    // no wall in front
 "wallAhead && !goalVisible"     // blocked and can't see the goal
 "energy < 20"                   // low on energy
@@ -165,8 +273,9 @@ A brick is **either** single-step or multi-step:
 }
 ```
 
-- **Single-step** — `{ "action": ... }`. One of the four primitive actions:
-  `moveForward`, `turnLeft`, `turnRight`, `wait`.
+- **Single-step** — `{ "action": ... }`. The maze primitives are `moveForward`,
+  `turnLeft`, `turnRight`, and `wait`; warehouse worlds additionally expose
+  `pickUp`, `deliver`, and (where configured) `charge`.
 - **Multi-step** — `{ "steps": [...] }`. A list of primitive actions **and/or other
   function ids** (so bricks compose from bricks). The engine expands it into a flat
   plan and runs it **one action per tick**. While a multi-step brick is running it
@@ -174,11 +283,15 @@ A brick is **either** single-step or multi-step:
   panel shows progress as `dash (2/3)`.
 
 A function must have exactly one of `action` or `steps`. Cycles (a brick that
-eventually calls itself) are rejected at load time.
+eventually calls itself) are rejected at load time. A multi-step brick normally
+continues across ticks, but the engine observes again before each primitive. If
+the next primitive is now unsafe (for example `moveForward` now faces a wall),
+the remaining plan is interrupted and the rule flow starts again that tick.
 
-> A blocked `moveForward` (wall/edge ahead) is safe — the robot simply stays put and
-> the tick still passes. So a `dash` that runs into a wall wastes moves but never
-> errors.
+> A blocked `moveForward` (wall/edge ahead) is safe: it is never applied blindly.
+> Rule selection skips an immediately blocked move, and a running multi-step brick
+> is interrupted before a later blocked move. The engine then evaluates the next
+> applicable rule rather than wasting the move or erroring.
 
 ---
 
@@ -209,20 +322,19 @@ tile for `goalHoldTicks` consecutive ticks (default **3**) — stepping off rese
 counter. This proves a deliberate arrival rather than passing over the tile on the
 way somewhere else, and it is why the `wait` primitive exists.
 
-So every working brain needs a top-priority settle rule:
+So every working brain needs a first settle rule:
 
 ```json
 {
   "id": "settle-at-goal",
   "when": "atGoal",
   "do": "hold",
-  "priority": 200,
   "description": "Standing on the goal — hold until the arrival is confirmed."
 }
 ```
 
-Omit the `state` field so it applies in every state, and give it a high priority so
-it outranks the movement rules once the robot arrives. The debug panel shows progress
+Put it above the movement rules and omit the `state` field so it applies in every
+state once the robot arrives. The debug panel shows progress
 as **Holding on goal — 2 / 3**. The threshold is configurable per simulation via
 `new Simulation(world, brain, { goalHoldTicks: 5 })`.
 
@@ -238,16 +350,15 @@ Goal: make the robot **turn around whenever it has already been to the tile ahea
    { "id": "about-face", "steps": ["pivot-right", "pivot-right"] }
    ```
 
-2. Switch to the **`rules.json`** tab and add a high-priority rule near the top of
-   the array:
+2. Switch to the **`rules.json`** tab and add this rule near the top of the
+   array, before general movement fallbacks:
 
    ```json
    {
      "id": "avoid-retread",
      "state": "explore",
      "when": "visitedAhead && !goalAhead",
-     "do": "about-face",
-     "priority": 90
+    "do": "about-face"
    }
    ```
 

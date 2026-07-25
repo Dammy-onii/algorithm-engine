@@ -1,6 +1,6 @@
 /**
  * Human-readable documentation for the built-in engine bricks (the default,
- * always-present primitives that wrap the four engine actions). Used to list and
+ * always-present primitives that wrap the engine actions). Used to list and
  * explain the defaults wherever bricks appear.
  */
 
@@ -35,6 +35,24 @@ export const BUILTIN_BRICK_DOCS: Record<string, BrickDoc> = {
     action: "wait",
     label: "Wait",
     description: "Do nothing for one tick — used to settle on the goal.",
+  },
+  "pick-up": {
+    id: "pick-up",
+    action: "pickUp",
+    label: "Pick Up",
+    description: "Load a waiting package from the robot's current tile when cargo space is free.",
+  },
+  deliver: {
+    id: "deliver",
+    action: "deliver",
+    label: "Deliver",
+    description: "Unload a carried package at its matching delivery zone.",
+  },
+  charge: {
+    id: "charge",
+    action: "charge",
+    label: "Charge",
+    description: "Restore battery power while standing on a charging station.",
   },
 };
 

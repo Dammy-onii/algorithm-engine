@@ -19,8 +19,8 @@ import { compileDerivedConditions } from "../runtime/loader";
 import { Simulation, BrainSource } from "../simulation";
 import { EntitiesData, WorldData } from "../types";
 
-import maze from "../../../world/maze.json";
-import entities from "../../../world/entities.json";
+import maze from "@/content/worlds/maze.json";
+import entities from "@/content/worlds/entities.json";
 
 describe("evaluateCondition with derived conditions", () => {
   const ctx: EvalContext = {

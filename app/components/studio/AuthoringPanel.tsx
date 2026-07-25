@@ -18,11 +18,13 @@ import { useState } from "react";
 import { VisualBrain, ChallengeData } from "@/lib/authoring/types";
 import { compileBrainToTexts } from "@/lib/authoring/brainCompiler";
 import { BrainIntelligence } from "./BrainIntelligence";
+import { ProblemBrief } from "./ProblemBrief";
 import { StateEditor } from "./layers/StateEditor";
 import { RuleBuilder } from "./layers/RuleBuilder";
 import { FunctionComposer } from "./layers/FunctionComposer";
 import { MemoryEditor } from "./layers/MemoryEditor";
 import { ConditionEditor } from "./layers/ConditionEditor";
+import { ControllerEditor } from "./layers/ControllerEditor";
 import { ObjectivesPanel } from "./layers/ObjectivesPanel";
 import { ObjectiveResult } from "@/lib/authoring/objectives";
 
@@ -32,7 +34,8 @@ type LayerTab =
   | "states"
   | "goals"
   | "functions"
-  | "memory";
+  | "memory"
+  | "controller";
 
 interface Props {
   challenge: ChallengeData;
@@ -53,6 +56,7 @@ const TAB_LABELS: Record<LayerTab, string> = {
   goals: "Objectives",
   functions: "Functions",
   memory: "Memory",
+  controller: "Code",
 };
 
 export function AuthoringPanel({
@@ -66,12 +70,7 @@ export function AuthoringPanel({
 }: Props) {
   const [activeTab, setActiveTab] = useState<LayerTab>("rules");
   const [showJson, setShowJson] = useState(false);
-  const [revealedHints, setRevealedHints] = useState(0);
-
-  // Staged hints: a challenge may provide several, revealed one at a time. Falls
-  // back to the single `hint`. After two failed runs we nudge toward them.
-  const hints = challenge.hints ?? (challenge.hint ? [challenge.hint] : []);
-  const nudge = attempts >= 2 && revealedHints === 0;
+  const [showIntel, setShowIntel] = useState(false);
 
   const jsonTexts = showJson ? compileBrainToTexts(brain) : null;
 
@@ -89,6 +88,7 @@ export function AuthoringPanel({
     "goals",
     "functions",
     "memory",
+    "controller",
   ];
 
   // Rules can select engine flags *and* any condition the user has named.
@@ -101,68 +101,10 @@ export function AuthoringPanel({
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
-      {/* 1 — Challenge header (compact context) */}
-      <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-1.5 flex items-baseline gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-            Level {challenge.difficulty}
-          </span>
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            {challenge.number}. {challenge.name}
-          </h2>
-        </div>
+      {/* 1 — Problem brief (progressive disclosure: headline first, prose on demand) */}
+      <ProblemBrief challenge={challenge} attempts={attempts} />
 
-        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-          {challenge.narrative}
-        </p>
-
-        <div className="mt-3 border-l-2 border-zinc-900 pl-3 dark:border-zinc-100">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-            Objective
-          </div>
-          <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-            {challenge.objective}
-          </div>
-        </div>
-
-        {hints.length > 0 && (
-          <div className="mt-3 flex flex-col gap-2">
-            {hints.slice(0, revealedHints).map((h, i) => (
-              <div
-                key={i}
-                className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-              >
-                <span className="font-medium text-zinc-500">
-                  Hint {hints.length > 1 ? `${i + 1} · ` : "· "}
-                </span>
-                {h}
-              </div>
-            ))}
-            {revealedHints < hints.length && (
-              <button
-                onClick={() => setRevealedHints((n) => n + 1)}
-                className={[
-                  "self-start text-xs font-medium underline-offset-2 transition-colors hover:underline",
-                  nudge
-                    ? "text-zinc-700 dark:text-zinc-200"
-                    : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300",
-                ].join(" ")}
-              >
-                {revealedHints === 0
-                  ? nudge
-                    ? "Stuck? Show a hint"
-                    : "Show hint"
-                  : "Show another hint"}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 2 — Current intelligence (quiet, secondary) */}
-      <BrainIntelligence brain={brain} intelligenceExplanation={challenge.intelligenceExplanation} />
-
-      {/* 3 — Layer editor (primary surface) */}
+      {/* 2 — Layer editor (primary surface) */}
       <div className="flex flex-col gap-3 rounded-lg border border-zinc-300 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <div className="flex flex-wrap gap-1 border-b border-zinc-100 pb-3 dark:border-zinc-800">
           {visibleTabs.map((tab) => (
@@ -180,6 +122,7 @@ export function AuthoringPanel({
           {activeTab === "rules" && (
             <RuleBuilder
               rules={brain.rules}
+              folders={brain.ruleFolders ?? []}
               states={brain.states}
               functions={brain.functions}
               availableBricks={challenge.availableBricks}
@@ -192,6 +135,9 @@ export function AuthoringPanel({
                       ? rulesOrFn(prev.rules)
                       : rulesOrFn,
                 }))
+              }
+              onFoldersChange={(ruleFolders) =>
+                onBrainChange((prev) => ({ ...prev, ruleFolders }))
               }
             />
           )}
@@ -232,7 +178,35 @@ export function AuthoringPanel({
               onChange={(memory) => onBrainChange({ ...brain, memory })}
             />
           )}
+          {activeTab === "controller" && (
+            <ControllerEditor
+              code={brain.controllerCode ?? ""}
+              onChange={(controllerCode) => onBrainChange((prev) => ({ ...prev, controllerCode }))}
+            />
+          )}
         </div>
+      </div>
+
+      {/* 3 — Current intelligence (collapsible, below the editor) */}
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <button
+          onClick={() => setShowIntel((s) => !s)}
+          className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+          aria-expanded={showIntel}
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Current intelligence
+          </span>
+          <span className="text-xs text-zinc-400">{showIntel ? "Hide" : "Show"}</span>
+        </button>
+        {showIntel && (
+          <div className="px-1 pb-1">
+            <BrainIntelligence
+              brain={brain}
+              intelligenceExplanation={challenge.intelligenceExplanation}
+            />
+          </div>
+        )}
       </div>
 
       {/* 4 — Run bar */}

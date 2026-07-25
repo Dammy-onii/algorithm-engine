@@ -10,7 +10,7 @@ import {
   isChallengeUnlocked,
   masteredConcepts,
 } from "../concepts";
-import { CHALLENGES } from "@/challenges/index";
+import { CHALLENGES } from "@/content/challenges";
 
 describe("curriculum registry", () => {
   it("every concept is taught by a real challenge", () => {
@@ -53,7 +53,13 @@ describe("progression gating", () => {
 
   it("completing the chain unlocks the whole path in order", () => {
     const done = new Set<string>();
-    const order = ["straight-line", "one-corner", "dead-end", "snake-corridor", "open-arena"];
+    const order = [
+      "straight-line", "one-corner", "dead-end", "snake-corridor", "branching-maze", "open-arena",
+      "warehouse-first-delivery", "warehouse-package-sorting",
+      "warehouse-continuous-operations", "warehouse-energy-management",
+      "finance-basic-route", "finance-skip-offline", "finance-reliability-intro",
+      "finance-route-selection", "finance-cost-and-reliability", "finance-provider-health",
+    ];
     for (const id of order) {
       expect(isChallengeUnlocked(id, done), `expected ${id} unlocked`).toBe(true);
       done.add(id);

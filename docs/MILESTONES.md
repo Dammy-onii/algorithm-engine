@@ -12,9 +12,9 @@ The full eight-milestone plan (with how-to and presentation notes) now lives in
 | **1** | **Core Simulation & Decision Engine** | Prove the observe→decide→act→update→render loop with a data-driven world and brain | **Complete ✅** |
 | **2** | **Intelligence Authoring System** | Visual editor for all brain layers; challenge system; compiled output feeds the unchanged engine | **Complete ✅** |
 | **3** | **Intelligence Composition** | Users build abstractions — derived conditions, objectives, a personal library | **In progress 🟨** (library pending) |
-| **4** | **Learning & Progression** | The curriculum teaches; complexity grows naturally | **In progress 🟨** (core shipped) |
+| **4** | **Learning & Progression** | The curriculum teaches; complexity grows naturally | **In progress 🟨** (core + learner flow shipped; skill-tree/adaptive pending) |
 | 5 | Hybrid Authoring | Same intelligence authorable as blocks **or** code | Planned |
-| 6 | Multiple Worlds | Prove the engine is domain-agnostic (a different problem, not a harder maze) | Planned (not before M5) |
+| 6 | Multiple Worlds | Prove the engine is domain-agnostic (a different problem, not a harder maze) | **In progress 🟨** (Warehouse Modes 1–4 + **non-grid Finance/Payment Routing** shipped; warehouse non-grid Stage 2 pending) |
 | 7 | Real-Time Collaboration | Multiple users co-author one agent | Planned |
 | 8 | Competition | Teams compare intelligence live, with scoring + spectating | Planned |
 
