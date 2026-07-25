@@ -19,13 +19,13 @@ world** a small module addition rather than a simulation rewrite.
 ```text
 authored content                         framework-independent runtime
 
-content/challenges/*.json ─┐
+content/challenges/*/*.json ─┐
 content/worlds/*.json      ├─► content + dataset registries ─► Simulation
 content/brains/*/*.json    ┘                                  │
                                                         observe → decide
                                                               → act → snapshot
                                                                     │
-                                              AppShell / Studio / Lab / renderer
+                                       route-owned page UI / Studio / Lab / renderer
 ```
 
 There are four distinct concerns. They should not be conflated:
@@ -35,7 +35,8 @@ There are four distinct concerns. They should not be conflated:
 | **Authored content** | Grid layouts, sample brains, challenge text/scaffolds | `content/` |
 | **Engine** | The tick lifecycle, safe rule evaluation, base grid movement | `lib/engine/` |
 | **World module** | Behaviour unique to one domain: warehouse packages or maze completion | `lib/engine/worlds/` |
-| **Application** | URLs, persistence, editor interactions, rendering | `app/` |
+| **Routes** | URL validation and route parameters | `app/` |
+| **Feature UI** | Persistence, editor interactions, rendering and workspaces | `features/`, `shared/` |
 
 The engine imports neither React nor Next.js. The application imports the engine;
 the engine never imports application components.
@@ -66,9 +67,9 @@ The engine accepts exactly two immutable input contracts.
 ### `WorldData`
 
 `WorldData` describes the environment: dimensions, tiles, start/goal, optional
-energy, and a `kind`. A warehouse world additionally carries a static
-`warehouse` configuration: capacity, delivery zones, packages, replenishing
-stations, and charging stations.
+energy, and a `kind`. A world module can own an additional static configuration:
+Warehouse adds packages, zones, stations, and chargers; Finance adds providers
+and transactions; Parking adds spaces and scheduled vehicles.
 
 Its TypeScript definition lives in `lib/engine/types.ts`; the JSON files live in
 `content/worlds/`.
@@ -116,7 +117,7 @@ from the same `WorldSource` and compiled brain.
 ChallengeData.worldKey
        │
        ▼
-app/lib/datasets.ts ──► WorldSource { world, entities }
+lib/content/datasets.ts ──► WorldSource { world, entities }
        │
 VisualBrain ──► compileBrain() ──► BrainSource
        │                              │
@@ -137,7 +138,7 @@ conditions, bad state references, and circular derived conditions before a run
 starts. This makes authoring errors appear on **Apply & Run**, not half-way through
 a tick loop.
 
-`app/lib/datasets.ts` is the bundled demonstration registry. It maps stable keys
+`lib/content/datasets.ts` is the bundled demonstration registry. It maps stable keys
 such as `warehouse-energy-management` to imported JSON and shared entity data.
 Challenges reference those stable keys rather than importing world files directly.
 
@@ -234,6 +235,20 @@ Those flags are returned in `Observation.domain`. The common evaluator spreads t
 bag into its context, so a warehouse rule can write `packageHere && !carryingPackage`
 without the evaluator gaining warehouse-specific code.
 
+### Finance and Parking modules
+
+Both modules set `tracksMovement: false` and use the common tick lifecycle
+without displaying the shared grid envelope:
+
+- `finance.ts` owns payment queues, provider health, routing outcomes, costs,
+  failures, and completion after the queue settles.
+- `parking.ts` owns scheduled arrivals, typed parking capacity, assignments,
+  exit requests, user-authorized departures, allocation violations, entry/exit
+  waiting time, utilization, and completion after every vehicle has left.
+
+Their renderers consume public module queries. Neither the generic `World` nor
+the decision pipeline contains Finance- or Parking-specific branches.
+
 ### Registry of shipped modules
 
 `lib/engine/worlds/registry.ts` maps known `WorldData.kind` values to modules:
@@ -241,6 +256,8 @@ without the evaluator gaining warehouse-specific code.
 ```text
 "maze"      → mazeModule
 "warehouse" → warehouseModule
+"finance"   → financeModule
+"parking"   → parkingModule
 missing kind → mazeModule
 ```
 
@@ -266,9 +283,11 @@ condition vocabulary and editor metadata from every registered module. Studio's
 condition controls therefore do not maintain a warehouse-specific flag list.
 
 The application dispatches boards and legends through
-`app/components/renderers/WorldRenderer.tsx`: `MazeRenderer` is maze-only and
-`WarehouseRenderer` owns package, zone, station, and charger rendering. The debug
-panel is generic and shows whatever facts the active module observed.
+`features/simulation/components/renderers/WorldRenderer.tsx`: `MazeRenderer` is maze-only and
+`WarehouseRenderer` owns package, zone, station, and charger rendering;
+`FinanceRenderer` owns the transfer flow; and `ParkingRenderer` owns the
+operational lot. The debug panel is generic and shows whatever facts the active
+module observed.
 
 Adding a new world still requires its reviewed module and renderer to be registered
 with the application. That is the intended security boundary; authored content
@@ -283,7 +302,7 @@ Several registries exist because they answer different questions.
 | Registry | Question it answers | Source |
 |---|---|---|
 | World-module registry | “Which executable domain behaviour is allowed?” | `lib/engine/worlds/registry.ts` |
-| Dataset registry | “Which bundled world/brain source has this key?” | `app/lib/datasets.ts` |
+| Dataset registry | “Which bundled world/brain source has this key?” | `lib/content/datasets.ts` |
 | Content registry | “Which packs and challenges are available?” | `lib/content/registry.ts` |
 | Challenge registry | “What does this authored challenge contain?” | `content/challenges/index.ts` |
 | Curriculum registry | “What is unlocked and what concept does it teach?” | `lib/curriculum/concepts.ts` |
@@ -304,15 +323,25 @@ for existing editor/test callers; it must not be used for route validation.
 
 ### Challenge data
 
-Each JSON descriptor in `content/challenges/` is self-contained presentation and
-authoring metadata. Its `pack` groups it, `worldKey` resolves its environment,
-`scaffoldBrain` starts Studio, and its available bricks/conditions and unlock flags
-shape the editor. Objectives are evaluated after a run; only non-bonus objectives
-gate completion.
+Each JSON descriptor in `content/challenges/<pack>/` is self-contained
+presentation and authoring metadata. The folder provides human organization while
+the descriptor's `pack` remains the runtime source of truth. Its `worldKey`
+resolves its environment, `scaffoldBrain` starts Studio, and its available
+bricks/conditions and unlock flags shape the editor. Objectives are evaluated
+after a run; only non-bonus objectives gate completion.
 
-`AppShell` persists a user's visual brain under `ae-brain-<challenge-id>` and
-completion under `ae-complete-<challenge-id>` in `localStorage`. Persistence stays
-keyed by challenge ID, so routing does not change saved work.
+`features/studio/pages/StudioPage.tsx` persists a user's visual brain through
+`features/studio/persistence.ts` under `ae-brain-<challenge-id>` and completion
+under `ae-complete-<challenge-id>` in `localStorage`. Persistence stays keyed by
+challenge ID, so routing does not change saved work.
+
+Studio owns a full-width problem workspace rather than using catalogue page
+chrome. Its toolbar provides challenge-directory, previous/next, run, Lab, and
+theme actions. The authoring and simulation panes scroll independently on wide
+screens and stack on narrow screens. A local Problem list drawer searches the
+current pack and displays the same curriculum unlock state used by direct
+challenge navigation; selecting an item still changes the URL through the
+router.
 
 Visual brains may also contain editor-only rule-folder metadata. Folders are saved
 with the visual brain and let users categorise large rule sets, but the compiler
@@ -332,27 +361,50 @@ have separate first practice challenges.
 
 ```text
 content/
-  worlds/                immutable maze and warehouse layouts + shared entities
+  worlds/                immutable scenario data for every shipped world
   brains/
     default/             sample maze follower
     naive/               deliberately limited sample
     dash/                multi-step-brick sample
     warehouse/           sample warehouse worker
-  challenges/            challenge descriptors and bundled challenge index
+    finance/             sample payment router
+    parking/             sample smart-facility operator
+  challenges/
+    maze/                Maze descriptors
+    warehouse/           Warehouse descriptors
+    finance/             Finance descriptors
+    parking/             Parking descriptors
+    index.ts             ordered bundled registry
 lib/
   engine/                framework-independent runtime and world modules
   content/               pack/challenge catalog API
   authoring/             Studio compiler, decompiler and objective evaluator
   curriculum/            progression graph
 app/
-  components/AppShell.tsx route-driven client workspace
+  page.tsx               home route
   [pack]/…               thin validated route segments
-  lab/                   raw JSON harness route
+  lab/                    raw JSON harness route
+features/
+  application/           shared PageLayout
+  catalogue/             Home/directory page UI and difficulty policy
+  studio/                Studio page state, persistence and authoring UI
+  lab/                   Lab page state and raw JSON editor
+  simulation/            shared stage, controls, debug panel and renderers
+shared/
+  components/            cross-feature UI
+assets/
+  parking/               imported parking artwork
 ```
 
 The imports are still bundled at build time. This layout is the Phase A base for
 the future content-loader design: replacing bundled imports with local or remote
 fetching should not change the engine, Studio, or route contracts.
+
+The UI dependency direction is also deliberate: each route file renders its own
+feature page component. Catalogue and Lab pages share the stateless
+`features/application/components/PageLayout.tsx`; Studio owns its denser problem
+workspace chrome. Studio and Lab reuse simulation presentation, but no page
+shares route state. The generic engine remains below all React code.
 
 ---
 
@@ -362,8 +414,10 @@ The App Router owns what screen is displayed:
 
 ```text
 /                       world picker
-/maze                   validated maze level directory, grouped by difficulty
-/warehouse              validated warehouse level directory, grouped by difficulty
+/maze                   validated Maze challenge-row directory
+/warehouse              validated Warehouse challenge-row directory
+/finance                validated Finance challenge-row directory
+/parking                validated Parking challenge-row directory
 /[pack]/[challenge]     one validated, shareable Studio challenge
 /lab                    raw JSON engine harness
 ```
@@ -372,12 +426,11 @@ Thin server route pages validate the `pack` with `findPack` and the challenge wi
 strict `getChallenge`; a challenge must also belong to the requested pack. Invalid
 paths call `notFound()`.
 
-`AppShell` remains a client component because it owns timers, local storage,
-authoring state, and simulation controls. It receives only validated route props.
-Selecting a pack or challenge uses `router.push`, so browser back/forward and copied
-URLs are meaningful. Route pages key the shell by selected route, deliberately
-resetting transient engines and timers while restoring the persisted brain for the
-new challenge.
+Home and challenge-directory page UI are server-renderable and navigate with
+links. `StudioPage` and `LabPageView` are separate client boundaries: each owns
+only its own timers, editor state, and simulation session. Navigating between
+routes therefore unmounts the relevant page lifecycle naturally. Challenge
+navigation remains URL-driven, so browser history and copied URLs are meaningful.
 
 For the detailed routing implementation and verification notes, see
 [ROUTING_AND_STRUCTURE.md](./ROUTING_AND_STRUCTURE.md).
@@ -386,12 +439,12 @@ For the detailed routing implementation and verification notes, see
 
 ## 9. Safe extension recipes
 
-### Add a maze or warehouse level
+### Add a level to an existing world
 
 1. Add a `WorldData` JSON file under `content/worlds/`.
-2. Add it to `app/lib/datasets.ts` with a stable `worldKey`.
-3. Add a challenge descriptor in `content/challenges/` and import it from that
-   directory's index.
+2. Add it to `lib/content/datasets.ts` with a stable `worldKey`.
+3. Add a challenge descriptor in `content/challenges/<pack>/` and import it from
+   `content/challenges/index.ts`.
 4. Give the challenge a known `pack`, available editor vocabulary and objectives.
 5. Add a curriculum concept if it teaches a new progression step.
 6. Run TypeScript and the tests.

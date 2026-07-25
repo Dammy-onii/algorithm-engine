@@ -30,12 +30,12 @@ challenges/              ← NEW (local JSON, no backend)
 ├── 05-open-arena.json
 └── index.ts             ← registry + localStorage helpers
 
-world/                   ← 3 new world files
+content/worlds/          ← 3 new world files
 ├── challenge-straight.json   (7×3)
 ├── challenge-corner.json     (5×5)
 └── challenge-arena.json      (9×9)
 
-app/components/studio/   ← NEW UI layer
+features/studio/components/   ← NEW UI layer
 ├── ChallengeSelector.tsx
 ├── AuthoringPanel.tsx
 ├── BrainIntelligence.tsx

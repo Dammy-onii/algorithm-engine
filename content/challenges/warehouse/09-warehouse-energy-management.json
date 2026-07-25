@@ -1,0 +1,150 @@
+{
+  "id": "warehouse-energy-management",
+  "pack": "warehouse",
+  "number": 9,
+  "name": "Warehouse — Energy Management",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "warehouse-energy-management",
+  "tagline": "Keep delivering without running dry.",
+  "narrative": "The 11×5 night-shift aisle loop now has a 60-unit battery and a charging bay at the staging corner. The proven pickup and delivery rules are supplied, but the robot cannot complete all six orders unless it charges while passing that bay. Charging too early adds a wasted tick; charging too late leaves the robot out of energy with work in progress.",
+  "objective": "Deliver all station orders while managing the finite battery.",
+  "learningObjective": "Resource management: use current energy and charging-station observations to interrupt routine work safely.",
+  "intelligenceExplanation": "Pickup, type-aware delivery, and navigation already work. Add one high-priority maintenance rule: WHEN chargingHere AND energy < 40 → DO charge. Charge only succeeds at a charging station and restores the configured battery capacity. The debug panel shows energy every tick.",
+  "hint": "Add WHEN chargingHere AND energy < 40 → charge with priority above 190. The robot passes the charger once per route loop.",
+  "availableBricks": [
+    "step",
+    "pivot-right",
+    "pick-up",
+    "deliver",
+    "charge",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "wallRight",
+    "packageHere",
+    "capacityRemaining",
+    "deliveryRedHere",
+    "deliveryBlueHere",
+    "carryingRed",
+    "carryingBlue",
+    "chargingHere",
+    "energy",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "sustain-operations",
+          "priority": 10,
+          "description": "Deliver every order without exhausting the battery."
+        }
+      ]
+    },
+    "states": {
+      "initial": "operate",
+      "states": [
+        {
+          "id": "operate",
+          "description": "Operate the route and maintain the battery."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "deliver-red",
+          "when": "deliveryRedHere && carryingRed",
+          "do": "deliver",
+          "priority": 200,
+          "description": "Unload red cargo at Red Outbound."
+        },
+        {
+          "id": "deliver-blue",
+          "when": "deliveryBlueHere && carryingBlue",
+          "do": "deliver",
+          "priority": 199,
+          "description": "Unload blue cargo at Blue Outbound."
+        },
+        {
+          "id": "pick-up-with-space",
+          "when": "packageHere && capacityRemaining > 0",
+          "do": "pick-up",
+          "priority": 190,
+          "description": "Load work only while cargo has room."
+        },
+        {
+          "id": "continue-aisle",
+          "when": "!wallAhead",
+          "do": "step",
+          "priority": 60,
+          "description": "Continue through a clear aisle."
+        },
+        {
+          "id": "turn-at-shelf-end",
+          "when": "wallAhead && !wallRight",
+          "do": "pivot-right",
+          "priority": 40,
+          "description": "Turn right at the end of an aisle."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Move one aisle tile."
+        },
+        {
+          "id": "pivot-right",
+          "action": "turnRight",
+          "description": "Turn right."
+        },
+        {
+          "id": "pick-up",
+          "action": "pickUp",
+          "description": "Load a package."
+        },
+        {
+          "id": "deliver",
+          "action": "deliver",
+          "description": "Unload matching cargo."
+        },
+        {
+          "id": "charge",
+          "action": "charge",
+          "description": "Recharge at a charging station."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Wait one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "sustain",
+      "label": "Deliver all six orders before energy runs out",
+      "check": "reached"
+    },
+    {
+      "id": "efficient",
+      "label": "Finish within 75 ticks",
+      "check": "reached && ticks <= 75",
+      "bonus": true
+    },
+    {
+      "id": "healthy",
+      "label": "Finish with more than 10 energy",
+      "check": "reached && energy > 10",
+      "bonus": true
+    }
+  ]
+}

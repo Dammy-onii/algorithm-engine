@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 
-import { AppShell } from "@/app/components/AppShell";
-import { findPack } from "@/lib/content/registry";
+import { ChallengeDirectoryPage } from "@/features/catalogue/pages/ChallengeDirectoryPage";
+import {
+  challengesInPack,
+  findPack,
+} from "@/lib/content/registry";
 
 interface Props {
   params: Promise<{ pack: string }>;
@@ -10,7 +13,13 @@ interface Props {
 /** A world-level directory grouped by difficulty. */
 export default async function PackPage({ params }: Props) {
   const { pack } = await params;
-  if (!findPack(pack)) notFound();
+  const packDefinition = findPack(pack);
+  if (!packDefinition) notFound();
 
-  return <AppShell key={`pack-${pack}`} view="levels" packId={pack} />;
+  return (
+    <ChallengeDirectoryPage
+      pack={packDefinition}
+      challenges={challengesInPack(pack)}
+    />
+  );
 }

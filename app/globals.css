@@ -28,6 +28,42 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Studio's authoring and simulation panes are separate work surfaces. Keeping
+   their scrollbars visible makes that independent scrolling explicit. */
+.workspace-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(161 161 170) transparent;
+  scrollbar-gutter: stable;
+}
+
+.workspace-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.workspace-scrollbar::-webkit-scrollbar-track {
+  background: rgb(244 244 245);
+}
+
+.workspace-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgb(161 161 170);
+  background-clip: padding-box;
+}
+
+.dark .workspace-scrollbar {
+  scrollbar-color: rgb(82 82 91) transparent;
+}
+
+.dark .workspace-scrollbar::-webkit-scrollbar-track {
+  background: rgb(39 39 42);
+}
+
+.dark .workspace-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(82 82 91);
+  background-clip: padding-box;
+}
+
 /* Finance flow adapts to the width of its renderer, not the browser viewport.
    This matters because Studio places it inside a narrow simulation sidebar. */
 .finance-flow-container {
@@ -67,5 +103,154 @@ body {
 
   .finance-flow-arrow-symbol {
     transform: rotate(0deg);
+  }
+}
+
+/* The parking board has its own container because Studio can make the
+   simulation column much narrower than the browser viewport. */
+.parking-board {
+  container-type: inline-size;
+}
+
+.parking-operations-strip {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.parking-special-space {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgb(255 255 255 / 0.08),
+      rgb(255 255 255 / 0.08) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+}
+
+@container (min-width: 42rem) {
+  .parking-operations-strip {
+    grid-template-columns:
+      minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .parking-vertical-arrow {
+    display: none;
+  }
+
+  .parking-horizontal-arrow {
+    display: inline;
+  }
+}
+
+@keyframes parking-arrive {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+
+.parking-car-arrive {
+  animation: parking-arrive var(--parking-arrival-duration, 280ms) ease-out both;
+}
+
+@keyframes parking-route-in {
+  0% {
+    left: -6%;
+    top: 50%;
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  58% {
+    left: var(--parking-target-x);
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  68% {
+    left: var(--parking-target-x);
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(var(--parking-bay-rotation));
+  }
+  92% {
+    left: var(--parking-target-x);
+    top: var(--parking-target-y);
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--parking-bay-rotation));
+  }
+  92.01%,
+  100% {
+    left: var(--parking-target-x);
+    top: var(--parking-target-y);
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--parking-bay-rotation));
+  }
+}
+
+@keyframes parking-route-out {
+  0% {
+    left: var(--parking-target-x);
+    top: var(--parking-target-y);
+    transform: translate(-50%, -50%) rotate(var(--parking-bay-rotation));
+  }
+  34% {
+    left: var(--parking-target-x);
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  78% {
+    left: 91%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  100% {
+    left: 108%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+}
+
+@keyframes parking-reveal-occupant {
+  0%,
+  92% {
+    opacity: 0;
+  }
+  92.01%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.parking-route-car {
+  position: absolute;
+  left: -6%;
+  top: 50%;
+  z-index: 30;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.55));
+  will-change: left, top, transform;
+}
+
+.parking-route-in {
+  animation: parking-route-in var(--parking-motion-duration, 820ms) linear both;
+}
+
+.parking-route-out {
+  animation: parking-route-out var(--parking-motion-duration, 820ms) linear both;
+}
+
+.parking-occupant-arriving {
+  animation: parking-reveal-occupant var(--parking-motion-duration, 820ms) linear both;
+}
+
+.parking-car-ready {
+  filter: drop-shadow(0 0 0.25rem rgb(253 224 71 / 0.8));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parking-car-arrive,
+  .parking-occupant-arriving {
+    animation: none;
+  }
+
+  .parking-route-car {
+    display: none;
   }
 }

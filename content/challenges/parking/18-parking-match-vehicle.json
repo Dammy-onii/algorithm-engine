@@ -1,0 +1,56 @@
+{
+  "id": "parking-match-vehicle",
+  "pack": "parking",
+  "number": 18,
+  "name": "Match the Vehicle",
+  "difficulty": 1,
+  "stage": "easy",
+  "worldKey": "parking-match-vehicle",
+  "taxonomy": { "domain": "Parking", "simulation": "Smart Facility Operations", "tier": "easy", "grade": 1 },
+  "tagline": "The same empty space is not right for every arrival.",
+  "brief": "Match ordinary cars, electric vehicles, and large vehicles to the correct spaces.",
+  "context": "The lot now has standard spaces, charging bays, and wide spaces for vans and trucks.",
+  "narrative": "A mixed queue is arriving. If the broad fallback rule runs first, electric cars and large vehicles consume the wrong resource. Build an ordered policy that handles special requirements before ordinary vehicles.",
+  "objective": "Serve all eight vehicles and make no category mistakes.",
+  "learningObjective": "Resource matching: inspect requirements, place specific rules first, and leave the general case as a fallback.",
+  "intelligenceExplanation": "The starter controller sends every waiting vehicle to a standard space. Add the electric and large cases above that fallback so the first matching rule selects the correct resource.",
+  "hint": "Order the rules as electric, large, then the existing general standard rule.",
+  "hints": [
+    "A broad hasWaitingVehicle rule also matches electric cars and trucks.",
+    "Specific rules must appear before the broad fallback in a top-to-bottom decision flow.",
+    "Use carElectric → park-charging, then carLarge → park-large, then hasWaitingVehicle → park-standard."
+  ],
+  "steps": [
+    { "id": "charging", "label": "Send electric vehicles to charging bays", "check": "departedCount >= 2 && violations == 0" },
+    { "id": "large", "label": "Keep large vehicles out of standard spaces", "check": "departedCount >= 4 && violations == 0" },
+    { "id": "serve", "label": "Serve the complete mixed queue", "check": "allVehiclesServed && violations == 0" }
+  ],
+  "availableBricks": ["park-standard", "park-charging", "park-large", "release-vehicle", "hold"],
+  "availableConditions": ["hasExitRequest", "exitQueueLength", "hasWaitingVehicle", "carElectric", "carLarge", "standardAvailable", "chargingAvailable", "largeAvailable", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "match-vehicles", "priority": 1, "description": "Match each vehicle to a compatible space." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Allocate the entrance queue." }] },
+    "rules": {
+      "rules": [
+        { "id": "release-ready", "when": "hasExitRequest", "do": "release-vehicle", "description": "Authorize completed stays through the exit checkpoint." },
+        { "id": "standard-fallback", "when": "hasWaitingVehicle", "do": "park-standard", "description": "This broad fallback currently catches every vehicle." }
+      ]
+    },
+    "functions": {
+      "functions": [
+        { "id": "park-standard", "action": "parkStandard", "description": "Assign the head vehicle to a standard space." },
+        { "id": "park-charging", "action": "parkCharging", "description": "Assign the head vehicle to a charging bay." },
+        { "id": "park-large", "action": "parkLarge", "description": "Assign the head vehicle to a large bay." },
+        { "id": "release-vehicle", "action": "releaseVehicle", "description": "Authorize the oldest exit request and free its space." },
+        { "id": "hold", "action": "wait", "description": "Wait one tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "serve-all", "label": "Serve every vehicle", "check": "reached && allVehiclesServed" },
+    { "id": "match-all", "label": "No category violations", "check": "allVehiclesServed && violations == 0" },
+    { "id": "responsive", "label": "Average entry and exit wait no more than two ticks", "check": "allVehiclesServed && averageWait <= 2 && averageExitWait <= 2", "bonus": true }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "id": "warehouse-first-delivery",
+  "pack": "warehouse",
+  "number": 6,
+  "name": "Warehouse — First Delivery",
+  "difficulty": 1,
+  "stage": "practice",
+  "worldKey": "warehouse-first-delivery",
+  "tagline": "Turn movement into useful work.",
+  "narrative": "The practice warehouse has one waiting order and one outbound station. The robot already knows the fixed aisle route, but it does not understand warehouse work yet: it will walk over a package and pass the delivery station unless you give it interaction rules. Teach it that a package under its wheels should be picked up, and that a carried package at a delivery station should be unloaded. The world is not complete when the robot reaches a square; it is complete when the order is delivered.",
+  "objective": "Pick up the waiting package and deliver it to Outbound A.",
+  "learningObjective": "World interaction: use observations about packages and delivery zones to choose the engine-owned Pick Up and Deliver actions.",
+  "intelligenceExplanation": "The route rules are already in place, so the robot can travel through every aisle. What is missing are the two moments of work: when a package is here, pick it up; when at a delivery zone while carrying a package, deliver it. Make both rules higher priority than continuing along the aisle. Unlike a maze, this world completes immediately after the final successful delivery — no goal holding is needed.",
+  "hint": "Add WHEN packageHere → DO pick-up with high priority. Then add WHEN deliveryHere AND carryingPackage → DO deliver with an even higher priority.",
+  "hints": [
+    "The route is present already. Watch the debug panel for Package here and Delivery here.",
+    "A package needs an interaction rule, not another move rule: WHEN packageHere → DO pick-up.",
+    "Delivery must only happen while carrying cargo: WHEN deliveryHere AND carryingPackage → DO deliver. Give both interaction rules higher priority than 60."
+  ],
+  "taxonomy": {
+    "domain": "Warehouse",
+    "simulation": "Fulfilment",
+    "tier": "tutorial",
+    "grade": 1
+  },
+  "brief": "Teach the robot to pick up the waiting order and drop it at Outbound A.",
+  "context": "One order, one outbound dock. The robot already drives the aisle — it just doesn't do warehouse work yet.",
+  "steps": [
+    {
+      "id": "pick",
+      "label": "Load the waiting package",
+      "check": "carryingPackage || deliveredCount >= 1",
+      "hint": "WHEN packageHere → DO pick-up (high priority)."
+    },
+    {
+      "id": "deliver",
+      "label": "Deliver it to Outbound A",
+      "check": "deliveredCount >= 1",
+      "hint": "WHEN deliveryHere AND carryingPackage → DO deliver."
+    }
+  ],
+  "availableBricks": [
+    "step",
+    "pivot-right",
+    "pick-up",
+    "deliver",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "wallRight",
+    "packageHere",
+    "deliveryHere",
+    "carryingPackage",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "fulfil-order",
+          "priority": 10,
+          "description": "Deliver every warehouse order."
+        }
+      ]
+    },
+    "states": {
+      "initial": "operate",
+      "states": [
+        {
+          "id": "operate",
+          "description": "Follow the practice route and handle orders."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "continue-aisle",
+          "when": "!wallAhead",
+          "do": "step",
+          "priority": 60,
+          "description": "Continue through a clear aisle."
+        },
+        {
+          "id": "turn-at-shelf-end",
+          "when": "wallAhead && !wallRight",
+          "do": "pivot-right",
+          "priority": 40,
+          "description": "Turn right where the practice aisle ends."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Move one aisle tile forward."
+        },
+        {
+          "id": "pivot-right",
+          "action": "turnRight",
+          "description": "Turn right at the end of an aisle."
+        },
+        {
+          "id": "pick-up",
+          "action": "pickUp",
+          "description": "Load a waiting package from this tile."
+        },
+        {
+          "id": "deliver",
+          "action": "deliver",
+          "description": "Unload a carried package at this delivery zone."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Wait one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "deliver-order",
+      "label": "Deliver the practice order",
+      "check": "reached"
+    },
+    {
+      "id": "efficient",
+      "label": "Deliver within 20 ticks",
+      "check": "reached && ticks <= 20",
+      "bonus": true
+    },
+    {
+      "id": "focused",
+      "label": "Use only the two interaction rules you need",
+      "check": "reached && rules <= 5",
+      "bonus": true
+    }
+  ]
+}

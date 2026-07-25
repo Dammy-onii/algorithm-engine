@@ -42,4 +42,11 @@ describe("content registry", () => {
     expect(getChallenge(first!.id)?.id).toBe(first!.id);
     expect(getChallenge("not-a-real-challenge")).toBeUndefined();
   });
+
+  it("does not publish the removed Maze level 5", () => {
+    expect(
+      challengesInPack("maze").some((challenge) => challenge.id === "open-arena"),
+    ).toBe(false);
+    expect(getChallenge("open-arena")).toBeUndefined();
+  });
 });

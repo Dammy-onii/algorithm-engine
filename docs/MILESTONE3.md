@@ -45,7 +45,7 @@ validation in `buildBrain`), threaded through `ruleEngine`, `goalManager`,
 
 ### 2. Conditions tab
 
-[ConditionEditor.tsx](../app/components/studio/layers/ConditionEditor.tsx):
+[ConditionEditor.tsx](../features/studio/components/layers/ConditionEditor.tsx):
 
 - **Engine flags · locked** — a read-only reference table of every flag, its type and
   meaning, marking which are available in the current challenge.
@@ -73,7 +73,7 @@ Challenges define machine-checkable objectives; a run is graded against `RunMetr
   each run. Completion now requires `challengePassed`, not merely reaching the goal.
 
 Files: [objectives.ts](../lib/authoring/objectives.ts),
-[ObjectivesPanel.tsx](../app/components/studio/layers/ObjectivesPanel.tsx).
+[ObjectivesPanel.tsx](../features/studio/components/layers/ObjectivesPanel.tsx).
 
 ### 4. States, honestly scoped
 

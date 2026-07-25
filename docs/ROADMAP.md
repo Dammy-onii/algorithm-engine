@@ -89,7 +89,7 @@ reusable assets.
   [loader.ts](../lib/engine/runtime/loader.ts))
 - **Conditions tab** — read-only reference for every engine flag (with per-challenge
   availability) plus a composer for derived conditions.
-  ([ConditionEditor.tsx](../app/components/studio/layers/ConditionEditor.tsx))
+  ([ConditionEditor.tsx](../features/studio/components/layers/ConditionEditor.tsx))
 - **Objectives** — challenges define machine-checkable objectives (primary + bonus)
   evaluated against run metrics; they tick off after each run and grade *quality*,
   not just correctness. This is the scoring substrate everything later depends on.

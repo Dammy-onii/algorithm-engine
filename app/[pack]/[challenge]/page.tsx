@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { AppShell } from "@/app/components/AppShell";
+import { StudioPage } from "@/features/studio/pages/StudioPage";
 import { findPack, getChallenge } from "@/lib/content/registry";
 
 interface Props {
@@ -15,11 +15,10 @@ export default async function ChallengePage({ params }: Props) {
   if (!findPack(pack) || !challenge || challenge.pack !== pack) notFound();
 
   return (
-    <AppShell
+    <StudioPage
       key={`challenge-${pack}-${challenge.id}`}
-      view="pack"
       packId={pack}
-      initialChallengeId={challenge.id}
+      challengeId={challenge.id}
     />
   );
 }

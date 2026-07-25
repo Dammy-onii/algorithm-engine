@@ -10,11 +10,13 @@ import type { DomainFlagSpec, WorldModule } from "./module";
 import { mazeModule } from "./maze";
 import { warehouseModule } from "./warehouse";
 import { financeModule } from "./finance";
+import { parkingModule } from "./parking";
 
 const MODULES: Record<string, WorldModule> = {
   [mazeModule.id]: mazeModule,
   [warehouseModule.id]: warehouseModule,
   [financeModule.id]: financeModule,
+  [parkingModule.id]: parkingModule,
 };
 
 /** Resolve a world module by kind, defaulting to the maze (base grid). */
@@ -37,4 +39,4 @@ export function allDomainActions(): string[] {
   return [...new Set(Object.values(MODULES).flatMap((module) => module.domainActions))];
 }
 
-export { mazeModule, warehouseModule, financeModule };
+export { mazeModule, warehouseModule, financeModule, parkingModule };

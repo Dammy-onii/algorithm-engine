@@ -55,13 +55,6 @@ export const CONCEPTS: Concept[] = [
     prerequisites: ["compound-conditions"],
   },
   {
-    id: "state-machines",
-    name: "State machines",
-    teaches: "Give the robot modes so the same sense means different things.",
-    taughtBy: "open-arena",
-    prerequisites: ["functions"],
-  },
-  {
     id: "maze-navigation",
     name: "Maze navigation",
     teaches: "Use wall observations and ordered rules to navigate branches and dead ends.",
@@ -140,6 +133,27 @@ export const CONCEPTS: Concept[] = [
     teaches: "Re-decide every tick from live state as provider health changes.",
     taughtBy: "finance-provider-health",
     prerequisites: ["weighted-routing"],
+  },
+  {
+    id: "parking-operations",
+    name: "Parking operations",
+    teaches: "Allocate arriving vehicles while occupied spaces turn over and become reusable.",
+    taughtBy: "parking-first-shift",
+    prerequisites: [],
+  },
+  {
+    id: "parking-resource-matching",
+    name: "Resource matching",
+    teaches: "Match vehicle requirements to compatible parking resources before using the general fallback.",
+    taughtBy: "parking-match-vehicle",
+    prerequisites: ["parking-operations"],
+  },
+  {
+    id: "parking-priority-allocation",
+    name: "Priority allocation",
+    teaches: "Protect reservations, accessible spaces, and premium access with ordered special cases.",
+    taughtBy: "parking-priority-access",
+    prerequisites: ["parking-resource-matching"],
   },
 ];
 

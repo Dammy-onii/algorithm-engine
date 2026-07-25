@@ -122,6 +122,13 @@ Studio displays `#1`, `#2`, and so on beside each card. Dragging a card or using
 the top/up/down/bottom controls changes only this authored order. Rule folders
 never change it.
 
+`+ Add rule` appends a new card to the bottom of the flow. It never silently
+promotes a new branch above existing logic. Move the card upward only when the
+new condition is intentionally more specific than an existing fallback. Editable
+challenge scaffolds avoid a terminal `WHEN always → hold` card because the engine
+already waits when nothing matches; such a terminal catch-all would otherwise
+hide newly appended cards until the learner manually reordered them.
+
 ### Guarded flow — why an impossible action never runs
 
 Order alone is not enough to produce intelligent behaviour. Consider an

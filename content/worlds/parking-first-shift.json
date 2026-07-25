@@ -1,0 +1,30 @@
+{
+  "name": "ParkFlow — First Shift",
+  "kind": "parking",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "parking": {
+    "maxTicks": 80,
+    "spaces": [
+      { "id": "N1", "kind": "standard", "row": "north", "order": 0, "distanceToExit": 8 },
+      { "id": "N2", "kind": "standard", "row": "north", "order": 1, "distanceToExit": 7 },
+      { "id": "N3", "kind": "standard", "row": "north", "order": 2, "distanceToExit": 6 },
+      { "id": "N4", "kind": "standard", "row": "north", "order": 3, "distanceToExit": 5 },
+      { "id": "S1", "kind": "standard", "row": "south", "order": 0, "distanceToExit": 4 },
+      { "id": "S2", "kind": "standard", "row": "south", "order": 1, "distanceToExit": 3 },
+      { "id": "S3", "kind": "standard", "row": "south", "order": 2, "distanceToExit": 2 },
+      { "id": "S4", "kind": "standard", "row": "south", "order": 3, "distanceToExit": 1 }
+    ],
+    "vehicles": [
+      { "id": "car-01", "arrivalTick": 0, "duration": 5, "size": "compact" },
+      { "id": "car-02", "arrivalTick": 1, "duration": 7, "size": "compact" },
+      { "id": "car-03", "arrivalTick": 2, "duration": 4, "size": "compact" },
+      { "id": "car-04", "arrivalTick": 4, "duration": 6, "size": "compact" },
+      { "id": "car-05", "arrivalTick": 6, "duration": 5, "size": "compact" },
+      { "id": "car-06", "arrivalTick": 8, "duration": 4, "size": "compact" }
+    ]
+  }
+}

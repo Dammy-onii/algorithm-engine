@@ -17,7 +17,7 @@ import { VisualBrain } from "../types";
 import { Simulation, BrainSource } from "@/lib/engine/simulation";
 import { EntitiesData, WorldData } from "@/lib/engine/types";
 import { CHALLENGES } from "@/content/challenges";
-import { findWorld } from "@/app/lib/datasets";
+import { findWorld } from "@/lib/content/datasets";
 
 import maze from "@/content/worlds/maze.json";
 import entities from "@/content/worlds/entities.json";

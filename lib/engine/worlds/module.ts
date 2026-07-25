@@ -45,10 +45,10 @@ export interface WorldModule {
   /**
    * Precondition for each domain action, as a condition expression over the
    * observation flags (e.g. `pickUp → "packageHere && capacityRemaining > 0"`).
-   * The decision layer uses these to prefer the highest-priority rule whose
-   * action is actually *possible* — "rules decide what's possible, priority
-   * decides what's preferred" — so an impossible action never wins over a
-   * possible one. Actions omitted here are always considered possible.
+   * The decision layer uses these to select the first authored rule whose
+   * action is actually possible. Ordered rule flow skips an impossible branch
+   * and continues to the next matching rule. Actions omitted here are always
+   * considered possible.
    */
   readonly actionPreconditions?: Readonly<Record<string, string>>;
 

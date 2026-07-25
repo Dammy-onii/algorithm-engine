@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Simulation, BrainSource, WorldSource } from "../simulation";
 import { EntitiesData, WorldData } from "../types";
 import { findChallenge } from "@/content/challenges";
-import { findWorld } from "@/app/lib/datasets";
+import { findWorld } from "@/lib/content/datasets";
 import { compileBrain } from "@/lib/authoring/brainCompiler";
 import { decompileBrain } from "@/lib/authoring/brainDecompiler";
 import {

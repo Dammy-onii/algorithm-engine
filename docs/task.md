@@ -14,28 +14,28 @@
 - [x] `lib/authoring/brainSummarizer.ts` — VisualBrain → human-readable intelligence explanation
 
 ## Phase 2 — Challenge Data
-- [x] `world/challenge-straight.json` — 7×3 straight corridor
-- [x] `world/challenge-corner.json` — 5×5 L-shape corner
-- [x] `world/challenge-arena.json` — 9×9 open arena
+- [x] `content/worlds/challenge-straight.json` — 7×3 straight corridor
+- [x] `content/worlds/challenge-corner.json` — 5×5 L-shape corner
+- [x] `content/worlds/challenge-arena.json` — 9×9 open arena
 - [x] `challenges/01-straight-line.json` — narrative + scaffold brain
 - [x] `challenges/02-one-corner.json`
 - [x] `challenges/03-dead-end.json`
 - [x] `challenges/04-snake-corridor.json`
 - [x] `challenges/05-open-arena.json`
 - [x] `challenges/index.ts` — registry + typed helpers
-- [x] `app/lib/datasets.ts` — add 3 new worlds
+- [x] `lib/content/datasets.ts` — add 3 new worlds
 
 ## Phase 3 — Studio UI Components
-- [x] `app/components/studio/blocks/PrimitiveBlock.tsx`
-- [x] `app/components/studio/blocks/ConditionChip.tsx`
-- [x] `app/components/studio/layers/GoalEditor.tsx`
-- [x] `app/components/studio/layers/StateEditor.tsx`
-- [x] `app/components/studio/layers/RuleBuilder.tsx`
-- [x] `app/components/studio/layers/FunctionComposer.tsx`
-- [x] `app/components/studio/layers/MemoryEditor.tsx`
-- [x] `app/components/studio/BrainIntelligence.tsx`
-- [x] `app/components/studio/AuthoringPanel.tsx`
-- [x] `app/components/studio/ChallengeSelector.tsx`
+- [x] `features/studio/components/blocks/PrimitiveBlock.tsx`
+- [x] `features/studio/components/blocks/ConditionChip.tsx`
+- [x] `features/studio/components/layers/GoalEditor.tsx`
+- [x] `features/studio/components/layers/StateEditor.tsx`
+- [x] `features/studio/components/layers/RuleBuilder.tsx`
+- [x] `features/studio/components/layers/FunctionComposer.tsx`
+- [x] `features/studio/components/layers/MemoryEditor.tsx`
+- [x] `features/studio/components/BrainIntelligence.tsx`
+- [x] `features/studio/components/AuthoringPanel.tsx`
+- [x] `features/studio/components/ChallengeSelector.tsx`
 
 ## Phase 4 — Page Rewrite
 - [x] `app/page.tsx` — two-tab (Studio | Lab), challenge state, visual brain state, shared engine

@@ -1,0 +1,61 @@
+{
+  "id": "parking-priority-access",
+  "pack": "parking",
+  "number": 19,
+  "name": "Priority Access",
+  "difficulty": 1,
+  "stage": "easy",
+  "worldKey": "parking-priority-access",
+  "taxonomy": { "domain": "Parking", "simulation": "Smart Facility Operations", "tier": "easy", "grade": 2 },
+  "tagline": "Protect scarce spaces from the general queue.",
+  "brief": "Honour reservations, permits, and VIP access while continuing to serve ordinary traffic.",
+  "context": "The full facility includes reserved, accessible, premium, charging, large, and standard spaces.",
+  "narrative": "Priority vehicles now share one entrance with ordinary traffic. Reserved drivers need their named bay, permit holders need accessible parking, and VIP arrivals use premium spaces. Your controller must resolve these cases in an intentional order before reaching the ordinary fallback.",
+  "objective": "Serve all ten vehicles with every protected space used correctly.",
+  "learningObjective": "Ordered policy design: protect exceptional constraints before applying a general allocation rule.",
+  "intelligenceExplanation": "The starter policy already understands electric, large, and standard vehicles. It does not yet recognise reservations, accessible permits, or VIP status, so those arrivals fall through to the wrong allocation.",
+  "hint": "Add the three protected cases above the existing vehicle-type rules.",
+  "hints": [
+    "Reserved, accessible, and VIP conditions are visible only for the head vehicle.",
+    "The first matching rule wins; all special cases belong above hasWaitingVehicle.",
+    "A complete order is reserved, accessible, VIP, electric, large, standard, idle."
+  ],
+  "steps": [
+    { "id": "priority", "label": "Protect reserved and permit access", "check": "departedCount >= 4 && violations == 0" },
+    { "id": "mixed", "label": "Keep every category correctly matched", "check": "departedCount >= 7 && violations == 0" },
+    { "id": "serve", "label": "Complete the full operating period", "check": "allVehiclesServed && violations == 0" }
+  ],
+  "availableBricks": ["park-standard", "park-charging", "park-large", "park-premium", "park-accessible", "park-reserved", "release-vehicle", "hold"],
+  "availableConditions": ["hasExitRequest", "exitQueueLength", "hasWaitingVehicle", "carReserved", "carAccessible", "carVIP", "carElectric", "carLarge", "standardAvailable", "chargingAvailable", "largeAvailable", "premiumAvailable", "accessibleAvailable", "reservedAvailable", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "protect-access", "priority": 1, "description": "Protect special access while serving the complete queue." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Allocate the entrance queue." }] },
+    "rules": {
+      "rules": [
+        { "id": "release-ready", "when": "hasExitRequest", "do": "release-vehicle", "description": "Authorize completed stays through the exit checkpoint." },
+        { "id": "electric-first", "when": "carElectric", "do": "park-charging", "description": "Send electric vehicles to charging." },
+        { "id": "large-first", "when": "carLarge", "do": "park-large", "description": "Send large vehicles to large bays." },
+        { "id": "standard-fallback", "when": "hasWaitingVehicle", "do": "park-standard", "description": "Use standard parking for the general case." }
+      ]
+    },
+    "functions": {
+      "functions": [
+        { "id": "park-standard", "action": "parkStandard", "description": "Assign the head vehicle to a standard space." },
+        { "id": "park-charging", "action": "parkCharging", "description": "Assign the head vehicle to a charging bay." },
+        { "id": "park-large", "action": "parkLarge", "description": "Assign the head vehicle to a large bay." },
+        { "id": "park-premium", "action": "parkPremium", "description": "Assign the head vehicle to a premium space." },
+        { "id": "park-accessible", "action": "parkAccessible", "description": "Assign the head vehicle to an accessible space." },
+        { "id": "park-reserved", "action": "parkReserved", "description": "Assign the head vehicle to its reserved space." },
+        { "id": "release-vehicle", "action": "releaseVehicle", "description": "Authorize the oldest exit request and free its space." },
+        { "id": "hold", "action": "wait", "description": "Wait one tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "serve-all", "label": "Serve every vehicle", "check": "reached && allVehiclesServed" },
+    { "id": "protect-all", "label": "No protected-space violations", "check": "allVehiclesServed && violations == 0" },
+    { "id": "responsive", "label": "Average entry and exit wait no more than two ticks", "check": "allVehiclesServed && averageWait <= 2 && averageExitWait <= 2", "bonus": true }
+  ]
+}

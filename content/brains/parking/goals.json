@@ -1,0 +1,5 @@
+{
+  "goals": [
+    { "id": "operate-lot", "priority": 1, "description": "Allocate every arriving vehicle to the correct kind of space." }
+  ]
+}

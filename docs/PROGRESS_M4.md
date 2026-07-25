@@ -13,16 +13,16 @@ taxonomy)._
 | 1 | Curriculum registry (concepts, prerequisites, helpers) | `lib/curriculum/concepts.ts` | ✅ |
 | 2 | Progression gating (linear unlock by completion) | `concepts.ts` + `ChallengeSelector.tsx` | ✅ |
 | 3 | Curriculum map UI (step, concept, locked/available/done) | `ChallengeSelector.tsx` | ✅ |
-| 4 | "You just learned X" callout on first completion | `AppShell.tsx` | ✅ |
+| 4 | "You just learned X" callout on first completion | `features/studio/pages/StudioPage.tsx` | ✅ |
 | 5 | Escalating staged hints (attempts-driven nudge) | `ProblemBrief.tsx`, `challenges/*` | ✅ |
 | 6 | Curriculum tests | `lib/curriculum/__tests__/concepts.test.ts` | ✅ |
 | 7 | Docs (MILESTONE4, PROGRESS_M4, CHALLENGE_SCHEMA, roadmap) | `docs/*` | ✅ |
 | 11 | Structured brief schema (brief/context/steps/taxonomy) + normalizer | `types.ts`, `challengeBrief.ts` | ✅ |
 | 12 | Progressive-disclosure problem brief | `ProblemBrief.tsx` | ✅ |
 | 13 | Live task checklist (ticks off during the run) | `TaskChecklist.tsx`, `objectives.ts` | ✅ |
-| 14 | Results screen (objectives + Next level) | `ResultsPanel.tsx`, `AppShell.tsx` | ✅ |
+| 14 | Results screen (objectives + Next level) | `ResultsPanel.tsx`, `features/studio/pages/StudioPage.tsx` | ✅ |
 | 15 | Compact progress stepper | `ProgressStepper.tsx` | ✅ |
-| 16 | First-run onboarding banner | `AppShell.tsx` | ✅ |
+| 16 | First-run onboarding banner | `features/studio/pages/StudioPage.tsx` | ✅ |
 | 17 | Grade taxonomy across brief + selector | `challengeBrief.ts`, `ChallengeSelector.tsx` | ✅ |
 | 18 | Brief/flow tests | `lib/authoring/__tests__/challengeBrief.test.ts` | ✅ |
 | 8 | Skill-tree visualization with prerequisite edges | TBD | ⬜ |
@@ -35,7 +35,7 @@ taxonomy)._
   (`layout.tsx`), `ThemeToggle` in the header, persisted as `ae-theme` (defaults to the
   OS setting). The codebase already used light defaults + `dark:` overrides, so both
   themes render correctly. Files: `app/globals.css`, `app/layout.tsx`,
-  `app/components/ThemeToggle.tsx`.
+  `shared/components/ThemeToggle.tsx`.
 - **Defaults listed + explained in every tab:**
   - **Conditions** — the engine flag reference (already shipped in M3), with
     per-challenge availability.

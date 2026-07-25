@@ -53,6 +53,14 @@ export const PACKS: PackInfo[] = [
       "Author the decision layer inside a payment system: route each transaction by cost, reliability, and live provider health.",
     action: "Explore payment routing",
   },
+  {
+    id: "parking",
+    eyebrow: "Facility operations curriculum",
+    title: "Parking",
+    description:
+      "Operate a smart parking facility: allocate arrivals, match vehicle requirements, and protect priority access as spaces turn over.",
+    action: "Explore parking operations",
+  },
 ];
 
 /** All packs in catalog order. */

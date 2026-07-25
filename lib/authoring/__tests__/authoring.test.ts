@@ -18,7 +18,7 @@ import { Simulation, BrainSource, WorldSource } from "@/lib/engine/simulation";
 import { EntitiesData, WorldData } from "@/lib/engine/types";
 
 import { CHALLENGES } from "@/content/challenges";
-import { WORLDS, findWorld } from "@/app/lib/datasets";
+import { WORLDS, findWorld } from "@/lib/content/datasets";
 
 import entities from "@/content/worlds/entities.json";
 import maze from "@/content/worlds/maze.json";

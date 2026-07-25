@@ -1,0 +1,12 @@
+{
+  "rules": [
+    { "id": "release-ready", "when": "hasExitRequest", "do": "release-vehicle", "description": "Authorize the oldest ready vehicle through the exit checkpoint." },
+    { "id": "reservation-first", "when": "carReserved", "do": "park-reserved", "description": "Honour the head vehicle's reservation." },
+    { "id": "accessible-first", "when": "carAccessible", "do": "park-accessible", "description": "Protect accessible bays for permit holders." },
+    { "id": "vip-first", "when": "carVIP", "do": "park-premium", "description": "Send VIP arrivals to premium parking." },
+    { "id": "electric-first", "when": "carElectric", "do": "park-charging", "description": "Send electric vehicles to charging bays." },
+    { "id": "large-first", "when": "carLarge", "do": "park-large", "description": "Send large vehicles to large bays." },
+    { "id": "standard-fallback", "when": "hasWaitingVehicle", "do": "park-standard", "description": "Use an ordinary bay for an ordinary vehicle." },
+    { "id": "idle", "when": "always", "do": "hold", "description": "Wait for the next arrival or departure." }
+  ]
+}

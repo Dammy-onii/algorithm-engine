@@ -9,16 +9,18 @@ This is the design contract. Implementation lands in tiers (see the end).
 
 ---
 
-## Why this is needed now (the honest starting point)
+## Original coupling that motivated the design
 
-The challenge layer is already ~80% data, but two couplings break plug-and-play:
+This plan began when the challenge layer was mostly data but two couplings still
+blocked plug-and-play loading:
 
 1. **Challenges are statically bundled, not discovered.** `challenges/index.ts`
    hard-imports every file into an array. Adding a level = editing that file +
    recompiling + redeploying.
 
-2. **The engine is no longer domain-agnostic.** The warehouse world was added *into*
-   the engine, not as a pack. Current warehouse coupling inside `lib/engine`:
+2. **The engine was not domain-agnostic.** Warehouse behavior initially lived
+   directly in the engine rather than behind a world module. The historical
+   coupling was:
 
    | File | warehouse-specific references |
    |---|---|
@@ -28,9 +30,12 @@ The challenge layer is already ~80% data, but two couplings break plug-and-play:
    | `decision/condition.ts` | ~20 |
    | `decision/observation.ts` | ~13 |
 
-   Plus the UI: `MazeRenderer` has warehouse branches; `ConditionChip` hardcodes the
-   warehouse flag vocabulary. Adding "traffic" today would mean editing all of these
-   again — the opposite of plug-and-play.
+   The UI also had warehouse branches in `MazeRenderer` and hardcoded warehouse
+   flags in condition controls.
+
+The second problem is now resolved by the `WorldModule` and renderer registries.
+The first remains a future content-discovery step: challenges are still bundled
+through `content/challenges/index.ts`.
 
 The goal: **adding a level/scenario = adding data; adding a whole new world = adding a
 small shipped plugin — never editing the engine core.**
@@ -95,9 +100,13 @@ content/
   lib/engine/worlds/
     maze/           world module (createRuntime, applyAction, observation, status)
     warehouse/      world module
-  app/renderers/
-    maze/           MazeRenderer
-    warehouse/      WarehouseRenderer
+  features/simulation/components/renderers/
+    WorldRenderer.tsx       renderer registry/dispatcher
+    WarehouseRenderer.tsx   warehouse presentation
+    FinanceRenderer.tsx     finance presentation
+    ParkingRenderer.tsx     parking presentation
+  features/simulation/components/
+    MazeRenderer.tsx        maze presentation
   ```
   A pack's `manifest.json` references these by **id** (`"renderer": "warehouse"`,
   `"worldModule": "warehouse"`), and the app resolves the id against a registry of
@@ -250,8 +259,8 @@ Concretely this means:
 
 - **`lib/engine/world/world.ts`** shrinks to a generic grid/agent core. The
   warehouse runtime, `pickUp`/`deliver`/`charge`, `packagesRemaining`, and the
-  warehouse status branch move into `lib/engine/worlds/warehouse/`. The maze's
-  `goalHold` settle logic moves into `lib/engine/worlds/maze/`.
+  warehouse status branch move into `lib/engine/worlds/warehouse.ts`. The maze's
+  `goalHold` settle logic moves into `lib/engine/worlds/maze.ts`.
 - **`ActionType`** stops being a fixed union that lists warehouse actions; the legal
   set comes from the active module (`module.actions`). Primitive *movement* can stay
   a shared base; domain actions are module-owned.
@@ -322,13 +331,14 @@ suite green, and only the last two change *where* content lives.
   (`listPacks`, `challengesInPack`, `packForChallenge`, `getChallenge`,
   `firstChallengeInPack`). Every challenge now declares its `pack` field, and the
   app groups by it — the old `id.startsWith("warehouse-")` prefix guessing and
-  `WorldPicker`'s hardcoded world list are gone. Covered by
+  hardcoded catalogue list are gone. Covered by
   `lib/content/__tests__/registry.test.ts`. Verified live: the world picker and
   per-pack challenge lists render from the registry.
 - **Tier 2 — not started.** Pack manifests + `content/index.json`.
 - **Tier 3 — complete.** `WorldModule` owns domain schema validation, action and
   flag metadata, runtime, observation, and status. `World`, the loader and shared
-  types contain no warehouse behaviour; the app dispatches maze and warehouse
-  boards through a renderer registry. 62 tests green. See
+  types contain no warehouse behavior; `features/simulation/` dispatches Maze,
+  Warehouse, Finance, and Parking presentations through a renderer registry.
+  The current suite passes all 96 tests. See
   [ENGINE_LOADING.md](./ENGINE_LOADING.md) for the current detail.
 - **Tier 4/5 — not started.** Runtime + remote fetch.

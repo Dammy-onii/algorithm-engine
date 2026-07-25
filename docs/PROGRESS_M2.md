@@ -16,26 +16,26 @@ _Last updated: 2026-07-23 — Phase 1–5 complete. Build verification in progre
 | 2 | Brain compiler | `lib/authoring/brainCompiler.ts` | ✅ |
 | 3 | Brain decompiler | `lib/authoring/brainDecompiler.ts` | ✅ |
 | 4 | Brain summarizer | `lib/authoring/brainSummarizer.ts` | ✅ |
-| 5 | World: straight corridor | `world/challenge-straight.json` | ✅ |
-| 6 | World: corner turn | `world/challenge-corner.json` | ✅ |
-| 7 | World: open arena | `world/challenge-arena.json` | ✅ |
+| 5 | World: straight corridor | `content/worlds/challenge-straight.json` | ✅ |
+| 6 | World: corner turn | `content/worlds/challenge-corner.json` | ✅ |
+| 7 | World: open arena | `content/worlds/challenge-arena.json` | ✅ |
 | 8 | Challenge 1 — Straight Run | `challenges/01-straight-line.json` | ✅ |
 | 9 | Challenge 2 — First Corner | `challenges/02-one-corner.json` | ✅ |
 | 10 | Challenge 3 — No Way Out | `challenges/03-dead-end.json` | ✅ |
 | 11 | Challenge 4 — Build Strategy | `challenges/04-snake-corridor.json` | ✅ |
 | 12 | Challenge 5 — Two Minds | `challenges/05-open-arena.json` | ✅ |
 | 13 | Challenge registry | `challenges/index.ts` | ✅ |
-| 14 | Dataset update (3 new worlds) | `app/lib/datasets.ts` | ✅ |
-| 15 | PrimitiveBlock component | `app/components/studio/blocks/PrimitiveBlock.tsx` | ✅ |
-| 16 | ConditionChip component | `app/components/studio/blocks/ConditionChip.tsx` | ✅ |
-| 17 | GoalEditor layer | `app/components/studio/layers/GoalEditor.tsx` | ✅ |
-| 18 | StateEditor layer | `app/components/studio/layers/StateEditor.tsx` | ✅ |
-| 19 | RuleBuilder layer | `app/components/studio/layers/RuleBuilder.tsx` | ✅ |
-| 20 | FunctionComposer layer | `app/components/studio/layers/FunctionComposer.tsx` | ✅ |
-| 21 | MemoryEditor layer | `app/components/studio/layers/MemoryEditor.tsx` | ✅ |
-| 22 | BrainIntelligence panel | `app/components/studio/BrainIntelligence.tsx` | ✅ |
-| 23 | AuthoringPanel | `app/components/studio/AuthoringPanel.tsx` | ✅ |
-| 24 | ChallengeSelector | `app/components/studio/ChallengeSelector.tsx` | ✅ |
+| 14 | Dataset update (3 new worlds) | `lib/content/datasets.ts` | ✅ |
+| 15 | PrimitiveBlock component | `features/studio/components/blocks/PrimitiveBlock.tsx` | ✅ |
+| 16 | ConditionChip component | `features/studio/components/blocks/ConditionChip.tsx` | ✅ |
+| 17 | GoalEditor layer | `features/studio/components/layers/GoalEditor.tsx` | ✅ |
+| 18 | StateEditor layer | `features/studio/components/layers/StateEditor.tsx` | ✅ |
+| 19 | RuleBuilder layer | `features/studio/components/layers/RuleBuilder.tsx` | ✅ |
+| 20 | FunctionComposer layer | `features/studio/components/layers/FunctionComposer.tsx` | ✅ |
+| 21 | MemoryEditor layer | `features/studio/components/layers/MemoryEditor.tsx` | ✅ |
+| 22 | BrainIntelligence panel | `features/studio/components/BrainIntelligence.tsx` | ✅ |
+| 23 | AuthoringPanel | `features/studio/components/AuthoringPanel.tsx` | ✅ |
+| 24 | ChallengeSelector | `features/studio/components/ChallengeSelector.tsx` | ✅ |
 | 25 | Page rewrite (Studio + Lab) | `app/page.tsx` | ✅ |
 | 26 | MILESTONE2.md doc | `docs/MILESTONE2.md` | ✅ |
 | 27 | MILESTONES.md update | `docs/MILESTONES.md` | ✅ |

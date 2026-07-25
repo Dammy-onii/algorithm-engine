@@ -54,11 +54,12 @@ describe("progression gating", () => {
   it("completing the chain unlocks the whole path in order", () => {
     const done = new Set<string>();
     const order = [
-      "straight-line", "one-corner", "dead-end", "snake-corridor", "branching-maze", "open-arena",
+      "straight-line", "one-corner", "dead-end", "snake-corridor", "branching-maze",
       "warehouse-first-delivery", "warehouse-package-sorting",
       "warehouse-continuous-operations", "warehouse-energy-management",
       "finance-basic-route", "finance-skip-offline", "finance-reliability-intro",
       "finance-route-selection", "finance-cost-and-reliability", "finance-provider-health",
+      "parking-first-shift", "parking-match-vehicle", "parking-priority-access",
     ];
     for (const id of order) {
       expect(isChallengeUnlocked(id, done), `expected ${id} unlocked`).toBe(true);

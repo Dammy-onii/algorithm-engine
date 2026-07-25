@@ -1,0 +1,4 @@
+{
+  "initial": "operate",
+  "states": [{ "id": "operate", "description": "Observe the entrance queue and allocate its head vehicle." }]
+}

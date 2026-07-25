@@ -43,7 +43,7 @@ heading without being able to skip ahead.
 
 ### 3. Curriculum map
 
-[ChallengeSelector.tsx](../app/components/studio/ChallengeSelector.tsx) is now a
+[ChallengeSelector.tsx](../features/studio/components/ChallengeSelector.tsx) is now a
 progression path: each card shows its step number, the concept it teaches (`Learn:
 Ordered rules`), and its state — ✓ completed, available, or 🔒 locked.
 
@@ -85,25 +85,25 @@ same experience. See [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md) for the schema
 Shipped:
 
 1. **Progressive-disclosure problem brief** —
-   [ProblemBrief.tsx](../app/components/studio/ProblemBrief.tsx). A one-line
+   [ProblemBrief.tsx](../features/studio/components/ProblemBrief.tsx). A one-line
    headline (*what to do*) + one line of context are always visible; the
    narrative and intelligence notes are tucked behind **Learn more**; hints live
    in their own drawer and still escalate one at a time (nudged open after two
    failed runs).
 2. **Live task checklist** —
-   [TaskChecklist.tsx](../app/components/studio/TaskChecklist.tsx) +
+   [TaskChecklist.tsx](../features/studio/components/TaskChecklist.tsx) +
    `evaluateSteps` / `liveContext` in
    [objectives.ts](../lib/authoring/objectives.ts). A challenge's `steps` (or, as
    a fallback, its required objectives) tick off **during the run**, evaluated
    each tick against the live metrics + the current observation domain. Turns an
    abstract objective into visible incremental progress.
 3. **Results screen** —
-   [ResultsPanel.tsx](../app/components/studio/ResultsPanel.tsx). Replaces the
+   [ResultsPanel.tsx](../features/studio/components/ResultsPanel.tsx). Replaces the
    "Goal reached" note with pass/fail, every objective (required ✓ + bonus ★), and
    an explicit **Next level →** action that navigates to the next unlocked
    challenge.
 4. **Compact progress stepper** —
-   [ProgressStepper.tsx](../app/components/studio/ProgressStepper.tsx). Always-on
+   [ProgressStepper.tsx](../features/studio/components/ProgressStepper.tsx). Always-on
    "Level X of N · done" summary with a dotted done/current/locked track.
 5. **First-run onboarding** — a dismissible one-time banner (`ae-onboarded`)
    explaining the three regions.

@@ -1,0 +1,12 @@
+{
+  "functions": [
+    { "id": "park-standard", "action": "parkStandard", "description": "Assign the head vehicle to the nearest free standard space." },
+    { "id": "park-charging", "action": "parkCharging", "description": "Assign the head vehicle to the nearest free charging bay." },
+    { "id": "park-large", "action": "parkLarge", "description": "Assign the head vehicle to the nearest free large bay." },
+    { "id": "park-premium", "action": "parkPremium", "description": "Assign the head vehicle to the nearest free premium space." },
+    { "id": "park-accessible", "action": "parkAccessible", "description": "Assign the head vehicle to the nearest free accessible space." },
+    { "id": "park-reserved", "action": "parkReserved", "description": "Assign the head vehicle to its reserved space." },
+    { "id": "release-vehicle", "action": "releaseVehicle", "description": "Authorize the oldest exit request and free its occupied space." },
+    { "id": "hold", "action": "wait", "description": "Wait one tick while the lot changes." }
+  ]
+}

@@ -61,7 +61,7 @@ Where things live:
 | Concern | File |
 |---|---|
 | Content catalog (packs → challenges) | `lib/content/registry.ts` |
-| World + brain registries (bundled data) | `app/lib/datasets.ts`, `content/challenges/index.ts` |
+| World + brain registries (bundled data) | `lib/content/datasets.ts`, `content/challenges/index.ts` |
 | Load + validate brain, build world | `lib/engine/runtime/loader.ts` |
 | The simulation loop | `lib/engine/simulation.ts` |
 | Generic world state | `lib/engine/world/world.ts` |
@@ -155,6 +155,12 @@ Shipped modules (`lib/engine/worlds/`):
   queue + provider health as the runtime, `routeTo{A,B,C}` / `hold` / `decline`
   actions with seeded (reproducible) outcomes, completion (*queue drained*), and
   the payment/provider observation bag. See [FINANCE_SIMULATION.md](./FINANCE_SIMULATION.md).
+- **`parking.ts`** — a **non-grid** world (`tracksMovement: false`): scheduled
+  arrivals + typed parking spaces as the runtime, category allocation actions,
+  explicit exit requests + user-authorized departures, space reuse,
+  compatibility violations, entry/exit wait and utilization metrics, and
+  completion after every vehicle leaves. See
+  [PARKING_SIMULATION.md](./PARKING_SIMULATION.md).
 - **`registry.ts`** — `resolveWorldModule(kind)` maps a `WorldData.kind` to its
   module (default `maze`); `allDomainFlags()` is the union of every module's flag
   names, used by the loader to validate brains across worlds.
@@ -213,8 +219,9 @@ What moved:
 
 The registry now derives domain action and flag vocabularies from every module.
 `ActionType` is open rather than a warehouse-expanded union, Studio reads domain
-flag metadata from the registry, and the app dispatches `MazeRenderer` and
-`WarehouseRenderer` through `WorldRenderer`. `buildWorld` also rejects a function
-plan that uses a domain action unavailable in the active world.
+flag metadata from the registry, and the app dispatches Maze, Warehouse, Finance,
+and Parking renderers through `WorldRenderer`. `buildWorld` also rejects a
+function plan that uses a domain action unavailable in the active world.
 
-Verified: `tsc` clean and **62 tests pass** with unchanged warehouse behaviour.
+Current verification is recorded in [CHANGELOG.md](./CHANGELOG.md); module-level
+tests live beside the engine under `lib/engine/__tests__/`.

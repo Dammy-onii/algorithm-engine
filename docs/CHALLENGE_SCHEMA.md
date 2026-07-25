@@ -79,7 +79,7 @@ values from the legacy `pack`/`stage`/`difficulty` when `taxonomy` is absent.
 }
 ```
 
-See [content/challenges/06-warehouse-first-delivery.json](../content/challenges/06-warehouse-first-delivery.json).
+See [content/challenges/warehouse/06-warehouse-first-delivery.json](../content/challenges/warehouse/06-warehouse-first-delivery.json).
 
 ## Why this matters for new worlds
 

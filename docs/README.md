@@ -31,6 +31,8 @@ Start here. The docs are grouped by purpose.
 - [WAREHOUSE_MODES_2_4.md](./WAREHOUSE_MODES_2_4.md) — warehouse stages 2–4.
 - [FINANCE_SIMULATION.md](./FINANCE_SIMULATION.md) — the finance (payment routing)
   world: a non-grid world on the same engine, its module, and the first six levels.
+- [PARKING_SIMULATION.md](./PARKING_SIMULATION.md) — the smart-parking operations
+  world, sprite-pack mapping, runtime contract, and first three levels.
 - [MAZE_LEVELS.md](./MAZE_LEVELS.md) — Maze level directory, difficulty policy,
   and the branching-maze authoring reference.
 
@@ -46,4 +48,5 @@ Start here. The docs are grouped by purpose.
 
 ## Routing & structure
 - [ROUTING_AND_STRUCTURE.md](./ROUTING_AND_STRUCTURE.md) — implemented App Router
-  routes, content reorganization, and navigation verification notes.
+  routes, current feature-oriented tree, component ownership/reuse rules,
+  dependency direction, and navigation verification.

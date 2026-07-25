@@ -63,11 +63,11 @@ Read World → Generate Observation → Evaluate Goal → Determine Active State
 
 ### Data contracts
 
-**World files** (`world/`)
+**World files** (`content/worlds/`)
 - `maze.json` — grid dimensions, tile layout, start, goal.
 - `entities.json` — agents/objects placed in the world.
 
-**Brain files** (`brain/`)
+**Brain files** (`content/brains/<brain-id>/`)
 - `goals.json` — prioritized objectives.
 - `states.json` — possible states + the initial state.
 - `rules.json` — condition → action/function mappings, grouped by state.
@@ -93,11 +93,13 @@ lib/engine/
 │   └── loader.ts             # load + validate world and brain data
 └── simulation.ts             # Simulation: owns world+agent+brain, exposes tick()
 
-brain/   goals.json states.json rules.json functions.json memory.json
-world/   maze.json entities.json
+content/brains/       goals, states, rules, functions and memory JSON
+content/worlds/       immutable world and entity JSON
+content/challenges/   challenge descriptors
 
-app/     page.tsx + components (renderer, debug panel, controls) — the only
-         Next.js-specific layer; the engine above is framework-agnostic.
+app/                  thin Next.js route segments and global layout
+features/             application, catalogue, studio, lab and simulation UI
+shared/               cross-feature reusable UI
 ```
 
 ### Initial (deliberately dumb) behavior

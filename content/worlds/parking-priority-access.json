@@ -1,0 +1,38 @@
+{
+  "name": "ParkFlow — Priority Access",
+  "kind": "parking",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "parking": {
+    "maxTicks": 120,
+    "spaces": [
+      { "id": "N1", "kind": "standard", "row": "north", "order": 0, "distanceToExit": 11 },
+      { "id": "N2", "kind": "standard", "row": "north", "order": 1, "distanceToExit": 10 },
+      { "id": "N3", "kind": "charging", "row": "north", "order": 2, "distanceToExit": 9 },
+      { "id": "N4", "kind": "large", "row": "north", "order": 3, "distanceToExit": 8 },
+      { "id": "N5", "kind": "reserved", "row": "north", "order": 4, "distanceToExit": 7, "reservedFor": "reserved-01" },
+      { "id": "N6", "kind": "premium", "row": "north", "order": 5, "distanceToExit": 6 },
+      { "id": "S1", "kind": "standard", "row": "south", "order": 0, "distanceToExit": 6 },
+      { "id": "S2", "kind": "standard", "row": "south", "order": 1, "distanceToExit": 5 },
+      { "id": "S3", "kind": "accessible", "row": "south", "order": 2, "distanceToExit": 4 },
+      { "id": "S4", "kind": "reserved", "row": "south", "order": 3, "distanceToExit": 3, "reservedFor": "reserved-02" },
+      { "id": "S5", "kind": "premium", "row": "south", "order": 4, "distanceToExit": 2 },
+      { "id": "S6", "kind": "standard", "row": "south", "order": 5, "distanceToExit": 1 }
+    ],
+    "vehicles": [
+      { "id": "car-01", "arrivalTick": 0, "duration": 7, "size": "compact" },
+      { "id": "vip-01", "arrivalTick": 1, "duration": 9, "size": "compact", "vip": true },
+      { "id": "permit-01", "arrivalTick": 2, "duration": 8, "size": "compact", "accessiblePermit": true },
+      { "id": "reserved-01", "arrivalTick": 3, "duration": 10, "size": "compact", "reservation": "reserved-01" },
+      { "id": "ev-01", "arrivalTick": 4, "duration": 7, "size": "compact", "electric": true },
+      { "id": "van-01", "arrivalTick": 5, "duration": 8, "size": "large" },
+      { "id": "car-02", "arrivalTick": 7, "duration": 5, "size": "compact" },
+      { "id": "reserved-02", "arrivalTick": 8, "duration": 6, "size": "compact", "reservation": "reserved-02" },
+      { "id": "vip-02", "arrivalTick": 9, "duration": 5, "size": "compact", "vip": true },
+      { "id": "car-03", "arrivalTick": 11, "duration": 4, "size": "compact" }
+    ]
+  }
+}

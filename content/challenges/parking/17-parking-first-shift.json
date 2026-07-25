@@ -1,0 +1,50 @@
+{
+  "id": "parking-first-shift",
+  "pack": "parking",
+  "number": 17,
+  "name": "First Shift",
+  "difficulty": 1,
+  "stage": "practice",
+  "worldKey": "parking-first-shift",
+  "taxonomy": { "domain": "Parking", "simulation": "Smart Facility Operations", "tier": "tutorial", "grade": 1 },
+  "tagline": "Open the lot and keep the entrance moving.",
+  "brief": "Allocate arriving cars, then authorize finished stays through the exit checkpoint to free capacity.",
+  "context": "A small city lot is opening for the morning. Every arrival is an ordinary compact car, but each stays for a different amount of time.",
+  "narrative": "Cars arrive at the entrance over time. Your controller sees the vehicle at the head of the queue and decides where it should park. After a stay ends, the car requests permission to leave but still occupies its bay. Your rules must open the exit checkpoint before that capacity can be reused.",
+  "objective": "Serve every arriving car without an allocation violation.",
+  "learningObjective": "Two-sided facility control: react to arrivals, allocate capacity, and explicitly release completed resources.",
+  "intelligenceExplanation": "The starter flow is empty. Add one rule for the exit checkpoint and one for the entrance queue. New rules append to the bottom and run in the order shown.",
+  "hint": "Use WHEN hasExitRequest → release-vehicle, then WHEN hasWaitingVehicle → park-standard.",
+  "hints": [
+    "Watch the entrance queue: its first car is the only vehicle the controller allocates this tick.",
+    "A standard car only needs the standard allocation action.",
+    "Use hasExitRequest → release-vehicle and hasWaitingVehicle → park-standard. Exit first keeps capacity turning over."
+  ],
+  "steps": [
+    { "id": "allocate", "label": "Allocate an arriving car", "check": "parkedCount >= 1 || departedCount >= 1" },
+    { "id": "release", "label": "Authorize a car through the exit checkpoint", "check": "departedCount >= 1" },
+    { "id": "serve", "label": "Serve all six cars", "check": "allVehiclesServed" },
+    { "id": "clean", "label": "Finish with no allocation violations", "check": "allVehiclesServed && violations == 0" }
+  ],
+  "availableBricks": ["park-standard", "release-vehicle", "hold"],
+  "availableConditions": ["hasExitRequest", "exitQueueLength", "hasWaitingVehicle", "standardAvailable", "spacesAvailable", "always"],
+  "functionsUnlocked": false,
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "operate-lot", "priority": 1, "description": "Serve every arriving vehicle." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Allocate the entrance queue." }] },
+    "rules": { "rules": [] },
+    "functions": {
+      "functions": [
+        { "id": "park-standard", "action": "parkStandard", "description": "Assign the head vehicle to a standard space." },
+        { "id": "release-vehicle", "action": "releaseVehicle", "description": "Authorize the oldest exit request and free its space." },
+        { "id": "hold", "action": "wait", "description": "Wait one tick." }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    { "id": "serve-all", "label": "Serve every vehicle", "check": "reached && allVehiclesServed" },
+    { "id": "correct", "label": "No allocation violations", "check": "allVehiclesServed && violations == 0" },
+    { "id": "responsive", "label": "Average entry and exit wait no more than one tick", "check": "allVehiclesServed && averageWait <= 1 && averageExitWait <= 1", "bonus": true }
+  ]
+}

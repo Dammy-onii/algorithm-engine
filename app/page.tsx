@@ -1,6 +1,6 @@
-import { AppShell } from "@/app/components/AppShell";
+import { WorldCataloguePage } from "@/features/catalogue/pages/WorldCataloguePage";
 
 /** The world-picker route. */
 export default function HomePage() {
-  return <AppShell view="home" />;
+  return <WorldCataloguePage />;
 }

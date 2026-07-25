@@ -1,15 +1,14 @@
 # Page Routing & File Structure
 
-Implemented reference for the routing and content-layout refactor. The work keeps
-the previous stateful Studio/Lab logic intact by extracting it into a shared client
-shell instead of rewriting it.
+Implemented reference for the route-owned page refactor. Every route now renders a
+dedicated feature page component; there is no `view` enum or shared stateful shell.
 
 ## Routes
 
 | URL | Server-route responsibility | Client view |
 |---|---|---|
 | `/` | none | World/pack picker |
-| `/[pack]` | Validate the pack | That world's level directory, grouped by difficulty |
+| `/[pack]` | Validate the pack | Filterable challenge-row directory with per-row difficulty |
 | `/[pack]/[challenge]` | Validate pack, challenge, and membership | Shareable Studio challenge |
 | `/lab` | none | Raw JSON Engine Lab |
 
@@ -20,11 +19,20 @@ Examples: `/maze`, `/warehouse`, and
 
 ```text
 app/
-  page.tsx                        <AppShell view="home" />
-  [pack]/page.tsx                 validates findPack(pack)
-  [pack]/[challenge]/page.tsx     validates findPack + getChallenge + membership
-  lab/page.tsx                    <AppShell view="lab" />
-  components/AppShell.tsx         timers, Studio, Lab, persistence and controls
+  page.tsx                        <WorldCataloguePage />
+  [pack]/page.tsx                 validates pack, renders <ChallengeDirectoryPage />
+  [pack]/[challenge]/page.tsx     validates membership, renders <StudioPage />
+  lab/page.tsx                    <LabPageView />
+
+features/
+  application/components/         shared PageLayout and application header
+  catalogue/pages/                Home and challenge-directory page UI
+  studio/pages/                   Studio page UI and Studio-only client state
+  lab/pages/                      Lab page UI and Lab-only client state
+  simulation/                     shared controls, stage, debug UI and renderers
+
+shared/
+  components/                     product-wide UI with no feature ownership
 ```
 
 The dynamic route pages are server components. In this version of Next's App
@@ -45,14 +53,12 @@ URL.
 
 The URL is the source of truth for the selected pack and challenge.
 
-- The world picker calls `router.push("/<pack>")`.
-- The world-level directory and in-Studio challenge selector call
-  `router.push("/<pack>/<challenge>")`.
+- World and directory cards are real Next links.
+- The in-Studio challenge selector calls `router.push("/<pack>/<challenge>")`
+  because it is already an interactive client component.
 - The header links back to `/`; the Lab button goes to `/lab`.
-- A route-specific `key` on `AppShell` intentionally resets transient state
-  (active interval, current simulation engine, ephemeral objective panel) after a
-  navigation. The persisted visual brain is then restored from `localStorage` by
-  challenge ID.
+- Studio is keyed by challenge route, resetting its transient engine and interval
+  while restoring the persisted brain by challenge ID.
 
 `router.push`, rather than `replace`, is intentional: selecting a level should add
 history so browser back/forward behaves as a learner expects. This corrects the
@@ -61,63 +67,144 @@ called for navigable history.
 
 ## File organization
 
-Authored data is now grouped under `content/`:
+The application is organized by ownership rather than by file type:
 
 ```text
+app/                       route files, root layout and global CSS only
+assets/                    source assets imported by components
+features/
+  application/             shared page frame and application chrome
+  catalogue/               discovery page UI, components and difficulty mapping
+  lab/                     Lab page UI, JSON editor and workspace
+  simulation/              cross-mode simulation presentation
+  studio/                  Studio page UI, persistence and authoring components
+shared/
+  components/              reusable cross-feature UI
 content/
-  worlds/                 formerly world/
+  worlds/                  immutable authored scenarios
   brains/
-    default/               formerly brain/
-    naive/                 formerly brain-naive/
-    dash/                  formerly brain-dash/
-    warehouse/             formerly brain-warehouse/
-  challenges/             formerly challenges/
+    default/ naive/ dash/
+    warehouse/ finance/ parking/
+  challenges/
+    maze/                  Maze challenge descriptors
+    warehouse/             Warehouse challenge descriptors
+    finance/               Finance challenge descriptors
+    parking/               Parking challenge descriptors
+    index.ts               ordered bundled challenge registry
 lib/
-  engine/                 runtime and shipped world modules
-  content/                catalog API (not authored data)
-  authoring/  curriculum/
-app/
-  components/             AppShell, simulator and Studio UI
-  [pack]/  lab/           route segments
+  engine/                   framework-independent runtime and world modules
+  content/                  shared dataset and catalogue registries
+  authoring/                compiler, persistence and objective evaluation
+  curriculum/               progression graph
 ```
 
-The apparent `content` naming overlap is deliberate:
+The ownership rules are:
 
-- `content/` at the repository root is authored JSON content, bundled today.
-- `lib/content/` is TypeScript that exposes that content through a stable catalog
-  API (`listPacks`, `findPack`, `challengesInPack`, `getChallenge`).
+- `app/` defines URLs; it does not own feature components.
+- `features/` owns React components and client behavior for one product area.
+- `shared/` is reserved for components that have no single feature owner.
+- `content/` is authored data; `lib/content/` is the TypeScript API that exposes it.
+- `lib/engine/` cannot import React, Next.js, `features/`, or `app/`.
+
+## Component ownership and reuse
+
+The directories describe ownership; they are not merely categories for similar
+file extensions.
+
+| Area | Public responsibility | Important reusable pieces |
+|---|---|---|
+| `features/application/` | Provides shared page chrome without route state | `PageLayout` |
+| `features/catalogue/` | Owns `/` and `/[pack]` page UI | `WorldCataloguePage`, `ChallengeDirectoryPage`, `difficultyFor()` |
+| `features/lab/` | Owns `/lab` UI and Lab-only state | `LabPageView`, `BrainEditor` |
+| `features/simulation/` | Presents and constructs simulations for Studio and Lab | `createSimulationSession`, `SimControls`, `SimStage`, renderers |
+| `features/studio/` | Owns challenge-page UI, persistence and authoring state | `StudioPage`, `AuthoringPanel`, progression/results components and editor layers |
+| `shared/components/` | Product-wide UI with no domain owner | `ThemeToggle` |
+
+The intended dependency direction is:
+
+```text
+app routes
+    ├──► catalogue pages
+    ├──► StudioPage ─────► lib/authoring + lib/curriculum
+    └──► LabPageView
+
+catalogue + Lab ─────► application/PageLayout
+StudioPage ──────────► Studio problem workspace chrome
+Studio + Lab ────────► simulation ─► lib/engine
+simulation ──────────► domain renderers
+all UI features ─────► shared components
+content registries ──► authored content
+```
+
+Rules for adding code:
+
+1. A route `page.tsx` validates input and renders exactly one route-specific page
+   UI component. It does not contain the page's Tailwind/JSX implementation.
+2. Put a component in the feature that owns its behavior. A component used by
+   two screens can still remain feature-owned when both uses concern that feature.
+3. Promote a component to `shared/` only when no product feature is its natural
+   owner.
+4. Keep pure policy and mapping functions outside React components, as with
+   `features/catalogue/difficulty.ts`.
+5. Renderers consume the generic `World` contract and domain query helpers. They
+   do not mutate the simulation.
+6. `features/application/` contains stateless shared page chrome. It must not
+   become another stateful route switch.
+7. Catalogue and Lab sizing is expressed with Tailwind at the `PageLayout`
+   call site; `PageLayout` does not translate semantic width props into
+   container classes. Studio deliberately owns a full-viewport, independently
+   scrolling two-pane workspace instead of using the catalogue frame.
 
 ### Mechanical migration order
 
-The migration was performed and TypeScript-checked after each step:
+The migrations were performed and TypeScript-checked after each step:
 
 1. `world/` → `content/worlds/`; central dataset and test imports updated.
 2. All `brain*` directories → `content/brains/<name>/`; central dataset and test
    imports updated.
 3. `challenges/` → `content/challenges/`; application, registry, curriculum and
    test imports updated.
-4. The former `app/page.tsx` → `app/components/AppShell.tsx`; thin pages added.
+4. The former `app/page.tsx` → `features/application/AppShell.tsx`; thin pages added.
+5. UI moved out of `app/components/` into feature-owned folders.
+6. `app/lib/datasets.ts` moved to `lib/content/datasets.ts` because world loading
+   is shared by Studio, Lab, and engine tests.
+7. Repeated application chrome became `ApplicationHeader`; the Lab view became
+   `LabWorkspace`; catalogue difficulty mapping became a pure reusable module.
+8. `AppShell` and `AppShellView` were removed. Home, directory, Studio, and Lab
+   received dedicated page UI components; Studio and Lab received independent
+   state and simulation lifecycles.
+9. Single-use `WorldPicker`, `PackLevelPicker`, `LabWorkspace`,
+   `ApplicationHeader`, and `HeaderAction` layers were folded into their owning
+   page or shared layout.
+10. Flat challenge JSON was grouped under pack-specific `maze/`, `warehouse/`,
+    `finance/`, and `parking/` folders; the root registry preserves authored order.
 
 ## Verification
 
 Completed locally:
 
-- `npx tsc --noEmit` passes after the content moves and route extraction.
-- `npm run lint` passes.
-- `npm test` passes: **8 files, 62 tests**.
+- `npx tsc --noEmit` passes after the feature reorganization.
+- `npm run lint` passes with one existing unused-import warning in the Finance test.
+- `npm test` passes: **17 files, 96 tests**.
+- `npm run build` passes.
 - The static route pages compile under TypeScript with asynchronous dynamic params
   and server-side `notFound()` validation.
-
-The production build was also attempted. It reaches Next's configured Google-font
-download but cannot complete in this sandbox because access to
-`fonts.googleapis.com` is blocked; the requested networked build approval timed
-out. This is external font fetching, not a routing or TypeScript failure.
+- Dependency-boundary checks confirm that `lib/engine/` imports no route, feature,
+  shared UI, React, or Next.js code.
+- Production client-reference manifests confirm route isolation: `/` and
+  `/[pack]` include neither Studio nor Lab page clients; `/lab` references only
+  `LabPage`, while `/[pack]/[challenge]` references `StudioPage`.
+- Live production smoke checks return 200 for `/`, `/maze`,
+  `/maze/branching-maze`, `/warehouse`, `/finance`, `/parking`, and `/lab`.
+  The removed `/maze/open-arena` route correctly returns 404.
 
 Manual browser smoke-test checklist for an environment where the dev server can
 listen:
 
-1. Open `/`, select Maze: `/maze` shows the level directory and its difficulty
-   constraints. Use Back to return to the picker.
+1. Open `/`, select Maze: `/maze` shows the challenge-row directory, with
+   Examples as its only section heading, concise difficulty labels, and the
+   Status/Skills/Difficulty/Subdomains filter sidebar. Use Back to return to the
+   picker.
 2. Open `/warehouse`, select First Delivery: URL becomes
    `/warehouse/warehouse-first-delivery`.
 3. Paste that deep URL into a fresh tab: warehouse Studio opens with the persisted
@@ -127,8 +214,8 @@ listen:
 5. Open `/lab`: the raw world/brain JSON harness works independently of Studio.
 6. Confirm the three invalid-path examples above render the Next not-found page.
 
-The sandbox prevents binding a local dev server (`listen EPERM`), so those browser
-steps are explicitly listed rather than claimed as completed.
+These remain useful manual interaction checks even though representative
+production routes were verified automatically.
 
 For the full explanation of engine decoupling, modules, registries, and challenge
 loading, see [ARCHITECTURE.md](./ARCHITECTURE.md).

@@ -16,13 +16,14 @@ How the project is built, the tech stack, and how to run it.
 
 The **engine is framework-agnostic**. Nothing under `lib/engine/` imports React or
 Next. The engine could be lifted into a Node CLI, a worker, or a test harness
-unchanged. Next.js only provides the *rendering shell and controls* in `app/`.
+unchanged. Next.js routes live in `app/`; React product UI lives in `features/`
+and `shared/`.
 
 ```
-┌────────────────────────────────────────────┐
-│ app/  (Next.js + React — rendering shell)  │  ← the ONLY framework layer
-│   route pages, AppShell, renderer, controls│
-└───────────────────────┬────────────────────┘
+┌───────────────────────────────────────────────┐
+│ app/ + features/ + shared/  (Next.js + React)│
+│ routes        feature UI       shared UI      │
+└────────────────────────┬──────────────────────┘
                         │ imports
 ┌───────────────────────▼────────────────────┐
 │ lib/engine/  (pure TypeScript)             │
@@ -40,12 +41,15 @@ See [`MILESTONES.md`](./MILESTONES.md#target-architecture) for the full engine t
 Top level:
 
 ```
-app/                  Next.js App Router UI and route segments
+app/                  Next.js App Router segments, layout and global CSS
+features/             Product UI grouped by application capability
+shared/               Cross-feature reusable UI
+assets/               Source artwork imported by feature components
 content/worlds/       World/maze definitions — authored data
 content/brains/       Agent instruction files — authored data
 content/challenges/   Challenge descriptors — authored data
 lib/engine/           Framework-agnostic simulation & decision engine
-lib/content/          Content catalog API
+lib/content/          Shared dataset and content-catalog APIs
 docs/                 This documentation
 public/               Static assets
 ```
@@ -80,6 +84,12 @@ npm run lint
 ## Conventions
 
 - Engine code: pure functions and small classes; no side effects outside `World`.
+- Route files stay thin; interactive behavior belongs to its owning feature.
+- Cross-feature UI belongs in `shared/`, not in an unrelated feature folder.
+- `features/application/` provides stateless shared page chrome; it must not own a
+  route enum, simulation timer, or feature state.
+- Keep reusable non-React policy in a feature-level module rather than burying it
+  inside a component.
 - Types live in `lib/engine/types.ts` and are shared across layers.
 - JSON data files are validated on load by `runtime/loader.ts`; a bad file should
   fail loudly, not silently.
