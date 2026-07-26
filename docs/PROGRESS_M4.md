@@ -2,9 +2,8 @@
 
 Resumable tracker. Legend: ⬜ not started · 🟨 in progress · ✅ done
 
-_Last updated: 2026-07-25 — learner flow & readability pass shipped (structured
-brief schema, live task checklist, results screen, stepper, onboarding, Grade
-taxonomy)._
+_Last updated: 2026-07-26 — learner flow remains shipped; the former compact
+stepper was retired by the full-width problem-workspace redesign._
 
 ## Task board
 
@@ -21,7 +20,7 @@ taxonomy)._
 | 12 | Progressive-disclosure problem brief | `ProblemBrief.tsx` | ✅ |
 | 13 | Live task checklist (ticks off during the run) | `TaskChecklist.tsx`, `objectives.ts` | ✅ |
 | 14 | Results screen (objectives + Next level) | `ResultsPanel.tsx`, `features/studio/pages/StudioPage.tsx` | ✅ |
-| 15 | Compact progress stepper | `ProgressStepper.tsx` | ✅ |
+| 15 | Compact progress stepper | `ProgressStepper.tsx` | ✅ shipped in M4; retired from current Studio UI |
 | 16 | First-run onboarding banner | `features/studio/pages/StudioPage.tsx` | ✅ |
 | 17 | Grade taxonomy across brief + selector | `challengeBrief.ts`, `ChallengeSelector.tsx` | ✅ |
 | 18 | Brief/flow tests | `lib/authoring/__tests__/challengeBrief.test.ts` | ✅ |
@@ -49,7 +48,7 @@ taxonomy)._
 
 Addresses the "problem statement is overwhelming; give a proper task-completion
 flow" feedback — and does it through a **world-agnostic** structured schema so
-the same flow serves maze, warehouse, and the coming finance world. Full write-up
+the same flow serves Maze, Warehouse, Finance, Parking, and future worlds. Full write-up
 in [MILESTONE4.md](./MILESTONE4.md); schema reference in
 [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md).
 
@@ -57,7 +56,9 @@ in [MILESTONE4.md](./MILESTONE4.md); schema reference in
   hints in a drawer. "Current intelligence" collapsed below the editor.
 - Live task checklist ticks off during the run (`steps` or required objectives).
 - Results screen: objectives (required ✓ / bonus ★) + **Next level →**.
-- Compact progress stepper + first-run onboarding banner.
+- First-run onboarding banner. The compact stepper shipped in this pass but was
+  later removed from Studio because its world and level summary duplicated the
+  Problem list header and rows.
 - Grade taxonomy (`Tutorial · Grade 1`) replaces "Level N" in brief + selector.
 
 ## Verification

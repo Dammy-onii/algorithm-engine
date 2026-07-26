@@ -135,6 +135,27 @@ export const CONCEPTS: Concept[] = [
     prerequisites: ["weighted-routing"],
   },
   {
+    id: "resilient-orchestration",
+    name: "Resilient payment orchestration",
+    teaches: "Combine eligibility, deadlines, capacity, reliability, and retry history in a policy that generalizes.",
+    taughtBy: "finance-interview-routing",
+    prerequisites: ["adaptive-routing"],
+  },
+  {
+    id: "load-aware-routing",
+    name: "Load-aware payment routing",
+    teaches: "Control congestion and protect service levels while provider work continues asynchronously.",
+    taughtBy: "finance-peak-hour-switch",
+    prerequisites: ["resilient-orchestration"],
+  },
+  {
+    id: "production-orchestration",
+    name: "Production payment orchestration",
+    teaches: "Balance throughput, reliability, deadlines, retries, compatibility, congestion, and cost under adversarial incidents.",
+    taughtBy: "finance-production-orchestrator",
+    prerequisites: ["load-aware-routing"],
+  },
+  {
     id: "parking-operations",
     name: "Parking operations",
     teaches: "Allocate arriving vehicles while occupied spaces turn over and become reusable.",
@@ -154,6 +175,27 @@ export const CONCEPTS: Concept[] = [
     teaches: "Protect reservations, accessible spaces, and premium access with ordered special cases.",
     taughtBy: "parking-priority-access",
     prerequisites: ["parking-resource-matching"],
+  },
+  {
+    id: "parking-realtime-control",
+    name: "Real-time parking control",
+    teaches: "Coordinate arrivals, physical movements, departures, patience, and reusable capacity in one live control loop.",
+    taughtBy: "parking-interview-controller",
+    prerequisites: ["parking-priority-allocation"],
+  },
+  {
+    id: "parking-incident-recovery",
+    name: "Parking incident recovery",
+    teaches: "Control back-pressure and fairness while closures, congestion, and gate capacity change.",
+    taughtBy: "parking-interview-operations",
+    prerequisites: ["parking-realtime-control"],
+  },
+  {
+    id: "parking-production-orchestration",
+    name: "Production parking orchestration",
+    teaches: "Maintain safety, throughput, fairness, and state consistency through overlapping long-running incidents.",
+    taughtBy: "parking-interview-orchestrator",
+    prerequisites: ["parking-incident-recovery"],
   },
 ];
 

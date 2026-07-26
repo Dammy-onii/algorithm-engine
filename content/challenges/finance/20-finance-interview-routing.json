@@ -1,0 +1,97 @@
+{
+  "id": "finance-interview-routing",
+  "pack": "finance",
+  "number": 20,
+  "name": "Intelligent Payment Routing",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "finance-interview-routing",
+  "tagline": "Build a routing policy that survives conditions it has never seen.",
+  "narrative": "You have joined YamusaPay's Payments Infrastructure team. The switch receives consumer, business, refund, and international transfers while provider availability, capacity, latency, fees, and reliability change. Every route occupies a provider slot until processing completes. Failed attempts may be retried, but retries consume deadline budget and increase cost. The visible stream teaches the contract; submission runs the same policy against hidden outages, capacity exhaustion, fee changes, latency spikes, and late high-value traffic.",
+  "objective": "Process the visible stream without timeouts, protect urgent and high-value payments, and submit a policy that generalizes across all hidden scenarios.",
+  "learningObjective": "Combine availability, compatibility, capacity, reliability, cost, urgency, and retry history in one ordered routing policy.",
+  "intelligenceExplanation": "The interview starts with no routing rules. Build the policy from the operational contract: filter eligibility and capacity first, then express reliability, urgency, retry, and cost preferences as guarded branches. A provider being online does not mean it can accept the current payment.",
+  "hint": "Start with the non-negotiable constraints: canRoute, deadline, priority, and supported value/type. Only compare cost after those filters.",
+  "hints": [
+    "Separate eligibility from preference. Use canRouteA/B/C before fee or expected cost.",
+    "Reserve the most reliable, low-latency route for urgent or high-value payments, and avoid immediately repeating a failed provider.",
+    "A robust fallback ends in hold only when the deadline permits waiting; otherwise choose an eligible route or decline deliberately."
+  ],
+  "taxonomy": {
+    "domain": "Finance",
+    "simulation": "Interview Payment Orchestration",
+    "tier": "medium",
+    "grade": 3
+  },
+  "brief": "Author and submit a resilient payment-routing policy against one visible and six hidden real-time scenarios.",
+  "context": "One tick is one routing decision while providers continue processing previously routed payments in parallel.",
+  "steps": [
+    {
+      "id": "eligibility",
+      "label": "Filter unavailable, incompatible, and capacity-exhausted providers",
+      "hint": "Use canRouteA, canRouteB, and canRouteC."
+    },
+    {
+      "id": "service-level",
+      "label": "Protect urgent and high-value payments from timeout and reliability risk",
+      "hint": "Use priority, isHighValue, deadlineRemaining, latency, and success rate."
+    },
+    {
+      "id": "visible",
+      "label": "Clear the visible stream without a timeout",
+      "check": "allProcessed && timedOut == 0"
+    },
+    {
+      "id": "hidden",
+      "label": "Submit the same policy to the hidden interview suite"
+    }
+  ],
+  "availableBricks": ["route-a", "route-b", "route-c", "hold", "decline"],
+  "availableConditions": [
+    "hasTransaction", "amount", "isConsumer", "isBusiness", "isInternational", "isRefund",
+    "isHighValue", "priority", "isPriority", "timeWaiting", "deadlineRemaining", "retryCount",
+    "canRetry", "lastProviderA", "lastProviderB", "lastProviderC", "queueDepth", "inFlight",
+    "onlineA", "onlineB", "onlineC", "canRouteA", "canRouteB", "canRouteC",
+    "feeA", "feeB", "feeC", "successRateA", "successRateB", "successRateC",
+    "currentLatencyA", "currentLatencyB", "currentLatencyC",
+    "expectedCostA", "expectedCostB", "expectedCostC",
+    "capacityRemainingA", "capacityRemainingB", "capacityRemainingC",
+    "queueLengthA", "queueLengthB", "queueLengthC", "healthScoreA", "healthScoreB", "healthScoreC",
+    "always"
+  ],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "objectives": [
+    { "id": "process", "label": "Finalize every visible payment", "check": "allProcessed" },
+    { "id": "timeouts", "label": "No visible payment expires", "check": "allProcessed && timedOut == 0" },
+    { "id": "priority", "label": "No urgent payment misses its service level", "check": "allProcessed && priorityFailures == 0" },
+    { "id": "quality", "label": "Keep the visible penalty score below 35", "check": "allProcessed && score < 35" }
+  ],
+  "interviewEvaluation": {
+    "suiteId": "intelligent-routing-v1",
+    "scenarioCount": 6,
+    "passingScore": 70,
+    "tutorial": true,
+    "rubric": [
+      "Correctness and completion: 30%",
+      "Reliability, timeout, and priority protection: 35%",
+      "Cost, congestion, and throughput: 25%",
+      "Generalization across hidden provider identities and schedules: 10%"
+    ]
+  },
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "orchestrate", "priority": 1, "description": "Process the stream safely and economically." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Continuously reassess the current payment and provider state." }] },
+    "rules": { "rules": [] },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Attempt the current payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Attempt the current payment through Provider B." },
+        { "id": "route-c", "action": "routeToC", "description": "Attempt the current payment through Provider C." },
+        { "id": "hold", "action": "hold", "description": "Leave the payment ready and let one tick of provider work elapse." },
+        { "id": "decline", "action": "decline", "description": "Permanently reject the current payment." }
+      ]
+    },
+    "memory": {}
+  }
+}

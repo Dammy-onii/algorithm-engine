@@ -1,0 +1,50 @@
+{
+  "name": "Smart Parking Controller — Interview Tutorial",
+  "kind": "parking",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "parking": {
+    "operationsMode": "realtime",
+    "entryTravelTicks": 2,
+    "exitTravelTicks": 2,
+    "laneCapacity": 3,
+    "exitGateCapacity": 1,
+    "congestionDelayPerMovement": 1,
+    "maxTicks": 360,
+    "spaces": [
+      { "id": "N1", "kind": "standard", "row": "north", "order": 0, "distanceToExit": 12, "zone": "A" },
+      { "id": "N2", "kind": "standard", "row": "north", "order": 1, "distanceToExit": 11, "zone": "A" },
+      { "id": "N3", "kind": "standard", "row": "north", "order": 2, "distanceToExit": 10, "zone": "A" },
+      { "id": "N4", "kind": "charging", "row": "north", "order": 3, "distanceToExit": 9, "zone": "A" },
+      { "id": "N5", "kind": "charging", "row": "north", "order": 4, "distanceToExit": 8, "zone": "B" },
+      { "id": "N6", "kind": "large", "row": "north", "order": 5, "distanceToExit": 7, "zone": "B" },
+      { "id": "N7", "kind": "premium", "row": "north", "order": 6, "distanceToExit": 6, "zone": "B" },
+      { "id": "N8", "kind": "premium", "row": "north", "order": 7, "distanceToExit": 5, "zone": "B" },
+      { "id": "S1", "kind": "standard", "row": "south", "order": 0, "distanceToExit": 8, "zone": "A" },
+      { "id": "S2", "kind": "standard", "row": "south", "order": 1, "distanceToExit": 7, "zone": "A" },
+      { "id": "S3", "kind": "standard", "row": "south", "order": 2, "distanceToExit": 6, "zone": "A" },
+      { "id": "S4", "kind": "large", "row": "south", "order": 3, "distanceToExit": 5, "zone": "B" },
+      { "id": "S5", "kind": "accessible", "row": "south", "order": 4, "distanceToExit": 4, "zone": "B" },
+      { "id": "S6", "kind": "accessible", "row": "south", "order": 5, "distanceToExit": 3, "zone": "B" },
+      { "id": "S7", "kind": "reserved", "row": "south", "order": 6, "distanceToExit": 2, "reservedFor": "interview-reservation", "zone": "B" },
+      { "id": "S8", "kind": "reserved", "row": "south", "order": 7, "distanceToExit": 1, "reservedFor": "interview-reservation", "zone": "B" }
+    ],
+    "batches": [
+      {
+        "prefix": "tutorial",
+        "count": 42,
+        "arrivalStart": 0,
+        "arrivalEvery": 2,
+        "durations": [8, 12, 6, 15, 10],
+        "vehicleTypes": ["standard", "electric", "standard", "large", "vip", "accessible", "reserved"],
+        "priorityEvery": 7,
+        "priority": 3,
+        "patienceTicks": 60,
+        "reservation": "interview-reservation"
+      }
+    ]
+  }
+}

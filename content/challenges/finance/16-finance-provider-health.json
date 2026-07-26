@@ -6,7 +6,7 @@
   "difficulty": 3,
   "stage": "medium",
   "worldKey": "finance-provider-health",
-  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "medium", "grade": 1 },
+  "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "medium", "grade": 2 },
   "tagline": "The best provider won't stay the best.",
   "brief": "Provider A is best — until it goes offline mid-run. Route so the queue keeps clearing after it drops.",
   "context": "A is cheap and reliable at first, then goes offline partway through. B is steady the whole time.",
@@ -47,6 +47,6 @@
   "objectives": [
     { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
     { "id": "adapt", "label": "At most one failed payment", "check": "allProcessed && failed <= 1" },
-    { "id": "smooth", "label": "Keep total cost at or below $2.00", "check": "allProcessed && totalCost <= 2", "bonus": true }
+    { "id": "smooth", "label": "Keep total cost at or below ₦2.00", "check": "allProcessed && totalCost <= 2", "bonus": true }
   ]
 }

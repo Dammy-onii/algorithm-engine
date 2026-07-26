@@ -10,7 +10,11 @@ dedicated feature page component; there is no `view` enum or shared stateful she
 | `/` | none | World/pack picker |
 | `/[pack]` | Validate the pack | Filterable challenge-row directory with per-row difficulty |
 | `/[pack]/[challenge]` | Validate pack, challenge, and membership | Shareable Studio challenge |
+| `/interview/[challengeId]` | Validate an interview-enabled challenge id | Shared interview workspace backed by that challenge's existing visible world and hidden suite |
+| `/i/[assignmentId]` | Verify a signed compact same-world assignment and resolve its ordered published challenge references | Multi-problem interview workspace; hidden Submit appears only for stages with an evaluation contract |
 | `/lab` | none | Raw JSON Engine Lab |
+| `/api/interview/assignments` | Validate a same-world problem selection and sign its canonical references | Compact assignment link |
+| `/api/interview/submit` | Validate the interview challenge and resolve its hidden suite | Streamed case results and final score |
 
 Examples: `/maze`, `/warehouse`, and
 `/warehouse/warehouse-first-delivery`.
@@ -22,7 +26,11 @@ app/
   page.tsx                        <WorldCataloguePage />
   [pack]/page.tsx                 validates pack, renders <ChallengeDirectoryPage />
   [pack]/[challenge]/page.tsx     validates membership, renders <StudioPage />
+  interview/[challengeId]/page.tsx validates interview stage, renders <StudioPage />
+  i/[assignmentId]/page.tsx       verifies assignment, renders selected <StudioPage />
   lab/page.tsx                    <LabPageView />
+  api/interview/assignments/route.ts compact signed assignment creation
+  api/interview/submit/route.ts   hidden Finance/Parking evaluation
 
 features/
   application/components/         shared PageLayout and application header
@@ -41,6 +49,8 @@ Invalid URLs call `notFound()`:
 
 - unknown pack: `/not-a-pack`;
 - unknown challenge: `/maze/not-a-challenge`;
+- unknown or non-interview stage: `/interview/not-an-interview`;
+- malformed or modified assignment: `/i/not-a-valid-assignment`;
 - valid challenge in the wrong pack:
   `/maze/warehouse-first-delivery`.
 
@@ -59,6 +69,9 @@ The URL is the source of truth for the selected pack and challenge.
 - The header links back to `/`; the Lab button goes to `/lab`.
 - Studio is keyed by challenge route, resetting its transient engine and interval
   while restoring the persisted brain by challenge ID.
+- Multi-problem interviews use `/i/[assignmentId]`; `?problem=n` selects a
+  canonical assignment position. Each assignment/problem pair receives an
+  isolated local brain key.
 
 `router.push`, rather than `replace`, is intentional: selecting a level should add
 history so browser back/forward behaves as a learner expects. This corrects the
@@ -153,7 +166,9 @@ Rules for adding code:
 7. Catalogue and Lab sizing is expressed with Tailwind at the `PageLayout`
    call site; `PageLayout` does not translate semantic width props into
    container classes. Studio deliberately owns a full-viewport, independently
-   scrolling two-pane workspace instead of using the catalogue frame.
+   scrolling two-pane desktop workspace instead of using the catalogue frame.
+   Its Problem list drawer keeps only one pack-scoped solved fraction in the
+   header; it does not repeat a level/done summary or visual progress track.
 
 ### Mechanical migration order
 
@@ -184,8 +199,8 @@ The migrations were performed and TypeScript-checked after each step:
 Completed locally:
 
 - `npx tsc --noEmit` passes after the feature reorganization.
-- `npm run lint` passes with one existing unused-import warning in the Finance test.
-- `npm test` passes: **17 files, 96 tests**.
+- `npm run lint` passes without warnings.
+- `npm test` passes: **18 files, 107 tests**.
 - `npm run build` passes.
 - The static route pages compile under TypeScript with asynchronous dynamic params
   and server-side `notFound()` validation.

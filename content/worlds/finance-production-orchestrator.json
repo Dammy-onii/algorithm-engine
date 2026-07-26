@@ -1,0 +1,90 @@
+{
+  "name": "Production Payment Orchestrator",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "processingMode": "queued",
+    "tickDurationMs": 1000,
+    "seed": 109,
+    "failurePenalty": 12,
+    "timeoutPenalty": 20,
+    "priorityFailurePenalty": 45,
+    "overloadPenalty": 8,
+    "queuePenaltyPerTick": 0.02,
+    "retryBackoffTicks": 2,
+    "highValueThreshold": 25000,
+    "maxTicksPerTx": 6,
+    "providers": [
+      {
+        "id": "A",
+        "name": "RetailRail",
+        "fee": 0.07,
+        "successRate": 96,
+        "latency": 1200,
+        "online": true,
+        "concurrentCapacity": 5,
+        "congestionLatencyPerItem": 700,
+        "accepts": ["consumer", "refund"],
+        "maxAmount": 10000,
+        "schedule": [
+          { "atTick": 120, "online": false },
+          { "atTick": 175, "online": true, "successRate": 98 },
+          { "atTick": 340, "latency": 4500 },
+          { "atTick": 390, "latency": 1300 }
+        ]
+      },
+      {
+        "id": "B",
+        "name": "NationalSwitch",
+        "fee": 0.32,
+        "successRate": 99.6,
+        "latency": 950,
+        "online": true,
+        "concurrentCapacity": 7,
+        "congestionLatencyPerItem": 220,
+        "accepts": ["consumer", "business", "international", "payroll", "settlement", "refund"],
+        "maxAmount": 250000,
+        "schedule": [
+          { "atTick": 250, "concurrentCapacity": 2, "latency": 3000 },
+          { "atTick": 290, "concurrentCapacity": 7, "latency": 950 }
+        ]
+      },
+      {
+        "id": "C",
+        "name": "CrossBorderLink",
+        "fee": 0.19,
+        "successRate": 98.4,
+        "latency": 2100,
+        "online": true,
+        "concurrentCapacity": 4,
+        "congestionLatencyPerItem": 500,
+        "accepts": ["consumer", "business", "international", "settlement", "refund"],
+        "maxAmount": 75000,
+        "schedule": [
+          { "atTick": 410, "successRate": 82, "latency": 6000 },
+          { "atTick": 455, "successRate": 98.4, "latency": 2100 }
+        ]
+      }
+    ],
+    "batches": [
+      {
+        "prefix": "production",
+        "count": 500,
+        "arrivalStart": 0,
+        "arrivalEvery": 1,
+        "amounts": [25, 80, 600, 4200, 18000, 52000, 140000],
+        "types": ["consumer", "refund", "consumer", "business", "international", "settlement", "payroll"],
+        "destinations": ["Bank X", "Bank Y", "Bank Z", "Bank Q", "Bank R"],
+        "priorityEvery": 9,
+        "priority": 3,
+        "deadlineTicks": 35,
+        "maxRetries": 2,
+        "customerImpact": 5
+      }
+    ]
+  }
+}

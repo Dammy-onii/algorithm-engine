@@ -1,0 +1,62 @@
+{
+  "id": "parking-interview-controller",
+  "pack": "parking",
+  "number": 23,
+  "name": "Smart Parking Controller",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "parking-interview-controller",
+  "tagline": "Control a live automated garage, not a static allocation puzzle.",
+  "brief": "Build and submit a controller that coordinates arrivals, occupied bays, and physical departures under continuous traffic.",
+  "context": "One tick is one control decision while cars already in the facility continue moving and staying in parallel.",
+  "narrative": "You have joined ParkFlow's facility-control team. Cars arrive with standard, electric, large, VIP, accessible, and reservation requirements. Assignments consume the shared movement lane and do not become parked immediately. Exit requests continue holding their bays until the controller authorizes them and their exit movement finishes. Vehicles have finite patience, so a controller that ignores exits can deadlock its own capacity. The visible shift teaches the contract; Submit evaluates the same policy against unseen bursts, closures, gate pressure, and changed category mixes.",
+  "objective": "Serve the visible shift without a hard allocation violation or abandonment, keep both queues controlled, and submit a policy that passes the hidden operations suite.",
+  "learningObjective": "Coordinate two queues and finite reusable resources with guarded, ordered decisions while work progresses asynchronously.",
+  "intelligenceExplanation": "The interview starts with no control rules. Build the flow from the facility contract: add hard eligibility branches first, coordinate exit capacity with entrance work, and use preference fallbacks only when waiting is safer than compromising service.",
+  "hint": "A robust order begins with an available exit gate, then reservation/accessibility/large constraints, then premium and charging preferences, and finally standard allocation.",
+  "hints": [
+    "Exit requests still occupy bays. Release them when both the exit gate and lane are available.",
+    "Reserved, accessible, and large requirements are hard constraints; VIP and charging placement are scored preferences.",
+    "Use carPatienceRemaining and congestion before deciding whether to wait for a preferred category or use a valid fallback."
+  ],
+  "taxonomy": { "domain": "Parking", "simulation": "Interview Facility Control", "tier": "medium", "grade": 3 },
+  "steps": [
+    { "id": "hard", "label": "Protect reserved, accessible, large, and occupied-space constraints" },
+    { "id": "turnover", "label": "Keep exit turnover running while arrivals continue" },
+    { "id": "visible", "label": "Resolve the visible shift with no abandonment or hard violation", "check": "allVehiclesResolved && abandonedCount == 0 && hardViolations == 0" },
+    { "id": "hidden", "label": "Submit the same controller to the hidden interview suite" }
+  ],
+  "availableBricks": ["park-standard", "park-charging", "park-large", "park-premium", "park-accessible", "park-reserved", "release-vehicle", "hold"],
+  "availableConditions": ["hasExitRequest", "exitQueueLength", "exitWait", "exitGateAvailable", "hasWaitingVehicle", "queueLength", "carElectric", "carLarge", "carVIP", "carAccessible", "carReserved", "carPriority", "carWait", "carPatienceRemaining", "standardAvailable", "chargingAvailable", "largeAvailable", "premiumAvailable", "accessibleAvailable", "reservedAvailable", "laneAvailable", "laneLoad", "laneCapacity", "congestion", "spacesAvailable", "always"],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "objectives": [
+    { "id": "resolve", "label": "Resolve every visible vehicle", "check": "reached && allVehiclesResolved" },
+    { "id": "safe", "label": "No hard allocation violations", "check": "allVehiclesResolved && hardViolations == 0" },
+    { "id": "service", "label": "No vehicle abandons the entrance queue", "check": "allVehiclesResolved && abandonedCount == 0" },
+    { "id": "efficient", "label": "Keep operating penalty below 500", "check": "allVehiclesResolved && parkingScore < 500", "bonus": true }
+  ],
+  "interviewEvaluation": {
+    "suiteId": "smart-parking-controller-v1",
+    "scenarioCount": 6,
+    "passingScore": 70,
+    "tutorial": true,
+    "rubric": ["Safety and state consistency: 30%", "Completion, patience, and fairness: 30%", "Queue, congestion, and exit throughput: 25%", "Generalization across hidden layouts and events: 15%"]
+  },
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "operate", "priority": 1, "description": "Operate the facility safely and continuously." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Reassess both queues and facility capacity every tick." }] },
+    "rules": { "rules": [] },
+    "functions": { "functions": [
+      { "id": "park-standard", "action": "parkStandard", "description": "Assign the head arrival to a standard bay." },
+      { "id": "park-charging", "action": "parkCharging", "description": "Assign the head arrival to a charging bay." },
+      { "id": "park-large", "action": "parkLarge", "description": "Assign the head arrival to a large bay." },
+      { "id": "park-premium", "action": "parkPremium", "description": "Assign the head arrival to a premium bay." },
+      { "id": "park-accessible", "action": "parkAccessible", "description": "Assign the head arrival to an accessible bay." },
+      { "id": "park-reserved", "action": "parkReserved", "description": "Assign the head reserved arrival to its matching reserved bay." },
+      { "id": "release-vehicle", "action": "releaseVehicle", "description": "Start the oldest ready vehicle's physical exit." },
+      { "id": "hold", "action": "wait", "description": "Take no new action while facility work advances." }
+    ] },
+    "memory": {}
+  }
+}

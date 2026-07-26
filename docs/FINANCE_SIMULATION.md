@@ -9,6 +9,11 @@ cheapest, most reliable way to move the money.
 > The player is not building a bank app. They are building the routing brain that
 > decides, for each of thousands of transactions, *which provider handles it*.
 
+All transaction amounts, provider fees, expected costs, processing costs, and
+total costs are denominated and displayed in **Nigerian naira (NGN / ₦)**. The
+engine keeps these as ordinary numeric values for comparisons and scoring;
+currency formatting belongs to the Finance renderer and shared debug display.
+
 Grounded in real payment-engineering practice: provider **health checks** and
 **failover**, **expected-cost** routing (fee + expected failure cost), and —
 reserved for later grades — **idempotent retries with backoff**.
@@ -112,7 +117,33 @@ this with raw condition expressions. This keeps the same world useful at three
 levels: fixed preferred-provider failover, visual comparison rules, and Code-mode
 routing algorithms.
 
-## The levels (first batch)
+## States and Code mode
+
+Finance states describe the routing controller's operating mode, not a mutable
+shortcut into the transaction queue. Useful modes include normal routing,
+deadline protection, congestion control, and outage recovery. Ordered rules can
+switch mode from live facts such as queue depth, deadline remaining, retry
+history, and provider health. Finance itself remains responsible for moving
+payments through waiting, processing, retryable, completed, declined, and lost
+statuses.
+
+The Code tab can run the same visible Finance world locally through an
+object-oriented `decide(observation)` controller. Finance facts are read from
+`observation.domain`, and the method returns `routeToA`, `routeToB`,
+`routeToC`, `hold`, or `decline`. The included Finance example filters
+ineligible providers, ranks urgent payments by reliability, and ordinary
+payments by expected cost. This Code path is currently Apply & Run only; hidden
+interview submission continues to evaluate the safe visual-policy DSL.
+
+The level-21 regression controller does not memorize a provider name. It builds
+the currently eligible provider set, avoids immediately retrying the provider
+that just failed, and changes its ranking formula according to urgency. Urgent,
+payroll, high-value, and near-deadline payments weight reliability, latency,
+capacity, and congestion most heavily; flexible traffic gives expected cost
+more influence. The unchanged controller is verified against all five visible
+Peak Hour objectives in `lib/engine/__tests__/controller.test.ts`.
+
+## The levels
 
 Difficulty is placed as **Domain → Simulation → Tier → Grade** (see
 [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md)), not a single number — each grade
@@ -123,9 +154,12 @@ adds a new *decision dimension*, not just more data.
 | 11 | Route the Payment | Tutorial · 1 | Pick the cheaper of two online providers. |
 | 12 | Mind the Offline Provider | Tutorial · 2 | Availability — the cheapest is offline. |
 | 13 | Cheap Can Cost More | Tutorial · 3 | Reliability as cost (fee + expected failure cost). |
-| 14 | Basic Route Selection | Easy · 1 | Filter, then optimize, across three providers. |
-| 15 | Cost and Reliability | Easy · 5 | Weighted score over competing objectives. |
-| 16 | Real-Time Provider Health | Medium · 1 | Adapt continuously as health changes mid-run. |
+| 14 | Three-Provider Routing | Easy · 1 | Consolidate availability and fee selection across three providers. |
+| 15 | Cost and Reliability | Medium · 1 | Weighted score over competing objectives. |
+| 16 | Real-Time Provider Health | Medium · 2 | Adapt continuously as health changes mid-run. |
+| 20 | Intelligent Payment Routing | Medium · 3 | Eligibility, capacity, deadlines, retries, and hidden evaluation. |
+| 21 | Peak Hour Payment Switch | Medium · 4 | Load-aware routing under surges, degradation, outages, and recovery. |
+| 22 | Production Payment Orchestrator | Hard · 1 | 500-payment orchestration with adversarial server-only cases. |
 
 Each tutorial level is deliberately simplified; core constraints (retries,
 timeouts/expiry, capacity, mixed payment types) are introduced **incrementally**
@@ -137,8 +171,15 @@ A single **best-value** reference brain
 failure, seeded determinism, scheduled health changes, and the termination
 safety net.
 
+Levels 20–22 form a separate interview-grade track. They add asynchronous
+provider processing, finite concurrent capacity, generated arrivals, deadlines,
+retry/backoff, compatibility and value restrictions, congestion, weighted
+scoring, and server-side hidden suites. See
+[FINANCE_INTERVIEW_TRACK.md](./FINANCE_INTERVIEW_TRACK.md).
+
 ## What comes later (not in this batch)
 
-Queue management under load, retry strategy with **idempotency keys** and
-exponential backoff, fraud/risk inspection, load balancing across capacity, and
-settlement/reconciliation — each is its own simulation on the same engine.
+Idempotency-key correctness, exponential backoff, fraud/risk inspection,
+multi-region routing, reconciliation, and settlement-ledger correctness remain
+future simulations. The interview track now covers queue pressure, finite
+capacity, deadlines, basic retry/backoff, and mixed transaction types.

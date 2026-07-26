@@ -136,22 +136,14 @@ export function decompileBrain(src: BrainSource): VisualBrain {
     description?: string;
   }[];
 
-  // Built-in = single-step wrappers for the four engine primitives
-  const PRIMITIVE_ACTIONS = new Set([
-    "moveForward",
-    "turnLeft",
-    "turnRight",
-    "wait",
-    "pickUp",
-    "deliver",
-    "charge",
-  ]);
+  // Every single-action wrapper is a core or world-module primitive. User
+  // functions are the multi-step definitions composed from those wrappers.
   const functions: VisualFunction[] = rawFunctions.map((f) => ({
     id: f.id,
     description: f.description ?? "",
     action: f.action,
     steps: f.steps,
-    isBuiltIn: f.action !== undefined && PRIMITIVE_ACTIONS.has(f.action),
+    isBuiltIn: f.action !== undefined,
   }));
 
   const rawRules = (src.rules.rules ?? []) as {

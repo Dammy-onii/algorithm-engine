@@ -13,6 +13,9 @@ Start here. The docs are grouped by purpose.
 ## How it works (engine + authoring)
 - [BUILD.md](./BUILD.md) — tech stack, how to run, design rules.
 - [RULES.md](./RULES.md) — authoring a brain: the six layers, conditions, functions.
+- [CODE_MODE.md](./CODE_MODE.md) — **how the Code editor communicates with the
+  simulation**, the observation/action lifecycle, Rules interaction, current
+  Submit limitation, multilingual runners, and visible/hidden test placement.
 - [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md) — the world-agnostic challenge schema
   (brief, live task steps, Grade taxonomy) that renders the learner flow for every
   simulation type.
@@ -30,9 +33,18 @@ Start here. The docs are grouped by purpose.
 - [WAREHOUSE_AUTOMATION.md](./WAREHOUSE_AUTOMATION.md) — the warehouse world design.
 - [WAREHOUSE_MODES_2_4.md](./WAREHOUSE_MODES_2_4.md) — warehouse stages 2–4.
 - [FINANCE_SIMULATION.md](./FINANCE_SIMULATION.md) — the finance (payment routing)
-  world: a non-grid world on the same engine, its module, and the first six levels.
+  world: a non-grid world on the same engine and its complete curriculum.
+- [FINANCE_INTERVIEW_TRACK.md](./FINANCE_INTERVIEW_TRACK.md) — the three
+  interview-grade problems, real-time orchestration model, hidden suites,
+  scoring, and untrusted-code security boundary.
 - [PARKING_SIMULATION.md](./PARKING_SIMULATION.md) — the smart-parking operations
-  world, sprite-pack mapping, runtime contract, and first three levels.
+  world, sprite-pack mapping, shared runtime contract, and foundational levels.
+- [PARKING_INTERVIEW_TRACK.md](./PARKING_INTERVIEW_TRACK.md) — three
+  interview-grade automated-facility problems, real-time mechanics, hidden
+  submission suites, scoring, and current controller boundary.
+- [INTERVIEW_SHARING.md](./INTERVIEW_SHARING.md) — single-stage and compact
+  multi-problem share routes, tutorial-first ordering, signed registry
+  references, visible/hidden resolution, and persistence limits.
 - [MAZE_LEVELS.md](./MAZE_LEVELS.md) — Maze level directory, difficulty policy,
   and the branching-maze authoring reference.
 

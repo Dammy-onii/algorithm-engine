@@ -154,6 +154,7 @@ export class World {
     }
 
     this.tick += 1;
+    this.module.advanceTick?.(this);
 
     // Completion is module-owned; otherwise fall through to energy / running.
     const domainStatus = this.module.resolveStatus(this);

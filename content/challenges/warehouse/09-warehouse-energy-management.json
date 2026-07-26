@@ -10,8 +10,37 @@
   "narrative": "The 11×5 night-shift aisle loop now has a 60-unit battery and a charging bay at the staging corner. The proven pickup and delivery rules are supplied, but the robot cannot complete all six orders unless it charges while passing that bay. Charging too early adds a wasted tick; charging too late leaves the robot out of energy with work in progress.",
   "objective": "Deliver all station orders while managing the finite battery.",
   "learningObjective": "Resource management: use current energy and charging-station observations to interrupt routine work safely.",
-  "intelligenceExplanation": "Pickup, type-aware delivery, and navigation already work. Add one high-priority maintenance rule: WHEN chargingHere AND energy < 40 → DO charge. Charge only succeeds at a charging station and restores the configured battery capacity. The debug panel shows energy every tick.",
-  "hint": "Add WHEN chargingHere AND energy < 40 → charge with priority above 190. The robot passes the charger once per route loop.",
+  "intelligenceExplanation": "Pickup, type-aware delivery, and navigation already work. Add one maintenance rule for a low battery at the charging station, then place it above navigation so the robot charges before driving away. Charge only succeeds on a charging tile and restores the configured battery capacity.",
+  "hint": "Add WHEN chargingHere AND energy < 40 → charge and move it above the clear-aisle navigation rule.",
+  "hints": [
+    "The robot passes the charger once per aisle loop; charging anywhere else is impossible.",
+    "Combine chargingHere with a numeric energy threshold so the robot does not charge on every visit.",
+    "Use WHEN chargingHere AND energy < 40 → charge, positioned before the navigation rules."
+  ],
+  "taxonomy": {
+    "domain": "Warehouse",
+    "simulation": "Fulfilment",
+    "tier": "medium",
+    "grade": 1
+  },
+  "brief": "Complete the six-order shift without exhausting the robot's battery.",
+  "context": "The existing fulfilment policy works, but every action now consumes energy and one route tile is a charger.",
+  "steps": [
+    {
+      "id": "maintain",
+      "label": "Recharge at the charging station before energy runs out"
+    },
+    {
+      "id": "progress",
+      "label": "Keep delivering after a charging decision",
+      "check": "deliveredCount >= 2"
+    },
+    {
+      "id": "complete",
+      "label": "Deliver all six orders",
+      "check": "reached"
+    }
+  ],
   "availableBricks": [
     "step",
     "pivot-right",

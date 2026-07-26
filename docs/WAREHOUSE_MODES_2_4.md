@@ -62,7 +62,7 @@ one energy. `charge` is valid only while standing on a charging station; it rest
 the robot to the world's configured energy capacity (the charging action itself
 still consumes its normal tick).
 
-The learner adds a high-priority rule such as:
+The learner adds this maintenance rule above the supplied navigation rules:
 
 ```
 WHEN chargingHere && energy < 40 → Charge

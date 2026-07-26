@@ -43,6 +43,8 @@ function resolveMeta(token: string) {
 
 interface Props {
   actionType: string;
+  /** Marks a world-module action that has no base primitive glyph. */
+  engineOwned?: boolean;
   /** If true, renders as a compact badge (e.g. inside a function sequence). */
   compact?: boolean;
   /** If true, shows a drag handle (used in the function composer). */
@@ -50,16 +52,39 @@ interface Props {
   onClick?: () => void;
 }
 
-export function PrimitiveBlock({ actionType, compact = false, draggable = false, onClick }: Props) {
+export function PrimitiveBlock({
+  actionType,
+  engineOwned = false,
+  compact = false,
+  draggable = false,
+  onClick,
+}: Props) {
   const meta = resolveMeta(actionType);
 
-  // Not a primitive → a user-composed function used as a step. Render it as a
-  // named, outlined chip rather than an unknown placeholder.
+  if (!meta && engineOwned) {
+    const classes = compact
+      ? "inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-xs font-semibold text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900"
+      : "flex select-none items-center rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 font-mono text-sm font-medium text-white dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-900";
+    return (
+      <span
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        onClick={onClick}
+        onKeyDown={onClick ? (event) => event.key === "Enter" && onClick() : undefined}
+        className={`${classes} ${onClick ? "cursor-pointer" : ""}`}
+        title={`Engine action: ${actionType}`}
+      >
+        {actionType}
+      </span>
+    );
+  }
+
+  // Not a primitive → a user-composed function used as a step.
   if (!meta) {
     if (compact) {
       return (
         <span
-          title={`Your function: ${actionType}`}
+          title={`Composed function: ${actionType}`}
           className="inline-flex items-center rounded border border-zinc-400 px-1.5 py-0.5 font-mono text-xs font-semibold text-zinc-700 dark:border-zinc-500 dark:text-zinc-300"
         >
           {actionType}

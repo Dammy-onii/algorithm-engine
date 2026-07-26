@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation";
 import type { BrainSource } from "@/lib/engine/simulation";
 import type { VisualBrain } from "@/lib/authoring/types";
 import type {
+  InterviewScenarioResult,
+  InterviewStreamEvent,
+  InterviewSubmissionReport,
+} from "@/lib/interview/types";
+import type {
   ObjectiveResult,
   StepResult,
 } from "@/lib/authoring/objectives";
@@ -40,6 +45,13 @@ import {
 import { WorldRenderer } from "@/features/simulation/components/renderers/WorldRenderer";
 import { AuthoringPanel } from "@/features/studio/components/AuthoringPanel";
 import { ResultsPanel } from "@/features/studio/components/ResultsPanel";
+import { InterviewResultsPanel } from "@/features/studio/components/InterviewResultsPanel";
+import {
+  InterviewStageNotice,
+  interviewAssignmentProblemPath,
+  type InterviewAssignmentContext,
+} from "@/features/studio/components/InterviewStageNotice";
+import { ShareInterviewLink } from "@/features/studio/components/ShareInterviewLink";
 import { TaskChecklist } from "@/features/studio/components/TaskChecklist";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
 import {
@@ -56,17 +68,31 @@ import {
 interface StudioPageProps {
   packId: string;
   challengeId: string;
+  workspaceMode?: "challenge" | "interview";
+  interviewAssignment?: InterviewAssignmentContext;
 }
 
 /** Complete interactive UI and state for `/[pack]/[challenge]`. */
-export function StudioPage({ packId, challengeId }: StudioPageProps) {
+export function StudioPage({
+  packId,
+  challengeId,
+  workspaceMode = "challenge",
+  interviewAssignment,
+}: StudioPageProps) {
   const router = useRouter();
   const pack = findPack(packId);
   const challenge = findChallenge(challengeId);
   const challenges = challengesInPack(packId);
+  const brainStorageId = challenge.interviewEvaluation
+    ? `interview-empty-v1-${interviewAssignment ? `${interviewAssignment.id}-` : ""}${challengeId}`
+    : workspaceMode === "interview" && interviewAssignment
+      ? `interview-assignment-v1-${interviewAssignment.id}-${challengeId}`
+    : challengeId;
 
   const [running, setRunning] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(
+    challenge.interviewEvaluation ? 20 : 1,
+  );
   const [brain, setBrain] = useState<VisualBrain>(() =>
     scaffoldBrainFor(challengeId),
   );
@@ -82,9 +108,27 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
   const [onboarded, setOnboarded] = useState(true);
   const [problemListOpen, setProblemListOpen] = useState(false);
   const [problemSearch, setProblemSearch] = useState("");
+  const [submissionReport, setSubmissionReport] =
+    useState<InterviewSubmissionReport | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submissionScenarios, setSubmissionScenarios] = useState<
+    InterviewScenarioResult[]
+  >([]);
+  const [activeHiddenCase, setActiveHiddenCase] = useState<string | null>(null);
+  const [hiddenCasesCompleted, setHiddenCasesCompleted] = useState(0);
+  const isInterviewWorkspace = workspaceMode === "interview";
+  const assignmentNextPath =
+    interviewAssignment &&
+    interviewAssignment.currentIndex < interviewAssignment.challengeIds.length - 1
+      ? interviewAssignmentProblemPath(
+          interviewAssignment.id,
+          interviewAssignment.currentIndex + 1,
+        )
+      : undefined;
 
   useEffect(() => {
-    const stored = readStoredBrain(challengeId);
+    const stored = readStoredBrain(challengeId, brainStorageId);
     const completed = readCompletedChallenges();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored) setBrain(stored);
@@ -96,7 +140,7 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
     } catch {
       // Keep the deterministic default when storage is unavailable.
     }
-  }, [challengeId]);
+  }, [brainStorageId, challengeId]);
 
   const previewSession = useMemo(() => {
     const result = createSimulationSession(
@@ -120,7 +164,7 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
   ) => {
     setBrain((current) => {
       const updated = typeof next === "function" ? next(current) : next;
-      saveBrain(challengeId, updated);
+      saveBrain(brainStorageId, updated);
       return updated;
     });
   };
@@ -155,6 +199,11 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
 
     setError(null);
     setObjectiveResults(null);
+    setSubmissionReport(null);
+    setSubmissionError(null);
+    setSubmissionScenarios([]);
+    setActiveHiddenCase(null);
+    setHiddenCasesCompleted(0);
     setJustLearned(null);
     setSession(result.session);
     setRunning(true);
@@ -172,15 +221,17 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
       const results = evaluateObjectives(challenge.objectives ?? [], metrics);
       setObjectiveResults(results);
       if (challengePassed(results)) {
-        try {
-          localStorage.setItem(`ae-complete-${challengeId}`, "true");
-        } catch {
-          // Completion still applies to the current session.
+        if (!challenge.interviewEvaluation) {
+          try {
+            localStorage.setItem(`ae-complete-${challengeId}`, "true");
+          } catch {
+            // Completion still applies to the current session.
+          }
+          if (!completedIds.has(challengeId)) {
+            setJustLearned(conceptForChallenge(challengeId) ?? null);
+          }
+          setCompletedIds((current) => new Set(current).add(challengeId));
         }
-        if (!completedIds.has(challengeId)) {
-          setJustLearned(conceptForChallenge(challengeId) ?? null);
-        }
-        setCompletedIds((current) => new Set(current).add(challengeId));
         setAttempts(0);
       } else {
         setAttempts((current) => current + 1);
@@ -208,6 +259,128 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
     onRun();
   };
 
+  const onSubmitInterview = async () => {
+    if (!challenge.interviewEvaluation) return;
+    if (brain.controllerCode?.trim()) {
+      setSubmissionError(
+        "Code-mode controllers require an isolated execution worker. The current hidden evaluator accepts the sandbox-safe visual policy DSL.",
+      );
+      return;
+    }
+
+    let brainSource: BrainSource;
+    try {
+      brainSource = compileBrain(brain);
+    } catch (submitError) {
+      setSubmissionError(
+        submitError instanceof Error ? submitError.message : String(submitError),
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmissionError(null);
+    setSubmissionReport(null);
+    setSubmissionScenarios([]);
+    setActiveHiddenCase(null);
+    setHiddenCasesCompleted(0);
+    try {
+      const response = await fetch("/api/interview/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId, brain: brainSource }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(
+          payload.error
+            ? payload.error
+            : "Hidden evaluation failed.",
+        );
+      }
+
+      if (!response.body) {
+        throw new Error("The hidden evaluator did not return a result stream.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finalReport: InterviewSubmissionReport | undefined;
+
+      const receiveEvent = (
+        event: InterviewStreamEvent,
+      ): InterviewSubmissionReport | undefined => {
+        if (event.type === "suite-start") {
+          setHiddenCasesCompleted(0);
+          return;
+        }
+        if (event.type === "scenario-start") {
+          setActiveHiddenCase(event.label);
+          return;
+        }
+        if (event.type === "scenario-result") {
+          setSubmissionScenarios((current) => [
+            ...current,
+            event.scenario,
+          ]);
+          setHiddenCasesCompleted(event.index + 1);
+          setActiveHiddenCase(null);
+          return;
+        }
+        if (event.type === "suite-complete") {
+          setSubmissionReport(event.report);
+          setActiveHiddenCase(null);
+          return event.report;
+        }
+        throw new Error(event.error);
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (line.trim()) {
+            const completed = receiveEvent(
+              JSON.parse(line) as InterviewStreamEvent,
+            );
+            if (completed) finalReport = completed;
+          }
+        }
+        if (done) break;
+      }
+      if (buffer.trim()) {
+        const completed = receiveEvent(
+          JSON.parse(buffer) as InterviewStreamEvent,
+        );
+        if (completed) finalReport = completed;
+      }
+      if (!finalReport) {
+        throw new Error("The hidden evaluator ended without a final report.");
+      }
+
+      if (finalReport.passed) {
+        try {
+          localStorage.setItem(`ae-complete-${challengeId}`, "true");
+        } catch {
+          // The current session still records completion.
+        }
+        if (!completedIds.has(challengeId)) {
+          setJustLearned(conceptForChallenge(challengeId) ?? null);
+        }
+        setCompletedIds((current) => new Set(current).add(challengeId));
+      }
+    } catch (submitError) {
+      setSubmissionError(
+        submitError instanceof Error ? submitError.message : String(submitError),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const briefSteps = normalizeBrief(challenge).steps;
   const stepResults: StepResult[] = session
     ? evaluateSteps(briefSteps, liveContext(session.sim, brain))
@@ -225,7 +398,9 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
   const nextUnlocked =
     !!nextChallenge && isChallengeUnlocked(nextChallenge.id, completedIds);
   const passed = objectiveResults
-    ? challengePassed(objectiveResults)
+    ? challenge.interviewEvaluation
+      ? submissionReport?.passed ?? false
+      : challengePassed(objectiveResults)
     : session?.sim.status === "reached";
   const stage = session ?? previewSession;
   const previousChallenge =
@@ -243,53 +418,85 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
     <main className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-zinc-100 p-2 text-zinc-900 dark:bg-[#0f0f0f] dark:text-zinc-100 xl:h-dvh xl:min-h-0 xl:overflow-hidden">
       <header className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm dark:border-zinc-800 dark:bg-[#1b1b1b] dark:shadow-none">
         <div className="flex shrink-0 items-center gap-2">
-          <Link
-            href={`/${packId}`}
-            aria-label={`Back to ${pack?.title ?? packId}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white"
-          >
-            ←
-          </Link>
-          <button
-            type="button"
-            onClick={() => setProblemListOpen(true)}
-            className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-          >
-            <ListIcon />
-            <span className="hidden text-sm font-semibold sm:inline">
-              Problem list
+          {!isInterviewWorkspace && (
+            <Link
+              href={`/${packId}`}
+              aria-label={`Back to ${pack?.title ?? packId}`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white"
+            >
+              ←
+            </Link>
+          )}
+          {isInterviewWorkspace ? (
+            <span className="rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+              Interview stage
             </span>
-          </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setProblemListOpen(true)}
+              className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            >
+              <ListIcon />
+              <span className="hidden text-sm font-semibold sm:inline">
+                Problem list
+              </span>
+            </button>
+          )}
+          {challenge.interviewEvaluation && (
+            <>
+              <button
+                type="button"
+                onClick={onSubmitInterview}
+                disabled={submitting}
+                className="hidden h-9 items-center rounded-lg border border-zinc-300 px-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 sm:inline-flex"
+              >
+                {submitting ? "Testing…" : "Submit"}
+              </button>
+              {!isInterviewWorkspace && (
+                <ShareInterviewLink challengeId={challengeId} />
+              )}
+            </>
+          )}
           <span className="hidden h-5 w-px bg-zinc-200 dark:bg-zinc-700 md:block" />
           <div className="hidden min-w-0 md:block">
             <p className="truncate text-sm font-semibold">
               {challenge.number}. {challenge.name}
             </p>
             <p className="truncate text-[11px] text-zinc-500">
-              {pack?.title ?? packId} · Intelligence Studio
+              {pack?.title ?? packId} ·{" "}
+              {isInterviewWorkspace
+                ? interviewAssignment
+                  ? `Shared technical interview · Problem ${interviewAssignment.currentIndex + 1} of ${interviewAssignment.challengeIds.length}`
+                  : "Shared technical interview"
+                : "Intelligence Studio"}
             </p>
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <ChallengeArrow
-            label="Previous problem"
-            href={
-              previousChallenge
-                ? `/${packId}/${previousChallenge.id}`
-                : undefined
-            }
-            direction="previous"
-          />
-          <ChallengeArrow
-            label="Next problem"
-            href={
-              nextChallenge && nextUnlocked
-                ? `/${packId}/${nextChallenge.id}`
-                : undefined
-            }
-            direction="next"
-          />
+          {!isInterviewWorkspace && (
+            <>
+              <ChallengeArrow
+                label="Previous problem"
+                href={
+                  previousChallenge
+                    ? `/${packId}/${previousChallenge.id}`
+                    : undefined
+                }
+                direction="previous"
+              />
+              <ChallengeArrow
+                label="Next problem"
+                href={
+                  nextChallenge && nextUnlocked
+                    ? `/${packId}/${nextChallenge.id}`
+                    : undefined
+                }
+                direction="next"
+              />
+            </>
+          )}
           <button
             type="button"
             onClick={onRun}
@@ -302,15 +509,33 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <Link
-            href="/lab"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:block"
-          >
-            Lab
-          </Link>
+          {isInterviewWorkspace && (
+            <ShareInterviewLink
+              challengeId={interviewAssignment ? undefined : challengeId}
+              sharePath={
+                interviewAssignment ? `/i/${interviewAssignment.id}` : undefined
+              }
+              compact
+            />
+          )}
+          {!isInterviewWorkspace && (
+            <Link
+              href="/lab"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:block"
+            >
+              Lab
+            </Link>
+          )}
           <ThemeToggle />
         </div>
       </header>
+
+      {isInterviewWorkspace && (
+        <InterviewStageNotice
+          challenge={challenge}
+          assignment={interviewAssignment}
+        />
+      )}
 
       <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 xl:overflow-hidden">
         {!onboarded && (
@@ -396,6 +621,7 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
                   onStep={doStep}
                   onReset={doReset}
                   onSpeedChange={setSpeed}
+                  maxSpeed={challenge.interviewEvaluation ? 60 : 3}
                 />
                 <SimStage
                   world={session.sim.world}
@@ -405,26 +631,38 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
                     <>
                       <TaskChecklist steps={stepResults} started />
                       {session.sim.isDone && (
-                        <ResultsPanel
-                          status={
-                            session.sim.status as
-                              | "running"
-                              | "reached"
-                              | "stuck"
-                              | "out-of-energy"
-                          }
-                          passed={!!passed}
-                          results={objectiveResults}
-                          onNext={
-                            passed && nextChallenge && nextUnlocked
-                              ? () =>
-                                  router.push(
-                                    `/${packId}/${nextChallenge.id}`,
-                                  )
-                              : undefined
-                          }
-                          onRetry={doReset}
-                        />
+                        <>
+                          <ResultsPanel
+                            status={
+                              session.sim.status as
+                                | "running"
+                                | "reached"
+                                | "stuck"
+                                | "out-of-energy"
+                            }
+                            passed={
+                              challenge.interviewEvaluation
+                                ? !!objectiveResults &&
+                                  challengePassed(objectiveResults)
+                                : !!passed
+                            }
+                            results={objectiveResults}
+                            onNext={
+                              passed && assignmentNextPath
+                                ? () => router.push(assignmentNextPath)
+                                : !isInterviewWorkspace &&
+                                    passed &&
+                                    nextChallenge &&
+                                    nextUnlocked
+                                ? () =>
+                                    router.push(
+                                      `/${packId}/${nextChallenge.id}`,
+                                    )
+                                : undefined
+                            }
+                            onRetry={doReset}
+                          />
+                        </>
                       )}
                     </>
                   }
@@ -458,12 +696,25 @@ export function StudioPage({ packId, challengeId }: StudioPageProps) {
                 )}
               </>
             )}
+                {challenge.interviewEvaluation && (
+                  <InterviewResultsPanel
+                    report={submissionReport}
+                    submitting={submitting}
+                    error={submissionError}
+                    liveScenarios={submissionScenarios}
+                    activeScenario={activeHiddenCase}
+                    completedScenarios={hiddenCasesCompleted}
+                    scenarioCount={challenge.interviewEvaluation.scenarioCount}
+                    passingScore={challenge.interviewEvaluation.passingScore}
+                    onSubmit={onSubmitInterview}
+                  />
+                )}
               </div>
             </div>
           </section>
         </div>
       </div>
-      {problemListOpen && (
+      {!isInterviewWorkspace && problemListOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px]"
           role="presentation"

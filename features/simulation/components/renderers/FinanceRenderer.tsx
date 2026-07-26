@@ -14,10 +14,25 @@ import {
   countByStatus,
   currentTx,
   expectedCost,
+  financeScore,
   financeRuntime,
   providerStateAt,
+  readyTransactions,
   totalCost,
 } from "@/lib/engine/worlds/finance";
+
+const NAIRA_AMOUNT = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  maximumFractionDigits: 0,
+});
+
+const NAIRA_COST = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 export function FinanceRenderer({ world }: { world: World }) {
   const runtime = financeRuntime(world);
@@ -32,9 +47,13 @@ export function FinanceRenderer({ world }: { world: World }) {
   const waiting = countByStatus(world, "waiting");
   const succeeded = countByStatus(world, "succeeded");
   const failed = countByStatus(world, "failed");
+  const inFlight = countByStatus(world, "processing");
+  const timedOut = runtime.timedOut;
   const total = runtime.transactions.length;
-  const queued = runtime.transactions.filter((item) => item.status === "waiting");
-  const settled = runtime.transactions.filter((item) => item.status !== "waiting");
+  const queued = readyTransactions(world);
+  const settled = runtime.transactions.filter((item) =>
+    ["succeeded", "failed", "declined", "lost"].includes(item.status),
+  );
   const latestSettlement = settled.at(-1);
 
   return (
@@ -65,7 +84,7 @@ export function FinanceRenderer({ world }: { world: World }) {
                         : "border-zinc-300 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
                     ].join(" ")}
                   >
-                    {item.id} · ${item.amount.toLocaleString()}
+                    {item.id} · {NAIRA_AMOUNT.format(item.amount)}
                   </span>
                 ))}
                 {queued.length > 5 && <span className="self-center text-[10px] text-zinc-400">+{queued.length - 5}</span>}
@@ -109,7 +128,11 @@ export function FinanceRenderer({ world }: { world: World }) {
                   >
                     <span className="font-semibold">{state.name}</span>
                     <span className="font-mono text-[10px] opacity-75">
-                      {state.online ? `${state.handled} routed` : "offline"}
+                      {state.online
+                        ? runtime.processingMode === "queued"
+                          ? `${state.active} active · ${state.capacityRemaining} free`
+                          : `${state.handled} routed`
+                        : "offline"}
                     </span>
                   </div>
                 );
@@ -132,7 +155,7 @@ export function FinanceRenderer({ world }: { world: World }) {
         </div>
         {tx ? (
           <div className="mt-0.5 flex items-baseline gap-2">
-            <span className="text-lg font-semibold tabular-nums">${tx.amount.toLocaleString()}</span>
+            <span className="text-lg font-semibold tabular-nums">{NAIRA_AMOUNT.format(tx.amount)}</span>
             <span className="text-xs text-zinc-300 dark:text-zinc-600">
               {tx.id}
               {tx.type ? ` · ${tx.type}` : ""}
@@ -176,10 +199,16 @@ export function FinanceRenderer({ world }: { world: World }) {
                 <span className="font-mono text-xs text-zinc-500">{s.id}</span>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-zinc-500 tabular-nums">
-                <span>fee ${s.fee.toFixed(2)}</span>
+                <span>fee {NAIRA_COST.format(s.fee)}</span>
                 <span>success {s.successRate}%</span>
                 <span>latency {s.latency}ms</span>
-                {penalty > 0 && <span>exp. cost ${exp.toFixed(2)}</span>}
+                {runtime.processingMode === "queued" && (
+                  <>
+                    <span>capacity {s.capacityRemaining} free</span>
+                    <span>health {s.healthScore.toFixed(0)}</span>
+                  </>
+                )}
+                {penalty > 0 && <span>exp. cost {NAIRA_COST.format(exp)}</span>}
               </div>
             </div>
           );
@@ -188,11 +217,15 @@ export function FinanceRenderer({ world }: { world: World }) {
 
       {/* Running tally */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-zinc-100 pt-2 text-xs text-zinc-500 tabular-nums dark:border-zinc-800">
-        <span>processed {succeeded + failed}/{total}</span>
+        <span>processed {succeeded + failed + countByStatus(world, "declined") + countByStatus(world, "lost")}/{total}</span>
+        {runtime.processingMode === "queued" && <span>in flight {inFlight}</span>}
         <span className="text-zinc-900 dark:text-zinc-100">✓ {succeeded}</span>
         <span>✗ {failed}</span>
+        {runtime.processingMode === "queued" && <span>timeouts {timedOut}</span>}
         <span className="ml-auto font-semibold text-zinc-700 dark:text-zinc-300">
-          total cost ${totalCost(world).toFixed(2)}
+          {runtime.processingMode === "queued"
+            ? `score ${financeScore(world).toFixed(2)}`
+            : `total cost ${NAIRA_COST.format(totalCost(world))}`}
         </span>
       </div>
     </div>

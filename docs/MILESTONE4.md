@@ -79,7 +79,7 @@ The problem statement used to render as one wall of text (narrative + objective 
 intelligence notes + learning objective + hints, all at once) and the only
 feedback was a terse pass/fail after a run. This pass makes the *flow* legible —
 and, critically, does so through a **structured, world-agnostic schema** so every
-simulation type (maze, warehouse, and the upcoming finance world) renders the
+simulation type (currently Maze, Warehouse, Finance, and Parking) renders the
 same experience. See [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md) for the schema.
 
 Shipped:
@@ -102,9 +102,12 @@ Shipped:
    "Goal reached" note with pass/fail, every objective (required ✓ + bonus ★), and
    an explicit **Next level →** action that navigates to the next unlocked
    challenge.
-4. **Compact progress stepper** —
-   [ProgressStepper.tsx](../features/studio/components/ProgressStepper.tsx). Always-on
-   "Level X of N · done" summary with a dotted done/current/locked track.
+4. **Progress summary (superseded in the current workspace)** — the original
+   [ProgressStepper.tsx](../features/studio/components/ProgressStepper.tsx)
+   rendered an always-on “Level X of N · done” summary and dotted track. The
+   2026-07-26 problem-workspace redesign removed that duplicate block. The
+   Problem list header now contains only the pack-scoped solved fraction and
+   world name; individual rows carry solved/unsolved and lock state.
 5. **First-run onboarding** — a dismissible one-time banner (`ae-onboarded`)
    explaining the three regions.
 6. **"Current intelligence" collapsed** — moved below the editor into a
@@ -133,7 +136,7 @@ live step evaluation (including safe handling of malformed checks).
 ## Verification
 
 `npm run build`, `npm run lint`, `npm test` (**70 tests**, +8 for the brief/flow
-pass) all pass. Browser: the brief shows a one-line headline with Learn more /
-Show a hint; the task checklist and progress stepper render; badges read
-`Tutorial · Grade 1` etc.; locked challenges are dimmed/unselectable. See
-[PROGRESS_M4.md](./PROGRESS_M4.md).
+pass at this milestone) all passed. In the current workspace, the brief still
+shows a one-line headline with Learn more / Show a hint, the task checklist
+renders, and the searchable Problem list exposes lock and completion state
+without the former duplicate progress block. See [PROGRESS_M4.md](./PROGRESS_M4.md).

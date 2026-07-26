@@ -1,0 +1,80 @@
+{
+  "name": "Intelligent Payment Routing — Interview Tutorial",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "processingMode": "queued",
+    "tickDurationMs": 1000,
+    "seed": 41,
+    "failurePenalty": 8,
+    "timeoutPenalty": 12,
+    "priorityFailurePenalty": 20,
+    "overloadPenalty": 4,
+    "queuePenaltyPerTick": 0.01,
+    "retryBackoffTicks": 1,
+    "highValueThreshold": 5000,
+    "maxTicksPerTx": 12,
+    "providers": [
+      {
+        "id": "A",
+        "name": "SwiftRail",
+        "fee": 0.10,
+        "successRate": 94,
+        "latency": 1800,
+        "online": true,
+        "concurrentCapacity": 2,
+        "congestionLatencyPerItem": 600,
+        "accepts": ["consumer", "business", "refund"],
+        "maxAmount": 10000,
+        "schedule": [
+          { "atTick": 12, "online": false },
+          { "atTick": 19, "online": true, "successRate": 97 }
+        ]
+      },
+      {
+        "id": "B",
+        "name": "TrustPay",
+        "fee": 0.24,
+        "successRate": 99,
+        "latency": 1100,
+        "online": true,
+        "concurrentCapacity": 3,
+        "congestionLatencyPerItem": 350,
+        "accepts": ["consumer", "business", "international", "refund"],
+        "maxAmount": 50000
+      },
+      {
+        "id": "C",
+        "name": "GlobalSettle",
+        "fee": 0.18,
+        "successRate": 97,
+        "latency": 2400,
+        "online": true,
+        "concurrentCapacity": 2,
+        "congestionLatencyPerItem": 500,
+        "accepts": ["consumer", "international", "refund"],
+        "maxAmount": 15000
+      }
+    ],
+    "batches": [
+      {
+        "prefix": "tutorial",
+        "count": 36,
+        "arrivalStart": 0,
+        "arrivalEvery": 1,
+        "amounts": [45, 220, 8500, 1200, 75, 16000],
+        "types": ["consumer", "consumer", "business", "refund", "international", "business"],
+        "destinations": ["Bank X", "Bank Y", "Bank Z"],
+        "priorityEvery": 7,
+        "priority": 2,
+        "deadlineTicks": 18,
+        "maxRetries": 1,
+        "customerImpact": 2
+      }
+    ]
+  }
+}

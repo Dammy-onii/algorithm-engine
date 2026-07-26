@@ -47,6 +47,55 @@ export const MAZE_CONTROLLER_TEMPLATE = `class RightHandFollower {
 
 return new RightHandFollower();`;
 
+export const FINANCE_CONTROLLER_TEMPLATE = `class PaymentRouter {
+  decide(observation) {
+    const facts = observation.domain;
+    if (!facts.hasTransaction) return "hold";
+
+    const candidates = [
+      {
+        action: "routeToA",
+        available: facts.canRouteA,
+        cost: facts.expectedCostA,
+        reliability: facts.successRateA,
+        latency: facts.currentLatencyA,
+      },
+      {
+        action: "routeToB",
+        available: facts.canRouteB,
+        cost: facts.expectedCostB,
+        reliability: facts.successRateB,
+        latency: facts.currentLatencyB,
+      },
+      {
+        action: "routeToC",
+        available: facts.canRouteC,
+        cost: facts.expectedCostC,
+        reliability: facts.successRateC,
+        latency: facts.currentLatencyC,
+      },
+    ].filter((provider) => provider.available);
+
+    if (candidates.length === 0) {
+      return facts.deadlineRemaining > 1 ? "hold" : "decline";
+    }
+
+    // Urgent payments prefer reliability and latency; ordinary payments prefer
+    // expected cost. No provider name is assumed to be permanently optimal.
+    candidates.sort((left, right) =>
+      facts.isPriority
+        ? right.reliability - left.reliability ||
+          left.latency - right.latency
+        : left.cost - right.cost ||
+          right.reliability - left.reliability
+    );
+
+    return candidates[0].action;
+  }
+}
+
+return new PaymentRouter();`;
+
 export function compileController(source: string): AgentController {
   if (!source.trim()) throw new Error("Write a controller class before running Code mode.");
   let value: unknown;

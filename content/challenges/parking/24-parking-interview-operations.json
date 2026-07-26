@@ -1,0 +1,53 @@
+{
+  "id": "parking-interview-operations",
+  "pack": "parking",
+  "number": 24,
+  "name": "Autonomous Parking Operations",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "parking-interview-operations",
+  "tagline": "Keep a high-traffic facility stable while capacity changes underneath it.",
+  "brief": "Build a load-aware controller for arrival surges, bay closures, charging failures, constrained lanes, and exit-gate outages.",
+  "context": "Closures and capacity events occur without pausing the controller; inbound assignments may need automatic rerouting before they reach a bay.",
+  "narrative": "ParkFlow now operates airport and event facilities. Traffic is bursty, category capacity changes during maintenance, and exit gates may fail while bays remain occupied. Shared lanes impose back-pressure: too many simultaneous movements increase future travel time. Priority vehicles may overtake the queue, but low-priority vehicles cannot be starved until their patience expires. Hard violations are forbidden; using a non-preferred but compatible bay is allowed at a satisfaction penalty.",
+  "objective": "Adapt to every visible incident, preserve safety, prevent starvation, recover after closures, and pass an unseen suite of oscillating capacity and surge scenarios.",
+  "learningObjective": "Design a load-aware scheduler that balances throughput, service priority, fairness, category preservation, and recovery.",
+  "intelligenceExplanation": "The interview starts with no control rules. Build a flow around live queue pressure, patience, lane saturation, gate availability, hard category eligibility, and recovery after capacity incidents.",
+  "hint": "Treat exits as capacity recovery, hard compatibility as eligibility, and VIP/EV placement as preferences. Use waiting time to prevent priority starvation.",
+  "hints": ["When the exit queue grows, each waiting departure is also an unavailable bay.", "A closed preferred category may recover later, but the head vehicle's patience determines whether waiting is defensible.", "Avoid reacting to congestion by continuously starting more entry movements."],
+  "taxonomy": { "domain": "Parking", "simulation": "Interview Facility Control", "tier": "medium", "grade": 7 },
+  "steps": [
+    { "id": "backpressure", "label": "Coordinate entrance and exit back-pressure" },
+    { "id": "incidents", "label": "Recover from charging, lane, and gate incidents" },
+    { "id": "fairness", "label": "Protect priority without starving ordinary arrivals" },
+    { "id": "visible", "label": "Resolve the visible operation within its service guardrails", "check": "allVehiclesResolved && hardViolations == 0" }
+  ],
+  "availableBricks": ["park-standard", "park-charging", "park-large", "park-premium", "park-accessible", "park-reserved", "release-vehicle", "hold"],
+  "availableConditions": ["hasExitRequest", "exitQueueLength", "exitWait", "exitGateAvailable", "hasWaitingVehicle", "queueLength", "carElectric", "carLarge", "carVIP", "carAccessible", "carReserved", "carPriority", "carWait", "carPatienceRemaining", "standardAvailable", "chargingAvailable", "largeAvailable", "premiumAvailable", "accessibleAvailable", "reservedAvailable", "laneAvailable", "laneLoad", "laneCapacity", "congestion", "movingVehicles", "spacesAvailable", "occupiedSpaces", "abandonedCount", "reassignmentCount", "always"],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "objectives": [
+    { "id": "resolve", "label": "Resolve the complete live operation", "check": "reached && allVehiclesResolved" },
+    { "id": "safe", "label": "No hard allocation violations", "check": "allVehiclesResolved && hardViolations == 0" },
+    { "id": "service", "label": "Keep visible abandonment below fifteen vehicles", "check": "allVehiclesResolved && abandonedCount <= 14" },
+    { "id": "recovery", "label": "Keep closure rerouting and congestion controlled", "check": "allVehiclesResolved && reassignmentCount <= 4 && congestionTicks <= 250" }
+  ],
+  "interviewEvaluation": {
+    "suiteId": "autonomous-parking-operations-v1",
+    "scenarioCount": 8,
+    "passingScore": 75,
+    "rubric": ["Hard-constraint correctness: 30%", "Throughput, timeout, and fairness: 30%", "Incident recovery and congestion control: 25%", "Policy generalization: 15%"]
+  },
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "stabilize", "priority": 1, "description": "Keep the facility safe and stable under changing load." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Evaluate live arrivals, exits, and capacity." }] },
+    "rules": { "rules": [] },
+    "functions": { "functions": [
+      { "id": "park-standard", "action": "parkStandard", "description": "Assign to a standard bay." }, { "id": "park-charging", "action": "parkCharging", "description": "Assign to a charging bay." },
+      { "id": "park-large", "action": "parkLarge", "description": "Assign to a large bay." }, { "id": "park-premium", "action": "parkPremium", "description": "Assign to a premium bay." },
+      { "id": "park-accessible", "action": "parkAccessible", "description": "Assign to an accessible bay." }, { "id": "park-reserved", "action": "parkReserved", "description": "Assign to the matching reserved bay." },
+      { "id": "release-vehicle", "action": "releaseVehicle", "description": "Start a ready vehicle's physical exit." }, { "id": "hold", "action": "wait", "description": "Let facility work advance without starting another action." }
+    ] },
+    "memory": {}
+  }
+}

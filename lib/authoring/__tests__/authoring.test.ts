@@ -83,6 +83,19 @@ describe("compileCondition", () => {
 // ---------------------------------------------------------------------------
 
 describe("compile / decompile round-trip", () => {
+  it("treats world-module action wrappers as locked primitives", () => {
+    const finance = decompileBrain(
+      CHALLENGES.find(
+        (challenge) => challenge.id === "finance-interview-routing",
+      )!.scaffoldBrain as BrainSource,
+    );
+
+    expect(
+      finance.functions.map((fn) => [fn.id, fn.action, fn.isBuiltIn]),
+    ).toContainEqual(["route-a", "routeToA", true]);
+    expect(finance.functions.every((fn) => fn.isBuiltIn)).toBe(true);
+  });
+
   it("decompile(compile(visual)) preserves the meaningful structure", () => {
     const visual: VisualBrain = {
       goals: [{ id: "reach-goal", priority: 10, description: "Reach it", activeWhen: "" }],

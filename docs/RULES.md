@@ -1,7 +1,7 @@
 # Authoring a Brain — Rules, States, Functions & More
 
-This is the guide to writing an agent's **brain**: the five data files the engine
-executes. You can edit all five live in the browser (the tabbed editor under the
+This is the guide to writing an agent's **brain**: the six data layers the engine
+executes. You can edit all six live in the browser (the tabbed editor under the
 simulation) or on disk in `content/brains/<sample>/*.json`. The engine never changes — your brain is
 what makes the robot behave.
 
@@ -39,6 +39,10 @@ algorithm as a class rather than arrange cards. A controller has one required
 method, `decide(observation)`, which the simulation calls **once on every tick**.
 It returns exactly one primitive action:
 
+For the complete editor-to-runtime flow, the meaning of
+`observation.domain`, the current Apply & Run versus Submit boundary, and the
+multilingual runner design, see [CODE_MODE.md](./CODE_MODE.md).
+
 Code mode becomes active on **Apply & Run** when the Code editor contains source;
 clear that editor and apply again to return to the visual-rule brain. The two
 decision sources never run together.
@@ -75,6 +79,59 @@ turns an unsafe action into `wait`, updates the world once, and produces the
 normal trace/objectives. Code mode currently runs locally in Studio; a hosted
 multi-user interview runner must execute the same `AgentController` contract in
 an isolated worker or container.
+
+World-module facts live under `observation.domain`, and a controller returns the
+module's primitive action—not its visual function wrapper ID. For example,
+Finance returns `routeToA`, not `route-a`:
+
+```js
+class PaymentRouter {
+  decide(observation) {
+    const facts = observation.domain;
+    if (!facts.hasTransaction) return "hold";
+
+    const providers = [
+      {
+        action: "routeToA",
+        available: facts.canRouteA,
+        cost: facts.expectedCostA,
+        reliability: facts.successRateA,
+      },
+      {
+        action: "routeToB",
+        available: facts.canRouteB,
+        cost: facts.expectedCostB,
+        reliability: facts.successRateB,
+      },
+      {
+        action: "routeToC",
+        available: facts.canRouteC,
+        cost: facts.expectedCostC,
+        reliability: facts.successRateC,
+      },
+    ].filter((provider) => provider.available);
+
+    if (providers.length === 0) {
+      return facts.deadlineRemaining > 1 ? "hold" : "decline";
+    }
+
+    providers.sort((left, right) =>
+      facts.isPriority
+        ? right.reliability - left.reliability
+        : left.cost - right.cost
+    );
+    return providers[0].action;
+  }
+}
+
+return new PaymentRouter();
+```
+
+The Code tab lists the exact primitive action strings available in the selected
+challenge and supplies a domain-appropriate example where one exists. Code
+currently affects **Apply & Run only**. Interview **Submit** sends the compiled
+visual policy; arbitrary controller JavaScript remains excluded until an
+isolated server worker exists.
 
 ---
 
@@ -128,6 +185,10 @@ new condition is intentionally more specific than an existing fallback. Editable
 challenge scaffolds avoid a terminal `WHEN always → hold` card because the engine
 already waits when nothing matches; such a terminal catch-all would otherwise
 hide newly appended cards until the learner manually reordered them.
+
+Scored interview challenges begin with an empty scaffold rule list. Their goals,
+states, available conditions, actions, and primitive functions define the
+contract, but every decision branch is authored by the candidate.
 
 ### Guarded flow — why an impossible action never runs
 
@@ -239,6 +300,27 @@ engine already computes — you cannot invent `enemyNearby` if nothing perceives
 enemy. The loader rejects, on Apply: shadowing a built-in flag, duplicates, invalid
 names, empty expressions, unknown identifiers, and cycles.
 
+Studio's expression input uses a themed, scrollable autocomplete directly below
+each field. It completes the identifier at the active caret, so suggestions keep
+working after an earlier condition or operator:
+
+```text
+canRouteA && dea
+             └─ selecting deadlineRemaining replaces only "dea"
+```
+
+| Operator | Meaning | Example |
+|---|---|---|
+| `&&` | both expressions must be true | `canRouteA && isPriority` |
+| `||` | either expression may be true | `canRouteA || canRouteB` |
+| `!` | invert a boolean | `!wallAhead` |
+| `( )` | group expressions | `(canRouteA || canRouteB) && isPriority` |
+| `< <= > >=` | numeric comparison | `deadlineRemaining <= 2` |
+| `== !=` | equality or inequality | `retryCount != 0` |
+
+The Conditions tab exposes the same reference through the collapsible
+**Condition operators and examples** section.
+
 ---
 
 ## States — modes of operation
@@ -258,6 +340,14 @@ names, empty expressions, unknown identifiers, and cycles.
 The agent is always in exactly one state. Rules with a matching `state` are the only
 ones considered, so states let the same observation produce different behavior.
 Transitions happen when a rule with a `setState` fires — that's the state machine.
+
+In Finance, states are most useful as payment-switch operating modes:
+`normal-routing`, `deadline-protection`, and `outage-recovery`. Queue depth,
+provider health, retries, or the current transaction can trigger a transition,
+and each mode can own a different ordered rule flow. Controller states do not
+directly rewrite a payment's runtime status. The Finance world owns statuses such
+as ready, processing, failed, and completed; `route`, `hold`, and `decline`
+actions advance that lifecycle.
 
 ---
 
@@ -282,7 +372,10 @@ A brick is **either** single-step or multi-step:
 
 - **Single-step** — `{ "action": ... }`. The maze primitives are `moveForward`,
   `turnLeft`, `turnRight`, and `wait`; warehouse worlds additionally expose
-  `pickUp`, `deliver`, and (where configured) `charge`.
+  `pickUp`, `deliver`, and (where configured) `charge`. Finance, Parking, and
+  future modules contribute their own single-action wrappers through the same
+  contract. Studio marks every single-action wrapper as a locked engine/world
+  primitive rather than a user-composed function.
 - **Multi-step** — `{ "steps": [...] }`. A list of primitive actions **and/or other
   function ids** (so bricks compose from bricks). The engine expands it into a flat
   plan and runs it **one action per tick**. While a multi-step brick is running it

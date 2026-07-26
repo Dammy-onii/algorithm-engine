@@ -6,6 +6,7 @@ import type { PackInfo } from "@/lib/content/registry";
 import Link from "next/link";
 
 import { PageLayout } from "@/features/application/components/PageLayout";
+import { InterviewAssignmentBuilder } from "@/features/catalogue/components/InterviewAssignmentBuilder";
 import {
   difficultyFor,
   type DifficultyBand,
@@ -119,7 +120,6 @@ export function ChallengeDirectoryPage({
       skillFilters.length +
       subdomainFilters.length >
     0;
-
   const toggleFilter = <T extends string>(
     value: T,
     selected: T[],
@@ -160,6 +160,10 @@ export function ChallengeDirectoryPage({
             simply the size of its simulation.
           </p>
         </div>
+
+        {challenges.length > 0 && (
+          <InterviewAssignmentBuilder challenges={challenges} />
+        )}
 
         <div className="grid items-start gap-8 lg:grid-cols-6">
           <div className="flex min-w-0 flex-col gap-6 col-span-4">

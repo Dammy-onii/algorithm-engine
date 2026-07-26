@@ -4,17 +4,38 @@
   "number": 4,
   "name": "Build Your Own Strategy",
   "difficulty": 2,
+  "stage": "easy",
   "worldKey": "snake",
-  "tagline": "Stop calling pre-built functions — write one.",
-  "narrative": "The Snake Corridor winds back and forth across an 11×11 grid. Earlier challenges gave you pre-built functions to call. This one does not. The engine still provides the four primitives — MoveForward, TurnLeft, TurnRight, Wait — but it is up to you to compose them into strategies. A wall-following algorithm needs a specific sequence: check if the left is open, turn left if so, step forward, check again. That is not a single primitive. It is a function you author from primitives. This is the moment the platform stops giving you tools and asks you to build them.",
-  "objective": "Solve the 11x11 Snake Corridor with a custom wall-following function, then hold on the goal for 3 ticks.",
-  "learningObjective": "Composing reusable multi-step functions from engine primitives. Understanding that abstraction — naming a sequence of steps — is what allows brains to stay readable as they grow.",
-  "intelligenceExplanation": "This brain starts with only the four engine primitives wrapped as single-step bricks. There are no pre-built strategies. The Functions tab is now unlocked — you can open it and compose new functions by sequencing primitives together. Once you have created a function like `follow-wall`, you can assign it to a rule just like any other brick. The robot will then execute that sequence, one action per tick, as a committed behavior. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so add a top-priority rule WHEN atGoal -> DO hold.",
-  "hint": "Try composing a `follow-left-wall` function with steps: [pivot-left, step]. Then write a rule: when `!wallLeft`, do `follow-left-wall`. Add a fallback: when `wallAhead`, do `pivot-right`. Add a high-priority rule: when `goalAhead`, do `step`.",
+  "tagline": "Name and reuse a safe multi-step cornering behaviour.",
+  "narrative": "The Snake Corridor repeatedly presents the same operation: turn into an open side and immediately advance. Conditions still belong in rules, where they are evaluated every tick. A function does something different: it names a fixed sequence of actions. Compose a turn-and-step function, then let an ordered rule decide when that sequence is appropriate.",
+  "objective": "Solve the 11×11 Snake Corridor and use at least one custom multi-step function.",
+  "learningObjective": "Separate decision logic from reusable behaviour: rules evaluate conditions, while functions execute fixed action sequences one action per tick.",
+  "intelligenceExplanation": "The brain starts with four primitive bricks and no rules. The Functions tab is unlocked, so you can compose a fixed sequence such as pivot-left followed by step. A rule can call that function when the left side is open; other rules still handle straight movement, blocked routes, and arrival. A running function is checked for action safety before each primitive.",
+  "hint": "Compose a `turn-left-and-step` function from [pivot-left, step], then call it only when the left side is open.",
   "hints": [
-    "You have the four primitives but no strategy. Open the Functions tab and compose one.",
-    "A left-hand wall follower repeats: if you can turn left, do; else go straight; else turn right.",
-    "Compose a multi-step brick from pivot-left / step / pivot-right, then call it from a single rule."
+    "Functions sequence actions; they do not contain WHEN checks. Keep sensing and branching in the rule list.",
+    "Create a two-step function: pivot-left, then step.",
+    "Use this order: atGoal → hold; !wallLeft → your turn-and-step function; !wallAhead → step; always → pivot-right."
+  ],
+  "taxonomy": {
+    "domain": "Maze",
+    "simulation": "Navigation",
+    "tier": "easy",
+    "grade": 1
+  },
+  "brief": "Build a reusable cornering function and use ordered rules to solve the Snake Corridor.",
+  "context": "Rules decide when to act; a custom function packages a fixed action sequence.",
+  "steps": [
+    {
+      "id": "compose",
+      "label": "Create at least one custom multi-step function",
+      "check": "functions >= 1"
+    },
+    {
+      "id": "reach",
+      "label": "Solve the corridor and settle on the goal",
+      "check": "reached"
+    }
   ],
   "availableBricks": [
     "step",
@@ -90,8 +111,7 @@
     {
       "id": "author",
       "label": "Use at least one custom function",
-      "check": "reached && functions >= 1",
-      "bonus": true
+      "check": "reached && functions >= 1"
     },
     {
       "id": "swift",

@@ -24,6 +24,8 @@ interface Props {
    * rather than offering a control with no observable effect.
    */
   editable?: boolean;
+  /** Selected simulation domain, used only for relevant authoring examples. */
+  domain?: string;
   onStatesChange: (states: VisualState[]) => void;
   onInitialChange: (id: string) => void;
 }
@@ -31,7 +33,15 @@ interface Props {
 const FIELD =
   "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
 
-export function StateEditor({ states, initial, rules, editable = true, onStatesChange, onInitialChange }: Props) {
+export function StateEditor({
+  states,
+  initial,
+  rules,
+  editable = true,
+  domain,
+  onStatesChange,
+  onInitialChange,
+}: Props) {
   const update = (index: number, patch: Partial<VisualState>) => {
     const next = states.map((s, i) => (i === index ? { ...s, ...patch } : s));
     onStatesChange(next);
@@ -62,42 +72,72 @@ export function StateEditor({ states, initial, rules, editable = true, onStatesC
           What a state is
         </p>
         <p>
-          A state is the robot&apos;s current <strong className="font-semibold text-zinc-700 dark:text-zinc-300">mode</strong>.
+          A state is the controller&apos;s current <strong className="font-semibold text-zinc-700 dark:text-zinc-300">mode</strong>.
           Think of a phone: on <em>silent</em> a call vibrates, on <em>normal</em> the
           same call rings. Same event, different behaviour — because the mode changed.
         </p>
 
-        <p className="mt-2">The robot works the same way. Say it has two modes:</p>
-        <div className="my-1.5 flex flex-col gap-1 border-l-2 border-zinc-300 pl-3 dark:border-zinc-700">
-          <div>
-            <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">explore</span>{" "}
-            — the goal is not in sight. Rules here wander and follow walls.
-          </div>
-          <div>
-            <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">seek</span>{" "}
-            — the goal is in sight. Rules here drive straight at it.
-          </div>
-        </div>
-        <p>
-          The robot senses &quot;the path ahead is clear&quot; in both modes — but in{" "}
-          <span className="font-mono">explore</span> that means <em>keep wandering</em>,
-          and in <span className="font-mono">seek</span> it means <em>close in on the
-          goal</em>. That is the whole point: a state lets the same condition mean
-          different things.
-        </p>
+        {domain === "finance" ? (
+          <>
+            <p className="mt-2">
+              Finance states are operating modes for the payment switch:
+            </p>
+            <div className="my-1.5 flex flex-col gap-1 border-l-2 border-zinc-300 pl-3 dark:border-zinc-700">
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+                  normal-routing
+                </span>{" "}
+                — balance cost and reliability while queues are healthy.
+              </div>
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+                  deadline-protection
+                </span>{" "}
+                — prioritize low latency when payments are close to expiry.
+              </div>
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+                  outage-recovery
+                </span>{" "}
+                — avoid a failed provider while capacity and queues recover.
+              </div>
+            </div>
+            <p>
+              A rule can switch modes when queue depth, provider health, retry
+              history, or the current transaction changes. The Finance world
+              still owns transaction lifecycle states such as ready, processing,
+              failed, and completed; actions like route, hold, and decline move
+              transactions through that lifecycle.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-2">
+              A maze controller might use two modes:
+            </p>
+            <div className="my-1.5 flex flex-col gap-1 border-l-2 border-zinc-300 pl-3 dark:border-zinc-700">
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">explore</span>{" "}
+                — follow walls while the goal is not visible.
+              </div>
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">seek</span>{" "}
+                — close in once the goal comes into view.
+              </div>
+            </div>
+          </>
+        )}
 
         <p className="mt-2">
-          The robot is always in exactly <strong className="font-semibold text-zinc-700 dark:text-zinc-300">one</strong>{" "}
-          state. A rule only fires if its state matches. To change mode, a rule sets{" "}
-          <span className="font-mono">Then switch to</span> — e.g. in{" "}
-          <span className="font-mono">explore</span>, WHEN the goal becomes visible →
-          DO step, then switch to <span className="font-mono">seek</span>.
+          The controller is always in exactly <strong className="font-semibold text-zinc-700 dark:text-zinc-300">one</strong>{" "}
+          state. Only rules matching that state are considered. A firing rule
+          changes mode through <span className="font-mono">Then switch to</span>.
         </p>
 
         {editable ? (
           <p className="mt-2">
             States are <strong className="font-semibold text-zinc-700 dark:text-zinc-300">yours to define</strong> —
-            rename, add, delete them, and pick which one the robot starts in. They are
+            rename, add, delete them, and pick which one the controller starts in. They are
             not fixed by the engine.
           </p>
         ) : (

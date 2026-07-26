@@ -10,8 +10,33 @@
   "narrative": "Two orders share an 11×5 warehouse aisle loop: one red, one blue. The robot already picks up whatever package it reaches and follows the route around the central rack block. But a delivery action at the wrong coloured outbound is deliberately harmless, so the robot needs to understand both the type of cargo in its hold and the type of the station beneath it. Sort both orders correctly.",
   "objective": "Deliver the red package to Red Outbound and the blue package to Blue Outbound.",
   "learningObjective": "Conditional logic across two facts: cargo type and delivery-zone type.",
-  "intelligenceExplanation": "Movement and pickup are already provided. Add a high-priority rule for Red Outbound that checks carryingRed, and another for Blue Outbound that checks carryingBlue. A generic delivery rule would also work in this safe world, but the two typed rules make the sorting decision visible.",
-  "hint": "Add WHEN deliveryRedHere AND carryingRed → DO deliver. Repeat for blue, and keep both priorities above 60 so route movement cannot skip the station.",
+  "intelligenceExplanation": "Movement and pickup are already provided. Add a Red Outbound rule that checks carryingRed and a Blue Outbound rule that checks carryingBlue. Put both delivery rules above navigation so the robot unloads before leaving a matching zone. A generic delivery rule is harmless in this world, but typed rules make the sorting policy explicit.",
+  "hint": "Add the red and blue delivery rules, then move both above the clear-aisle movement rule.",
+  "hints": [
+    "The robot can sense both the outbound colour beneath it and the cargo colour it carries.",
+    "Combine deliveryRedHere with carryingRed, then repeat the pattern for blue.",
+    "Place both typed delivery rules above navigation so they run before the robot steps away."
+  ],
+  "taxonomy": {
+    "domain": "Warehouse",
+    "simulation": "Fulfilment",
+    "tier": "tutorial",
+    "grade": 2
+  },
+  "brief": "Deliver each coloured package to its matching outbound lane.",
+  "context": "Navigation and pickup are already provided; the missing policy is type-aware unloading.",
+  "steps": [
+    {
+      "id": "first",
+      "label": "Deliver the first correctly matched package",
+      "check": "deliveredCount >= 1"
+    },
+    {
+      "id": "sort",
+      "label": "Sort and deliver both packages",
+      "check": "reached"
+    }
+  ],
   "availableBricks": [
     "step",
     "pivot-right",

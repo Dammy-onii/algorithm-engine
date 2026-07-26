@@ -1,0 +1,77 @@
+{
+  "name": "Production Parking Orchestrator",
+  "kind": "parking",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "parking": {
+    "operationsMode": "realtime",
+    "entryTravelTicks": 3,
+    "exitTravelTicks": 3,
+    "laneCapacity": 4,
+    "exitGateCapacity": 2,
+    "congestionDelayPerMovement": 1,
+    "maxTicks": 1400,
+    "facilitySchedule": [
+      { "atTick": 80, "exitGateCapacity": 1 },
+      { "atTick": 130, "exitGateCapacity": 0 },
+      { "atTick": 155, "exitGateCapacity": 2 },
+      { "atTick": 210, "laneCapacity": 2 },
+      { "atTick": 270, "laneCapacity": 4 }
+    ],
+    "spaces": [
+      { "id": "N1", "kind": "standard", "row": "north", "order": 0, "distanceToExit": 16, "zone": "A" },
+      { "id": "N2", "kind": "standard", "row": "north", "order": 1, "distanceToExit": 15, "zone": "A", "schedule": [{ "atTick": 100, "closed": true }, { "atTick": 190, "closed": false }] },
+      { "id": "N3", "kind": "standard", "row": "north", "order": 2, "distanceToExit": 14, "zone": "A" },
+      { "id": "N4", "kind": "standard", "row": "north", "order": 3, "distanceToExit": 13, "zone": "A" },
+      { "id": "N5", "kind": "charging", "row": "north", "order": 4, "distanceToExit": 12, "zone": "B", "schedule": [{ "atTick": 65, "closed": true }, { "atTick": 145, "closed": false }] },
+      { "id": "N6", "kind": "charging", "row": "north", "order": 5, "distanceToExit": 11, "zone": "B", "schedule": [{ "atTick": 65, "closed": true }, { "atTick": 145, "closed": false }] },
+      { "id": "N7", "kind": "charging", "row": "north", "order": 6, "distanceToExit": 10, "zone": "B" },
+      { "id": "N8", "kind": "large", "row": "north", "order": 7, "distanceToExit": 9, "zone": "B" },
+      { "id": "N9", "kind": "large", "row": "north", "order": 8, "distanceToExit": 8, "zone": "B" },
+      { "id": "N10", "kind": "premium", "row": "north", "order": 9, "distanceToExit": 7, "zone": "C" },
+      { "id": "N11", "kind": "premium", "row": "north", "order": 10, "distanceToExit": 6, "zone": "C" },
+      { "id": "N12", "kind": "premium", "row": "north", "order": 11, "distanceToExit": 5, "zone": "C" },
+      { "id": "S1", "kind": "standard", "row": "south", "order": 0, "distanceToExit": 12, "zone": "A" },
+      { "id": "S2", "kind": "standard", "row": "south", "order": 1, "distanceToExit": 11, "zone": "A" },
+      { "id": "S3", "kind": "standard", "row": "south", "order": 2, "distanceToExit": 10, "zone": "A" },
+      { "id": "S4", "kind": "standard", "row": "south", "order": 3, "distanceToExit": 9, "zone": "A" },
+      { "id": "S5", "kind": "accessible", "row": "south", "order": 4, "distanceToExit": 8, "zone": "B" },
+      { "id": "S6", "kind": "accessible", "row": "south", "order": 5, "distanceToExit": 7, "zone": "B" },
+      { "id": "S7", "kind": "reserved", "row": "south", "order": 6, "distanceToExit": 6, "reservedFor": "airport-reservation", "zone": "C" },
+      { "id": "S8", "kind": "reserved", "row": "south", "order": 7, "distanceToExit": 5, "reservedFor": "airport-reservation", "zone": "C" },
+      { "id": "S9", "kind": "reserved", "row": "south", "order": 8, "distanceToExit": 4, "reservedFor": "airport-reservation", "zone": "C" },
+      { "id": "S10", "kind": "large", "row": "south", "order": 9, "distanceToExit": 3, "zone": "B" },
+      { "id": "S11", "kind": "premium", "row": "south", "order": 10, "distanceToExit": 2, "zone": "C" },
+      { "id": "S12", "kind": "charging", "row": "south", "order": 11, "distanceToExit": 1, "zone": "B" }
+    ],
+    "batches": [
+      {
+        "prefix": "airport",
+        "count": 180,
+        "arrivalStart": 0,
+        "arrivalEvery": 2,
+        "durations": [8, 15, 20, 11, 6, 24],
+        "vehicleTypes": ["standard", "electric", "large", "vip", "accessible", "standard", "reserved"],
+        "priorityEvery": 8,
+        "priority": 4,
+        "patienceTicks": 500,
+        "reservation": "airport-reservation"
+      },
+      {
+        "prefix": "surge",
+        "count": 48,
+        "arrivalStart": 75,
+        "arrivalEvery": 1,
+        "durations": [10, 18, 12],
+        "vehicleTypes": ["vip", "reserved", "electric", "accessible"],
+        "priorityEvery": 2,
+        "priority": 5,
+        "patienceTicks": 500,
+        "reservation": "airport-reservation"
+      }
+    ]
+  }
+}

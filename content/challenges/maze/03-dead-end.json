@@ -4,13 +4,38 @@
   "number": 3,
   "name": "No Way Out",
   "difficulty": 1,
+  "stage": "practice",
   "worldKey": "small",
   "tagline": "Handle the situation no single rule can predict.",
-  "narrative": "The maze ahead has multiple corridors. Some of them loop back. Some end in dead ends — three walls and nowhere to go. The robot's current two-rule brain works in simple corridors, but put it in a real maze and it will spin in a corner forever. Real navigation requires reasoning about combinations of conditions, not just single flags. When both the path ahead is blocked and the left is a wall, something specific needs to happen — and that something needs its own dedicated rule.",
+  "narrative": "The small maze introduces a dead-end pattern that the two-rule corner brain cannot distinguish from an ordinary turn. Combine the front and right wall observations into a more specific case, then place that case above the general blocked-path rule.",
   "objective": "Navigate the 7x7 maze from start to goal, then hold on the goal for 3 ticks.",
   "learningObjective": "Combining conditions with AND (`&&`) and reasoning about ordered rules when multiple conditions could match.",
   "intelligenceExplanation": "This brain has two rules: move forward when clear, and turn right when blocked. That handles single corners, but in a maze with dead ends it will oscillate — turning right, finding a wall, turning right again, looping. Add a rule that handles the dead-end case: both ahead and right are walls. A left turn, or an about-face, breaks the cycle. Order the rules by specificity: most specific conditions at the top, most general fallbacks at the bottom. Put WHEN atGoal -> DO hold first so the robot settles at its destination.",
   "hint": "Use `wallAhead && wallRight` as the condition for a new rule that pivots left. Place it above the existing turn-right rule.",
+  "hints": [
+    "Look for a situation in which the existing wallAhead rule is too general.",
+    "Combine wallAhead and wallRight with AND to describe the dead-end case.",
+    "Put WHEN wallAhead AND wallRight → pivot-left above the existing wallAhead → pivot-right rule, with the arrival rule first."
+  ],
+  "taxonomy": {
+    "domain": "Maze",
+    "simulation": "Navigation",
+    "tier": "tutorial",
+    "grade": 3
+  },
+  "brief": "Add a specific dead-end response and use it to reach the goal.",
+  "context": "The starter brain handles clear corridors and ordinary corners, but not combined wall conditions.",
+  "steps": [
+    {
+      "id": "dead-end",
+      "label": "Describe the dead end with a combined condition"
+    },
+    {
+      "id": "reach",
+      "label": "Escape the maze and settle on the goal",
+      "check": "reached"
+    }
+  ],
   "availableBricks": [
     "step",
     "pivot-left",

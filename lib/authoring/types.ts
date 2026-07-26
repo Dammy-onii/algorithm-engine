@@ -102,7 +102,7 @@ export interface VisualFunction {
   action?: string;
   steps?: string[];
   /**
-   * True = this brick wraps an engine primitive and cannot be deleted.
+   * True = this brick wraps a core or world-module primitive and cannot be deleted.
    * False = user-composed; editable and removable.
    */
   isBuiltIn: boolean;
@@ -251,6 +251,19 @@ export interface ChallengeData {
   statesUnlocked?: boolean;
   /** Machine-checked objectives that tick off from the run's outcome. */
   objectives?: ChallengeObjective[];
+  /**
+   * Server-evaluated interview suite. The suite id is public; scenario inputs
+   * remain in a server-only module and are never included in the client bundle.
+   */
+  interviewEvaluation?: {
+    suiteId: string;
+    scenarioCount: number;
+    passingScore: number;
+    /** Marks the guided interview stage that must lead a shared assignment. */
+    tutorial?: boolean;
+    /** Short contract shown before submission without revealing hidden inputs. */
+    rubric: string[];
+  };
 
   // --- Structured brief (Milestone 4) — optional, layered over the free-text
   //     fields above so existing challenges keep working while new ones (and

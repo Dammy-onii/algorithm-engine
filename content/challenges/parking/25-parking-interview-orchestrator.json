@@ -1,0 +1,53 @@
+{
+  "id": "parking-interview-orchestrator",
+  "pack": "parking",
+  "number": 25,
+  "name": "Production Parking Orchestrator",
+  "difficulty": 3,
+  "stage": "hard",
+  "worldKey": "parking-interview-distributed",
+  "tagline": "Operate a production-scale autonomous facility through overlapping failures.",
+  "brief": "Submit a robust parking policy for mixed traffic, simultaneous incidents, long-running load, and adversarial arrival patterns.",
+  "context": "The facility owns exact bay selection inside the category chosen by your policy; your controller owns service ordering, category choice, waiting, and exit authorization.",
+  "narrative": "You are building the scheduling layer for an airport parking platform. Multiple logical zones share constrained movement and exit infrastructure. Arrivals, departures, closures, charging outages, gate failures, reservation surges, cancellations, and capacity recovery overlap. A bay may close while a car is inbound, forcing the facility to return that car to the entrance queue. The controller must remain safe and make progress without assuming a fixed capacity, category mix, queue length, or event sequence.",
+  "objective": "Maximize safe completed departures while minimizing abandonment, preference loss, queue growth, rerouting, congestion, and operating penalty across visible and hidden production scenarios.",
+  "learningObjective": "Engineer a durable real-time control policy with back-pressure, fairness, failure recovery, and long-running state consistency.",
+  "intelligenceExplanation": "No complete starter policy is supplied. Build the decision flow from the operational contract. The hidden evaluator changes layouts and timing but never changes the meanings of actions or observations.",
+  "hint": "Use a safety envelope first, an urgency/fairness layer second, and optimization preferences last. Never let a preference bypass eligibility.",
+  "hints": ["Exact bays are selected by the facility allocator; your policy chooses an eligible category and when to consume lane capacity.", "Prioritize exit recovery when occupied capacity is the bottleneck, but do not ignore a near-expiry entrance vehicle.", "A final hold branch is necessary because physical work, failures, and recovery continue between decisions."],
+  "taxonomy": { "domain": "Parking", "simulation": "Interview Facility Control", "tier": "hard", "grade": 10 },
+  "steps": [
+    { "id": "safety", "label": "Encode the hard safety and compatibility envelope" },
+    { "id": "service", "label": "Balance exit recovery, priority, and starvation prevention" },
+    { "id": "recovery", "label": "Remain stable through overlapping closures and gate failures" },
+    { "id": "submit", "label": "Submit against the production hidden evaluation suite" }
+  ],
+  "availableBricks": ["park-standard", "park-charging", "park-large", "park-premium", "park-accessible", "park-reserved", "release-vehicle", "hold"],
+  "availableConditions": ["hasExitRequest", "exitQueueLength", "exitWait", "exitGateAvailable", "hasWaitingVehicle", "queueLength", "carElectric", "carLarge", "carVIP", "carAccessible", "carReserved", "carPriority", "carWait", "carPatienceRemaining", "standardAvailable", "chargingAvailable", "largeAvailable", "premiumAvailable", "accessibleAvailable", "reservedAvailable", "laneAvailable", "laneLoad", "laneCapacity", "congestion", "movingVehicles", "spacesAvailable", "occupiedSpaces", "hardViolations", "preferenceViolations", "abandonedCount", "reassignmentCount", "congestionTicks", "maxEntranceQueue", "maxExitQueue", "parkingScore", "always"],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "objectives": [
+    { "id": "resolve", "label": "Resolve the complete visible production stream", "check": "reached && allVehiclesResolved" },
+    { "id": "safe", "label": "No hard allocation violations", "check": "allVehiclesResolved && hardViolations == 0" },
+    { "id": "service", "label": "Keep visible abandonment below five vehicles", "check": "allVehiclesResolved && abandonedCount <= 4" },
+    { "id": "stable", "label": "Keep visible operating penalty below 26000", "check": "allVehiclesResolved && parkingScore < 26000" }
+  ],
+  "interviewEvaluation": {
+    "suiteId": "production-parking-orchestrator-v1",
+    "scenarioCount": 10,
+    "passingScore": 80,
+    "rubric": ["State safety and correctness: 30%", "Completion, fairness, and customer service: 25%", "Failure recovery and back-pressure: 25%", "Efficiency and long-running stability: 20%"]
+  },
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "orchestrate", "priority": 1, "description": "Operate safely through continuous production incidents." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Continuously evaluate live facility state." }] },
+    "rules": { "rules": [] },
+    "functions": { "functions": [
+      { "id": "park-standard", "action": "parkStandard", "description": "Assign to a standard bay." }, { "id": "park-charging", "action": "parkCharging", "description": "Assign to a charging bay." },
+      { "id": "park-large", "action": "parkLarge", "description": "Assign to a large bay." }, { "id": "park-premium", "action": "parkPremium", "description": "Assign to a premium bay." },
+      { "id": "park-accessible", "action": "parkAccessible", "description": "Assign to an accessible bay." }, { "id": "park-reserved", "action": "parkReserved", "description": "Assign to the matching reserved bay." },
+      { "id": "release-vehicle", "action": "releaseVehicle", "description": "Start a ready vehicle's physical exit." }, { "id": "hold", "action": "wait", "description": "Let facility work advance without starting another action." }
+    ] },
+    "memory": {}
+  }
+}

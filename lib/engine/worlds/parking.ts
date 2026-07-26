@@ -27,6 +27,14 @@ export interface ParkingSpace {
   order: number;
   distanceToExit: number;
   reservedFor?: string;
+  zone?: string;
+  closed?: boolean;
+  schedule?: ParkingSpaceSchedule[];
+}
+
+export interface ParkingSpaceSchedule {
+  atTick: number;
+  closed: boolean;
 }
 
 export interface ParkingVehicle {
@@ -38,12 +46,46 @@ export interface ParkingVehicle {
   vip?: boolean;
   accessiblePermit?: boolean;
   reservation?: string;
+  priority?: number;
+  patienceTicks?: number;
+  cancellationTick?: number;
+  entrance?: string;
+}
+
+export interface ParkingFacilitySchedule {
+  atTick: number;
+  laneCapacity?: number;
+  exitGateCapacity?: number;
+}
+
+export interface ParkingVehicleBatch {
+  prefix: string;
+  count: number;
+  arrivalStart?: number;
+  arrivalEvery?: number;
+  durations: number[];
+  vehicleTypes?: Array<
+    "standard" | "electric" | "large" | "vip" | "accessible" | "reserved"
+  >;
+  priorityEvery?: number;
+  priority?: number;
+  patienceTicks?: number;
+  reservation?: string;
+  entrance?: string;
 }
 
 export interface ParkingConfig {
   spaces: ParkingSpace[];
-  vehicles: ParkingVehicle[];
+  vehicles?: ParkingVehicle[];
+  batches?: ParkingVehicleBatch[];
   maxTicks?: number;
+  operationsMode?: "instant" | "realtime";
+  entryTravelTicks?: number;
+  exitTravelTicks?: number;
+  laneCapacity?: number;
+  exitGateCapacity?: number;
+  congestionDelayPerMovement?: number;
+  facilitySchedule?: ParkingFacilitySchedule[];
 }
 
 type ParkingWorldData = WorldData & { parking?: ParkingConfig };
@@ -67,8 +109,17 @@ export function validateParkingData(data: WorldData): void {
   if (!Array.isArray(config.spaces) || config.spaces.length === 0) {
     throw new Error("[parking] at least one parking space is required");
   }
-  if (!Array.isArray(config.vehicles) || config.vehicles.length === 0) {
+  const vehicles = expandParkingVehicles(config);
+  if (vehicles.length === 0) {
     throw new Error("[parking] at least one vehicle is required");
+  }
+  for (const batch of config.batches ?? []) {
+    if (!batch.prefix || !Number.isInteger(batch.count) || batch.count < 1) {
+      throw new Error("[parking] each vehicle batch needs a prefix and positive count");
+    }
+    if (!Array.isArray(batch.durations) || batch.durations.length === 0) {
+      throw new Error(`[parking] batch '${batch.prefix}' needs at least one duration`);
+    }
   }
 
   const spaceIds = new Set<string>();
@@ -87,11 +138,16 @@ export function validateParkingData(data: WorldData): void {
     if (space.kind === "reserved" && !space.reservedFor) {
       throw new Error(`[parking] reserved space '${space.id}' needs reservedFor`);
     }
+    for (const event of space.schedule ?? []) {
+      if (!Number.isInteger(event.atTick) || event.atTick < 0) {
+        throw new Error(`[parking] space '${space.id}' has an invalid schedule tick`);
+      }
+    }
     spaceIds.add(space.id);
   }
 
   const vehicleIds = new Set<string>();
-  for (const vehicle of config.vehicles) {
+  for (const vehicle of vehicles) {
     if (!vehicle.id) throw new Error("[parking] a vehicle has an empty id");
     if (vehicleIds.has(vehicle.id)) {
       throw new Error(`[parking] duplicate vehicle '${vehicle.id}'`);
@@ -102,19 +158,57 @@ export function validateParkingData(data: WorldData): void {
     if (!Number.isInteger(vehicle.duration) || vehicle.duration < 1) {
       throw new Error(`[parking] vehicle '${vehicle.id}' duration must be positive`);
     }
+    if (
+      vehicle.patienceTicks !== undefined &&
+      (!Number.isInteger(vehicle.patienceTicks) || vehicle.patienceTicks < 1)
+    ) {
+      throw new Error(`[parking] vehicle '${vehicle.id}' patienceTicks must be positive`);
+    }
     vehicleIds.add(vehicle.id);
   }
 
-  for (const space of config.spaces) {
-    if (space.reservedFor && !vehicleIds.has(space.reservedFor)) {
-      throw new Error(
-        `[parking] space '${space.id}' reserves for unknown vehicle '${space.reservedFor}'`,
-      );
-    }
-  }
+  // reservedFor may be a vehicle id or an external reservation token. The
+  // matching arrival can be generated later by a batch or supplied by a hidden
+  // scenario, so it is intentionally not constrained to explicit vehicle ids.
 }
 
-export type ParkingVehicleStatus = "scheduled" | "parked" | "ready" | "departed";
+export function expandParkingVehicles(config: ParkingConfig): ParkingVehicle[] {
+  const explicit = structuredClone(config.vehicles ?? []);
+  const generated = (config.batches ?? []).flatMap((batch) =>
+    Array.from({ length: batch.count }, (_, index) => {
+      const type =
+        batch.vehicleTypes?.[index % batch.vehicleTypes.length] ?? "standard";
+      return {
+        id: `${batch.prefix}-${String(index + 1).padStart(3, "0")}`,
+        arrivalTick:
+          (batch.arrivalStart ?? 0) + index * Math.max(1, batch.arrivalEvery ?? 1),
+        duration: batch.durations[index % batch.durations.length],
+        size: type === "large" ? ("large" as const) : ("compact" as const),
+        electric: type === "electric",
+        vip: type === "vip",
+        accessiblePermit: type === "accessible",
+        reservation: type === "reserved" ? batch.reservation ?? "reserved" : undefined,
+        priority:
+          batch.priorityEvery && index % batch.priorityEvery === 0
+            ? batch.priority ?? 3
+            : 1,
+        patienceTicks: batch.patienceTicks,
+        entrance: batch.entrance,
+      };
+    }),
+  );
+  return [...explicit, ...generated];
+}
+
+export type ParkingVehicleStatus =
+  | "scheduled"
+  | "entering"
+  | "parked"
+  | "ready"
+  | "exiting"
+  | "departed"
+  | "abandoned"
+  | "cancelled";
 
 export interface ParkingRuntimeVehicle extends ParkingVehicle {
   status: ParkingVehicleStatus;
@@ -122,9 +216,13 @@ export interface ParkingRuntimeVehicle extends ParkingVehicle {
   parkedAt?: number;
   departAt?: number;
   readyAt?: number;
+  movementCompletesAt?: number;
   waited: number;
   exitWaited: number;
   violation: boolean;
+  hardViolation: boolean;
+  preferenceViolation: boolean;
+  reassignments: number;
 }
 
 export interface ParkingRuntime {
@@ -135,6 +233,21 @@ export interface ParkingRuntime {
   totalWait: number;
   totalExitWait: number;
   maxTicks: number;
+  operationsMode: "instant" | "realtime";
+  entryTravelTicks: number;
+  exitTravelTicks: number;
+  laneCapacity: number;
+  exitGateCapacity: number;
+  congestionDelayPerMovement: number;
+  facilitySchedule: ParkingFacilitySchedule[];
+  abandoned: number;
+  cancelled: number;
+  hardViolations: number;
+  preferenceViolations: number;
+  reassignments: number;
+  congestionTicks: number;
+  maxEntranceQueue: number;
+  maxExitQueue: number;
   lastAssignedVehicleId?: string;
   lastAssignedSpaceId?: string;
   lastAssignmentTick?: number;
@@ -147,18 +260,37 @@ export function createParkingRuntime(data: WorldData): ParkingRuntime | null {
   if (data.kind !== "parking" || !config) return null;
   return {
     spaces: structuredClone(config.spaces),
-    vehicles: config.vehicles.map((vehicle) => ({
+    vehicles: expandParkingVehicles(config).map((vehicle) => ({
       ...structuredClone(vehicle),
       status: "scheduled",
       waited: 0,
       exitWaited: 0,
       violation: false,
+      hardViolation: false,
+      preferenceViolation: false,
+      reassignments: 0,
     })),
     violations: 0,
     assignments: 0,
     totalWait: 0,
     totalExitWait: 0,
-    maxTicks: config.maxTicks ?? Math.max(100, config.vehicles.length * 20),
+    maxTicks:
+      config.maxTicks ?? Math.max(100, expandParkingVehicles(config).length * 20),
+    operationsMode: config.operationsMode ?? "instant",
+    entryTravelTicks: Math.max(1, config.entryTravelTicks ?? 2),
+    exitTravelTicks: Math.max(1, config.exitTravelTicks ?? 2),
+    laneCapacity: Math.max(1, config.laneCapacity ?? 2),
+    exitGateCapacity: Math.max(0, config.exitGateCapacity ?? 1),
+    congestionDelayPerMovement: Math.max(0, config.congestionDelayPerMovement ?? 1),
+    facilitySchedule: structuredClone(config.facilitySchedule ?? []),
+    abandoned: 0,
+    cancelled: 0,
+    hardViolations: 0,
+    preferenceViolations: 0,
+    reassignments: 0,
+    congestionTicks: 0,
+    maxEntranceQueue: 0,
+    maxExitQueue: 0,
   };
 }
 
@@ -171,8 +303,22 @@ export function waitingVehicles(world: World): ParkingRuntimeVehicle[] {
     parkingRuntime(world)?.vehicles.filter(
       (vehicle) =>
         vehicle.status === "scheduled" && vehicle.arrivalTick <= world.tick,
+    ).sort(
+      (a, b) =>
+        Number(remainingPatience(b, world.tick) <= 10) -
+          Number(remainingPatience(a, world.tick) <= 10) ||
+        (b.priority ?? 1) - (a.priority ?? 1) ||
+        remainingPatience(a, world.tick) - remainingPatience(b, world.tick) ||
+        a.arrivalTick - b.arrivalTick ||
+        a.id.localeCompare(b.id),
     ) ?? []
   );
+}
+
+function remainingPatience(vehicle: ParkingRuntimeVehicle, tick: number): number {
+  return vehicle.patienceTicks === undefined
+    ? Number.MAX_SAFE_INTEGER
+    : vehicle.arrivalTick + vehicle.patienceTicks - tick;
 }
 
 export function currentParkingVehicle(world: World): ParkingRuntimeVehicle | null {
@@ -182,7 +328,11 @@ export function currentParkingVehicle(world: World): ParkingRuntimeVehicle | nul
 export function parkedVehicles(world: World): ParkingRuntimeVehicle[] {
   return (
     parkingRuntime(world)?.vehicles.filter(
-      (vehicle) => vehicle.status === "parked" || vehicle.status === "ready",
+      (vehicle) =>
+        vehicle.status === "entering" ||
+        vehicle.status === "parked" ||
+        vehicle.status === "ready" ||
+        vehicle.status === "exiting",
     ) ?? []
   );
 }
@@ -211,9 +361,28 @@ export function occupantForSpace(
   return (
     parkingRuntime(world)?.vehicles.find(
       (vehicle) =>
-        (vehicle.status === "parked" || vehicle.status === "ready") &&
+        (vehicle.status === "entering" ||
+          vehicle.status === "parked" ||
+          vehicle.status === "ready" ||
+          vehicle.status === "exiting") &&
         vehicle.assignedSpaceId === spaceId,
     ) ?? null
+  );
+}
+
+export function isParkingSpaceClosed(space: ParkingSpace, tick: number): boolean {
+  let closed = space.closed === true;
+  for (const event of [...(space.schedule ?? [])].sort((a, b) => a.atTick - b.atTick)) {
+    if (event.atTick <= tick) closed = event.closed;
+  }
+  return closed;
+}
+
+export function movingVehicles(world: World): ParkingRuntimeVehicle[] {
+  return (
+    parkingRuntime(world)?.vehicles.filter(
+      (vehicle) => vehicle.status === "entering" || vehicle.status === "exiting",
+    ) ?? []
   );
 }
 
@@ -226,7 +395,9 @@ export function availableSpaces(
   return runtime.spaces
     .filter(
       (space) =>
-        (!kind || space.kind === kind) && occupantForSpace(world, space.id) === null,
+        (!kind || space.kind === kind) &&
+        !isParkingSpaceClosed(space, world.tick) &&
+        occupantForSpace(world, space.id) === null,
     )
     .sort((a, b) => a.distanceToExit - b.distanceToExit || a.order - b.order);
 }
@@ -248,6 +419,45 @@ function expectedKind(vehicle: ParkingRuntimeVehicle): ParkingSpaceKind {
   return "standard";
 }
 
+function classifyAssignment(
+  vehicle: ParkingRuntimeVehicle,
+  space: ParkingSpace,
+  tick: number,
+): { hard: boolean; preference: boolean } {
+  const reservationMatches =
+    Boolean(vehicle.reservation) &&
+    (space.reservedFor === vehicle.id || space.reservedFor === vehicle.reservation);
+  const hard =
+    isParkingSpaceClosed(space, tick) ||
+    (space.kind === "reserved" && !reservationMatches) ||
+    (space.kind === "accessible" && !vehicle.accessiblePermit) ||
+    (vehicle.accessiblePermit === true && space.kind !== "accessible") ||
+    (vehicle.size === "large" && space.kind !== "large") ||
+    (Boolean(vehicle.reservation) && !reservationMatches);
+  const preference =
+    !hard &&
+    ((vehicle.electric === true && space.kind !== "charging") ||
+      (vehicle.vip === true && space.kind !== "premium") ||
+      expectedKind(vehicle) !== space.kind);
+  return { hard, preference };
+}
+
+function laneLoad(world: World): number {
+  return movingVehicles(world).length;
+}
+
+function laneHasCapacity(world: World): boolean {
+  const runtime = parkingRuntime(world);
+  return Boolean(runtime && laneLoad(world) < runtime.laneCapacity);
+}
+
+function exitGateHasCapacity(world: World): boolean {
+  const runtime = parkingRuntime(world);
+  if (!runtime) return false;
+  const exiting = runtime.vehicles.filter((vehicle) => vehicle.status === "exiting").length;
+  return exiting < runtime.exitGateCapacity;
+}
+
 function assignToKind(world: World, kind: ParkingSpaceKind): void {
   const runtime = parkingRuntime(world);
   const vehicle = currentParkingVehicle(world);
@@ -263,15 +473,27 @@ function assignToKind(world: World, kind: ParkingSpaceKind): void {
       : availableSpaces(world, kind)[0];
   if (!space) return;
 
-  vehicle.status = "parked";
+  const assignment = classifyAssignment(vehicle, space, world.tick);
+  vehicle.status = runtime.operationsMode === "realtime" ? "entering" : "parked";
   vehicle.assignedSpaceId = space.id;
-  vehicle.parkedAt = world.tick;
-  vehicle.departAt = world.tick + vehicle.duration;
+  if (runtime.operationsMode === "realtime") {
+    const congestionDelay =
+      laneLoad(world) * runtime.congestionDelayPerMovement;
+    vehicle.movementCompletesAt =
+      world.tick + runtime.entryTravelTicks + congestionDelay;
+  } else {
+    vehicle.parkedAt = world.tick;
+    vehicle.departAt = world.tick + vehicle.duration;
+  }
   vehicle.waited = Math.max(0, world.tick - vehicle.arrivalTick);
-  vehicle.violation = expectedKind(vehicle) !== space.kind;
+  vehicle.hardViolation = assignment.hard;
+  vehicle.preferenceViolation = assignment.preference;
+  vehicle.violation = assignment.hard || assignment.preference;
   runtime.assignments += 1;
   runtime.totalWait += vehicle.waited;
   if (vehicle.violation) runtime.violations += 1;
+  if (vehicle.hardViolation) runtime.hardViolations += 1;
+  if (vehicle.preferenceViolation) runtime.preferenceViolations += 1;
   runtime.lastAssignedVehicleId = vehicle.id;
   runtime.lastAssignedSpaceId = space.id;
   runtime.lastAssignmentTick = world.tick;
@@ -301,11 +523,19 @@ function applyParkingAction(world: World, action: Action): boolean {
       const runtime = parkingRuntime(world);
       const vehicle = readyToLeaveVehicles(world)[0];
       if (!runtime || !vehicle) return true;
-      vehicle.status = "departed";
       vehicle.exitWaited = Math.max(0, world.tick - (vehicle.readyAt ?? world.tick));
       runtime.totalExitWait += vehicle.exitWaited;
-      runtime.lastDepartedVehicleId = vehicle.id;
-      runtime.lastDepartureTick = world.tick;
+      if (runtime.operationsMode === "realtime") {
+        const congestionDelay =
+          laneLoad(world) * runtime.congestionDelayPerMovement;
+        vehicle.status = "exiting";
+        vehicle.movementCompletesAt =
+          world.tick + runtime.exitTravelTicks + congestionDelay;
+      } else {
+        vehicle.status = "departed";
+        runtime.lastDepartedVehicleId = vehicle.id;
+        runtime.lastDepartureTick = world.tick;
+      }
       return true;
     }
     default:
@@ -328,6 +558,125 @@ function raiseExitRequests(world: World): void {
   }
 }
 
+function applyFacilitySchedule(world: World): void {
+  const runtime = parkingRuntime(world);
+  if (!runtime) return;
+  for (const event of runtime.facilitySchedule) {
+    if (event.atTick !== world.tick) continue;
+    if (event.laneCapacity !== undefined) {
+      runtime.laneCapacity = Math.max(0, event.laneCapacity);
+    }
+    if (event.exitGateCapacity !== undefined) {
+      runtime.exitGateCapacity = Math.max(0, event.exitGateCapacity);
+    }
+  }
+}
+
+function advanceParking(world: World): void {
+  const runtime = parkingRuntime(world);
+  if (!runtime) return;
+
+  applyFacilitySchedule(world);
+
+  for (const vehicle of runtime.vehicles) {
+    if (
+      vehicle.status === "scheduled" &&
+      vehicle.cancellationTick !== undefined &&
+      vehicle.cancellationTick <= world.tick
+    ) {
+      vehicle.status = "cancelled";
+      runtime.cancelled += 1;
+      continue;
+    }
+
+    if (
+      vehicle.status === "scheduled" &&
+      vehicle.arrivalTick <= world.tick &&
+      vehicle.patienceTicks !== undefined &&
+      world.tick - vehicle.arrivalTick >= vehicle.patienceTicks
+    ) {
+      vehicle.status = "abandoned";
+      runtime.abandoned += 1;
+      continue;
+    }
+
+    if (vehicle.status === "entering" && vehicle.assignedSpaceId) {
+      const space = runtime.spaces.find(
+        (candidate) => candidate.id === vehicle.assignedSpaceId,
+      );
+      if (!space || isParkingSpaceClosed(space, world.tick)) {
+        vehicle.status = "scheduled";
+        vehicle.assignedSpaceId = undefined;
+        vehicle.movementCompletesAt = undefined;
+        vehicle.reassignments += 1;
+        runtime.reassignments += 1;
+        continue;
+      }
+      if (
+        vehicle.movementCompletesAt !== undefined &&
+        vehicle.movementCompletesAt <= world.tick
+      ) {
+        vehicle.status = "parked";
+        vehicle.parkedAt = world.tick;
+        vehicle.departAt = world.tick + vehicle.duration;
+        vehicle.movementCompletesAt = undefined;
+      }
+    }
+
+    if (
+      vehicle.status === "exiting" &&
+      vehicle.movementCompletesAt !== undefined &&
+      vehicle.movementCompletesAt <= world.tick
+    ) {
+      vehicle.status = "departed";
+      vehicle.movementCompletesAt = undefined;
+      runtime.lastDepartedVehicleId = vehicle.id;
+      runtime.lastDepartureTick = world.tick;
+    }
+  }
+
+  raiseExitRequests(world);
+  runtime.maxEntranceQueue = Math.max(
+    runtime.maxEntranceQueue,
+    waitingVehicles(world).length,
+  );
+  runtime.maxExitQueue = Math.max(
+    runtime.maxExitQueue,
+    readyToLeaveVehicles(world).length,
+  );
+  if (laneLoad(world) >= runtime.laneCapacity && laneLoad(world) > 0) {
+    runtime.congestionTicks += 1;
+  }
+}
+
+export function resolvedParkingVehicles(world: World): ParkingRuntimeVehicle[] {
+  return (
+    parkingRuntime(world)?.vehicles.filter(
+      (vehicle) =>
+        vehicle.status === "departed" ||
+        vehicle.status === "abandoned" ||
+        vehicle.status === "cancelled",
+    ) ?? []
+  );
+}
+
+export function parkingScore(world: World): number {
+  const runtime = parkingRuntime(world);
+  if (!runtime) return 0;
+  const activeQueuePenalty =
+    waitingVehicles(world).length + readyToLeaveVehicles(world).length;
+  return (
+    runtime.totalWait * 0.4 +
+    runtime.totalExitWait * 0.6 +
+    runtime.hardViolations * 100 +
+    runtime.preferenceViolations * 8 +
+    runtime.abandoned * 35 +
+    runtime.reassignments * 6 +
+    runtime.congestionTicks * 0.5 +
+    activeQueuePenalty
+  );
+}
+
 function parkingObserve(world: World): Record<string, number | boolean> {
   const runtime = parkingRuntime(world);
   const vehicle = currentParkingVehicle(world);
@@ -335,6 +684,14 @@ function parkingObserve(world: World): Record<string, number | boolean> {
   if (!runtime) return {};
   const occupied = parkedVehicles(world).length;
   const departed = departedVehicles(world).length;
+  const resolved = resolvedParkingVehicles(world).length;
+  const moving = movingVehicles(world).length;
+  const entryHeadWait = vehicle
+    ? Math.max(0, world.tick - vehicle.arrivalTick)
+    : 0;
+  const exitHeadWait = exitVehicle
+    ? Math.max(0, world.tick - (exitVehicle.readyAt ?? world.tick))
+    : 0;
   const future = runtime.vehicles.filter(
     (candidate) =>
       candidate.status === "scheduled" && candidate.arrivalTick > world.tick,
@@ -349,6 +706,12 @@ function parkingObserve(world: World): Record<string, number | boolean> {
     carVIP: vehicle?.vip === true,
     carAccessible: vehicle?.accessiblePermit === true,
     carReserved: Boolean(vehicle?.reservation),
+    carPriority: vehicle?.priority ?? 0,
+    carWait: entryHeadWait,
+    carPatienceRemaining:
+      vehicle?.patienceTicks === undefined
+        ? 999999
+        : Math.max(0, remainingPatience(vehicle, world.tick)),
     hasExitRequest: exitVehicle !== null,
     exitQueueLength: readyToLeaveVehicles(world).length,
     exitCarElectric: exitVehicle?.electric === true,
@@ -356,6 +719,14 @@ function parkingObserve(world: World): Record<string, number | boolean> {
     exitCarVIP: exitVehicle?.vip === true,
     exitCarAccessible: exitVehicle?.accessiblePermit === true,
     exitCarReserved: Boolean(exitVehicle?.reservation),
+    exitWait: exitHeadWait,
+    laneAvailable: laneHasCapacity(world),
+    laneLoad: moving,
+    laneCapacity: runtime.laneCapacity,
+    exitGateAvailable: exitGateHasCapacity(world) && laneHasCapacity(world),
+    exitGateCapacity: runtime.exitGateCapacity,
+    congestion: moving >= runtime.laneCapacity && moving > 0,
+    movingVehicles: moving,
     standardAvailable: availableSpaces(world, "standard").length > 0,
     chargingAvailable: availableSpaces(world, "charging").length > 0,
     largeAvailable: availableSpaces(world, "large").length > 0,
@@ -367,6 +738,15 @@ function parkingObserve(world: World): Record<string, number | boolean> {
     parkedCount: occupied,
     departedCount: departed,
     violations: runtime.violations,
+    hardViolations: runtime.hardViolations,
+    preferenceViolations: runtime.preferenceViolations,
+    abandonedCount: runtime.abandoned,
+    cancelledCount: runtime.cancelled,
+    reassignmentCount: runtime.reassignments,
+    congestionTicks: runtime.congestionTicks,
+    maxEntranceQueue: runtime.maxEntranceQueue,
+    maxExitQueue: runtime.maxExitQueue,
+    parkingScore: parkingScore(world),
     averageWait:
       runtime.assignments > 0 ? runtime.totalWait / runtime.assignments : 0,
     averageExitWait:
@@ -375,6 +755,7 @@ function parkingObserve(world: World): Record<string, number | boolean> {
       runtime.spaces.length > 0 ? (occupied / runtime.spaces.length) * 100 : 0,
     allVehiclesArrived: future === 0,
     allVehiclesServed: departed === runtime.vehicles.length,
+    allVehiclesResolved: resolved === runtime.vehicles.length,
   };
 }
 
@@ -387,6 +768,9 @@ export const PARKING_FLAGS: DomainFlagSpec[] = [
   { id: "carVIP", type: "bool", label: "VIP Vehicle", meaning: "The head vehicle has VIP status" },
   { id: "carAccessible", type: "bool", label: "Accessible Permit", meaning: "The head vehicle has an accessible permit" },
   { id: "carReserved", type: "bool", label: "Reservation", meaning: "The head vehicle has a reserved bay" },
+  { id: "carPriority", type: "number", label: "Vehicle Priority", meaning: "Priority of the head entrance vehicle" },
+  { id: "carWait", type: "number", label: "Entrance Wait", meaning: "Ticks the head vehicle has waited" },
+  { id: "carPatienceRemaining", type: "number", label: "Patience Remaining", meaning: "Ticks before the head vehicle abandons the queue" },
   { id: "hasExitRequest", type: "bool", label: "Exit Request", meaning: "A parked vehicle has finished its stay and is waiting for exit authorization" },
   { id: "exitQueueLength", type: "number", label: "Exit Queue Length", meaning: "Vehicles currently waiting for exit authorization" },
   { id: "exitCarElectric", type: "bool", label: "Exiting EV", meaning: "The head exit request is an electric vehicle" },
@@ -394,6 +778,14 @@ export const PARKING_FLAGS: DomainFlagSpec[] = [
   { id: "exitCarVIP", type: "bool", label: "Exiting VIP", meaning: "The head exit request has VIP status" },
   { id: "exitCarAccessible", type: "bool", label: "Exiting Accessible Vehicle", meaning: "The head exit request has an accessible permit" },
   { id: "exitCarReserved", type: "bool", label: "Exiting Reserved Vehicle", meaning: "The head exit request used a reservation" },
+  { id: "exitWait", type: "number", label: "Exit Wait", meaning: "Ticks the head exit request has waited" },
+  { id: "laneAvailable", type: "bool", label: "Lane Available", meaning: "The shared movement lane can accept another car" },
+  { id: "laneLoad", type: "number", label: "Lane Load", meaning: "Cars currently moving through shared lanes" },
+  { id: "laneCapacity", type: "number", label: "Lane Capacity", meaning: "Current simultaneous movement capacity" },
+  { id: "exitGateAvailable", type: "bool", label: "Exit Gate Available", meaning: "An exit gate and shared lane slot are available" },
+  { id: "exitGateCapacity", type: "number", label: "Exit Gate Capacity", meaning: "Current concurrent exit capacity" },
+  { id: "congestion", type: "bool", label: "Congestion", meaning: "Shared movement capacity is saturated" },
+  { id: "movingVehicles", type: "number", label: "Moving Vehicles", meaning: "Cars currently entering or exiting" },
   { id: "standardAvailable", type: "bool", label: "Standard Space Available", meaning: "At least one standard space is free" },
   { id: "chargingAvailable", type: "bool", label: "Charging Bay Available", meaning: "At least one charging bay is free" },
   { id: "largeAvailable", type: "bool", label: "Large Bay Available", meaning: "At least one large bay is free" },
@@ -405,11 +797,21 @@ export const PARKING_FLAGS: DomainFlagSpec[] = [
   { id: "parkedCount", type: "number", label: "Parked Count", meaning: "Vehicles currently occupying spaces" },
   { id: "departedCount", type: "number", label: "Departed Count", meaning: "Vehicles that completed their stay and left" },
   { id: "violations", type: "number", label: "Allocation Violations", meaning: "Vehicles assigned to the wrong space category" },
+  { id: "hardViolations", type: "number", label: "Hard Violations", meaning: "Unsafe or forbidden allocations" },
+  { id: "preferenceViolations", type: "number", label: "Preference Violations", meaning: "Valid allocations that miss a customer preference" },
+  { id: "abandonedCount", type: "number", label: "Abandoned Vehicles", meaning: "Vehicles that exceeded their entrance patience" },
+  { id: "cancelledCount", type: "number", label: "Cancelled Vehicles", meaning: "Vehicles removed by a cancellation event" },
+  { id: "reassignmentCount", type: "number", label: "Reassignments", meaning: "Inbound cars rerouted after a closure" },
+  { id: "congestionTicks", type: "number", label: "Congestion Ticks", meaning: "Ticks when lane capacity was saturated" },
+  { id: "maxEntranceQueue", type: "number", label: "Peak Entrance Queue", meaning: "Largest observed entrance backlog" },
+  { id: "maxExitQueue", type: "number", label: "Peak Exit Queue", meaning: "Largest observed exit backlog" },
+  { id: "parkingScore", type: "number", label: "Operating Penalty", meaning: "Combined wait, failure, violation, rerouting, and congestion penalty" },
   { id: "averageWait", type: "number", label: "Average Wait", meaning: "Average ticks waited before assignment" },
   { id: "averageExitWait", type: "number", label: "Average Exit Wait", meaning: "Average ticks waited for exit authorization" },
-  { id: "utilization", type: "number", label: "Utilization %", meaning: "Current percentage of occupied spaces" },
+  { id: "utilization", type: "number", label: "Utilization %", meaning: "Current percentage of occupied spaces", format: "percent" },
   { id: "allVehiclesArrived", type: "bool", label: "All Arrived", meaning: "No future arrivals remain" },
   { id: "allVehiclesServed", type: "bool", label: "All Served", meaning: "Every scheduled vehicle has departed" },
+  { id: "allVehiclesResolved", type: "bool", label: "All Resolved", meaning: "Every vehicle departed, cancelled, or abandoned" },
 ];
 
 export const parkingModule: WorldModule = {
@@ -426,22 +828,27 @@ export const parkingModule: WorldModule = {
   ],
   domainFlags: PARKING_FLAGS,
   actionPreconditions: {
-    parkStandard: "hasWaitingVehicle && standardAvailable",
-    parkCharging: "hasWaitingVehicle && chargingAvailable",
-    parkLarge: "hasWaitingVehicle && largeAvailable",
-    parkPremium: "hasWaitingVehicle && premiumAvailable",
-    parkAccessible: "hasWaitingVehicle && accessibleAvailable",
-    parkReserved: "hasWaitingVehicle && reservedAvailable",
-    releaseVehicle: "hasExitRequest",
+    parkStandard: "hasWaitingVehicle && standardAvailable && laneAvailable",
+    parkCharging: "hasWaitingVehicle && chargingAvailable && laneAvailable",
+    parkLarge: "hasWaitingVehicle && largeAvailable && laneAvailable",
+    parkPremium: "hasWaitingVehicle && premiumAvailable && laneAvailable",
+    parkAccessible: "hasWaitingVehicle && accessibleAvailable && laneAvailable",
+    parkReserved: "hasWaitingVehicle && reservedAvailable && laneAvailable",
+    releaseVehicle: "hasExitRequest && exitGateAvailable",
   },
   validate: validateParkingData,
   createDomain: createParkingRuntime,
   applyAction: applyParkingAction,
+  advanceTick: advanceParking,
   resolveStatus(world: World): SimStatus | null {
     const runtime = parkingRuntime(world);
     if (!runtime) return null;
-    raiseExitRequests(world);
-    if (runtime.vehicles.every((vehicle) => vehicle.status === "departed")) {
+    if (runtime.operationsMode === "instant") raiseExitRequests(world);
+    const done =
+      runtime.operationsMode === "realtime"
+        ? resolvedParkingVehicles(world).length === runtime.vehicles.length
+        : runtime.vehicles.every((vehicle) => vehicle.status === "departed");
+    if (done) {
       return "reached";
     }
     return world.tick >= runtime.maxTicks ? "stuck" : null;

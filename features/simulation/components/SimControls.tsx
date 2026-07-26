@@ -18,6 +18,8 @@ interface Props {
   onStep: () => void;
   onReset: () => void;
   onSpeedChange: (n: number) => void;
+  /** Interview-scale streams can opt into fast-forward; defaults to 3 ticks/s. */
+  maxSpeed?: number;
   /** Optional mode-specific controls rendered before the transport buttons. */
   leading?: ReactNode;
 }
@@ -35,6 +37,7 @@ export function SimControls({
   onStep,
   onReset,
   onSpeedChange,
+  maxSpeed = 3,
   leading,
 }: Props) {
   return (
@@ -57,7 +60,7 @@ export function SimControls({
         <input
           type="range"
           min={1}
-          max={3}
+          max={maxSpeed}
           value={speed}
           onChange={(e) => onSpeedChange(Number(e.target.value))}
           className="w-24"

@@ -23,9 +23,15 @@ import c13 from "./finance/13-finance-reliability-intro.json";
 import c14 from "./finance/14-finance-route-selection.json";
 import c15 from "./finance/15-finance-cost-and-reliability.json";
 import c16 from "./finance/16-finance-provider-health.json";
+import c20 from "./finance/20-finance-interview-routing.json";
+import c21 from "./finance/21-finance-peak-hour-switch.json";
+import c22 from "./finance/22-finance-production-orchestrator.json";
 import c17 from "./parking/17-parking-first-shift.json";
 import c18 from "./parking/18-parking-match-vehicle.json";
 import c19 from "./parking/19-parking-priority-access.json";
+import c23 from "./parking/23-parking-interview-controller.json";
+import c24 from "./parking/24-parking-interview-operations.json";
+import c25 from "./parking/25-parking-interview-orchestrator.json";
 
 export const CHALLENGES: ChallengeData[] = [
   c1 as ChallengeData,
@@ -43,9 +49,15 @@ export const CHALLENGES: ChallengeData[] = [
   c14 as ChallengeData,
   c15 as ChallengeData,
   c16 as ChallengeData,
+  c20 as ChallengeData,
+  c21 as ChallengeData,
+  c22 as ChallengeData,
   c17 as ChallengeData,
   c18 as ChallengeData,
   c19 as ChallengeData,
+  c23 as ChallengeData,
+  c24 as ChallengeData,
+  c25 as ChallengeData,
 ];
 
 export function findChallenge(id: string): ChallengeData {

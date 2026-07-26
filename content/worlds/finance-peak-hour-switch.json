@@ -1,0 +1,84 @@
+{
+  "name": "Peak Hour Payment Switch",
+  "kind": "finance",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "finance": {
+    "processingMode": "queued",
+    "tickDurationMs": 1000,
+    "seed": 73,
+    "failurePenalty": 10,
+    "timeoutPenalty": 15,
+    "priorityFailurePenalty": 30,
+    "overloadPenalty": 6,
+    "queuePenaltyPerTick": 0.015,
+    "retryBackoffTicks": 2,
+    "highValueThreshold": 10000,
+    "maxTicksPerTx": 10,
+    "providers": [
+      {
+        "id": "A",
+        "name": "ValueRoute",
+        "fee": 0.08,
+        "successRate": 96,
+        "latency": 1300,
+        "online": true,
+        "concurrentCapacity": 3,
+        "congestionLatencyPerItem": 900,
+        "accepts": ["consumer", "refund"],
+        "maxAmount": 5000,
+        "schedule": [
+          { "atTick": 28, "latency": 5200, "successRate": 88 },
+          { "atTick": 47, "latency": 1400, "successRate": 97 }
+        ]
+      },
+      {
+        "id": "B",
+        "name": "PriorityNet",
+        "fee": 0.30,
+        "successRate": 99.5,
+        "latency": 900,
+        "online": true,
+        "concurrentCapacity": 4,
+        "congestionLatencyPerItem": 250,
+        "accepts": ["consumer", "business", "international", "payroll", "refund"],
+        "maxAmount": 100000,
+        "schedule": [
+          { "atTick": 50, "online": false },
+          { "atTick": 58, "online": true }
+        ]
+      },
+      {
+        "id": "C",
+        "name": "FlexSettle",
+        "fee": 0.16,
+        "successRate": 98,
+        "latency": 1900,
+        "online": true,
+        "concurrentCapacity": 2,
+        "congestionLatencyPerItem": 550,
+        "accepts": ["consumer", "business", "international", "refund"],
+        "maxAmount": 25000
+      }
+    ],
+    "batches": [
+      {
+        "prefix": "peak",
+        "count": 96,
+        "arrivalStart": 0,
+        "arrivalEvery": 1,
+        "amounts": [35, 90, 450, 2800, 12000, 48000],
+        "types": ["consumer", "refund", "consumer", "business", "international", "payroll"],
+        "destinations": ["Bank X", "Bank Y", "Bank Z", "Bank Q"],
+        "priorityEvery": 6,
+        "priority": 3,
+        "deadlineTicks": 24,
+        "maxRetries": 2,
+        "customerImpact": 3
+      }
+    ]
+  }
+}

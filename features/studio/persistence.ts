@@ -15,9 +15,12 @@ export function scaffoldBrainFor(challengeId: string): VisualBrain {
   );
 }
 
-export function readStoredBrain(challengeId: string): VisualBrain | null {
+export function readStoredBrain(
+  challengeId: string,
+  storageId = challengeId,
+): VisualBrain | null {
   try {
-    const stored = localStorage.getItem(challengeStorageKey(challengeId));
+    const stored = localStorage.getItem(challengeStorageKey(storageId));
     return stored
       ? upgradePersistedBrain(
           JSON.parse(stored),
@@ -29,10 +32,10 @@ export function readStoredBrain(challengeId: string): VisualBrain | null {
   }
 }
 
-export function saveBrain(challengeId: string, brain: VisualBrain) {
+export function saveBrain(storageId: string, brain: VisualBrain) {
   try {
     localStorage.setItem(
-      challengeStorageKey(challengeId),
+      challengeStorageKey(storageId),
       JSON.stringify(brain),
     );
   } catch {

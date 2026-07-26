@@ -29,7 +29,8 @@ _Modes 1–4 and the Stage 1 realistic aisle-layout refresh were completed
 - [x] Implement replenishing package stations and capacity-two operations for Mode 3.
 - [x] Implement charging stations and the `charge` primitive for Mode 4.
 - [x] Add a root world picker and separate Maze/Warehouse Studio level views.
-- [x] Add draggable Studio rules with priority renumbering from 1.
+- [x] Add draggable Studio rules with visible order numbering from 1; execution
+  follows the authored top-to-bottom order.
 - [x] Render warehouse objects and expose warehouse observations in debugging UI.
 - [x] Add unit/integration coverage for pickup, delivery, invalid interactions, and
   data-driven completion.

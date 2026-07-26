@@ -22,6 +22,8 @@ export interface DomainFlagSpec {
   type: "bool" | "number";
   label: string;
   meaning: string;
+  /** Optional debug/display formatting for numeric observations. */
+  format?: "decimal" | "percent" | "percentFraction" | "currency";
 }
 
 export interface WorldModule {
@@ -63,6 +65,14 @@ export interface WorldModule {
    * action; false lets the base engine handle movement primitives.
    */
   applyAction(world: World, action: Action): boolean;
+
+  /**
+   * Advance autonomous domain activity after the world clock moves. This is for
+   * systems that continue changing between decisions: provider queues complete
+   * work, transactions arrive or expire, and health schedules take effect.
+   * Grid worlds omit it.
+   */
+  advanceTick?(world: World): void;
 
   /**
    * Domain completion check, run once per tick after the action. Returns a

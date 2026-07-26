@@ -1,0 +1,71 @@
+{
+  "name": "Autonomous Parking Operations",
+  "kind": "parking",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "parking": {
+    "operationsMode": "realtime",
+    "entryTravelTicks": 3,
+    "exitTravelTicks": 2,
+    "laneCapacity": 3,
+    "exitGateCapacity": 2,
+    "congestionDelayPerMovement": 1,
+    "maxTicks": 720,
+    "facilitySchedule": [
+      { "atTick": 55, "laneCapacity": 1 },
+      { "atTick": 90, "laneCapacity": 3 },
+      { "atTick": 120, "exitGateCapacity": 0 },
+      { "atTick": 138, "exitGateCapacity": 2 }
+    ],
+    "spaces": [
+      { "id": "N1", "kind": "standard", "row": "north", "order": 0, "distanceToExit": 14, "zone": "A" },
+      { "id": "N2", "kind": "standard", "row": "north", "order": 1, "distanceToExit": 13, "zone": "A", "schedule": [{ "atTick": 45, "closed": true }, { "atTick": 95, "closed": false }] },
+      { "id": "N3", "kind": "standard", "row": "north", "order": 2, "distanceToExit": 12, "zone": "A" },
+      { "id": "N4", "kind": "standard", "row": "north", "order": 3, "distanceToExit": 11, "zone": "A" },
+      { "id": "N5", "kind": "charging", "row": "north", "order": 4, "distanceToExit": 10, "zone": "B", "schedule": [{ "atTick": 70, "closed": true }, { "atTick": 125, "closed": false }] },
+      { "id": "N6", "kind": "charging", "row": "north", "order": 5, "distanceToExit": 9, "zone": "B", "schedule": [{ "atTick": 70, "closed": true }, { "atTick": 125, "closed": false }] },
+      { "id": "N7", "kind": "large", "row": "north", "order": 6, "distanceToExit": 8, "zone": "B" },
+      { "id": "N8", "kind": "large", "row": "north", "order": 7, "distanceToExit": 7, "zone": "B" },
+      { "id": "N9", "kind": "premium", "row": "north", "order": 8, "distanceToExit": 6, "zone": "C" },
+      { "id": "N10", "kind": "premium", "row": "north", "order": 9, "distanceToExit": 5, "zone": "C" },
+      { "id": "S1", "kind": "standard", "row": "south", "order": 0, "distanceToExit": 10, "zone": "A" },
+      { "id": "S2", "kind": "standard", "row": "south", "order": 1, "distanceToExit": 9, "zone": "A" },
+      { "id": "S3", "kind": "standard", "row": "south", "order": 2, "distanceToExit": 8, "zone": "A" },
+      { "id": "S4", "kind": "standard", "row": "south", "order": 3, "distanceToExit": 7, "zone": "A" },
+      { "id": "S5", "kind": "accessible", "row": "south", "order": 4, "distanceToExit": 6, "zone": "B" },
+      { "id": "S6", "kind": "accessible", "row": "south", "order": 5, "distanceToExit": 5, "zone": "B" },
+      { "id": "S7", "kind": "reserved", "row": "south", "order": 6, "distanceToExit": 4, "reservedFor": "event-reservation", "zone": "C" },
+      { "id": "S8", "kind": "reserved", "row": "south", "order": 7, "distanceToExit": 3, "reservedFor": "event-reservation", "zone": "C" },
+      { "id": "S9", "kind": "reserved", "row": "south", "order": 8, "distanceToExit": 2, "reservedFor": "event-reservation", "zone": "C" },
+      { "id": "S10", "kind": "premium", "row": "south", "order": 9, "distanceToExit": 1, "zone": "C" }
+    ],
+    "batches": [
+      {
+        "prefix": "regular",
+        "count": 72,
+        "arrivalStart": 0,
+        "arrivalEvery": 2,
+        "durations": [9, 14, 7, 18, 11],
+        "vehicleTypes": ["standard", "electric", "standard", "large", "vip", "accessible"],
+        "priorityEvery": 9,
+        "priority": 3,
+        "patienceTicks": 180
+      },
+      {
+        "prefix": "event",
+        "count": 30,
+        "arrivalStart": 40,
+        "arrivalEvery": 1,
+        "durations": [12, 16, 10],
+        "vehicleTypes": ["reserved", "vip", "standard"],
+        "priorityEvery": 3,
+        "priority": 4,
+        "patienceTicks": 160,
+        "reservation": "event-reservation"
+      }
+    ]
+  }
+}

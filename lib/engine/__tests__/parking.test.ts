@@ -18,6 +18,7 @@ import { EntitiesData, WorldData } from "../types";
 import {
   ParkingConfig,
   departedVehicles,
+  occupantForSpace,
   parkingRuntime,
   readyToLeaveVehicles,
 } from "../worlds/parking";
@@ -180,6 +181,45 @@ describe("parking — smart facility operations", () => {
     expect(result.status).toBe("reached");
     expect(runtime.violations).toBe(1);
     expect(runtime.vehicles[0].violation).toBe(true);
+  });
+
+  it("keeps real-time entry and exit movements in flight before freeing the bay", () => {
+    const result = sim(
+      {
+        operationsMode: "realtime",
+        entryTravelTicks: 2,
+        exitTravelTicks: 2,
+        laneCapacity: 1,
+        exitGateCapacity: 1,
+        spaces: [
+          {
+            id: "S1",
+            kind: "standard",
+            row: "north",
+            order: 0,
+            distanceToExit: 1,
+          },
+        ],
+        vehicles: [
+          { id: "car-1", arrivalTick: 0, duration: 1, patienceTicks: 20 },
+        ],
+        maxTicks: 20,
+      },
+      standardBrain,
+    );
+
+    result.tick();
+    expect(parkingRuntime(result.world)!.vehicles[0].status).toBe("entering");
+    expect(occupantForSpace(result.world, "S1")?.id).toBe("car-1");
+
+    while (parkingRuntime(result.world)!.vehicles[0].status !== "exiting") {
+      result.tick();
+    }
+    expect(occupantForSpace(result.world, "S1")?.id).toBe("car-1");
+
+    run(result);
+    expect(result.status).toBe("reached");
+    expect(occupantForSpace(result.world, "S1")).toBeNull();
   });
 
   it("the reference parking operator passes all three authored levels", () => {

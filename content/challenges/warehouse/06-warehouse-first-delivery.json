@@ -10,12 +10,12 @@
   "narrative": "The practice warehouse has one waiting order and one outbound station. The robot already knows the fixed aisle route, but it does not understand warehouse work yet: it will walk over a package and pass the delivery station unless you give it interaction rules. Teach it that a package under its wheels should be picked up, and that a carried package at a delivery station should be unloaded. The world is not complete when the robot reaches a square; it is complete when the order is delivered.",
   "objective": "Pick up the waiting package and deliver it to Outbound A.",
   "learningObjective": "World interaction: use observations about packages and delivery zones to choose the engine-owned Pick Up and Deliver actions.",
-  "intelligenceExplanation": "The route rules are already in place, so the robot can travel through every aisle. What is missing are the two moments of work: when a package is here, pick it up; when at a delivery zone while carrying a package, deliver it. Make both rules higher priority than continuing along the aisle. Unlike a maze, this world completes immediately after the final successful delivery — no goal holding is needed.",
-  "hint": "Add WHEN packageHere → DO pick-up with high priority. Then add WHEN deliveryHere AND carryingPackage → DO deliver with an even higher priority.",
+  "intelligenceExplanation": "The route rules are already in place, so the robot can travel through every aisle. What is missing are the two moments of work: when a package is here, pick it up; when at a delivery zone while carrying a package, deliver it. Put both work rules above the navigation rules so they are considered first. Unlike a maze, this world completes immediately after the final successful delivery — no goal holding is needed.",
+  "hint": "Add WHEN packageHere → DO pick-up and WHEN deliveryHere AND carryingPackage → DO deliver, then move both above the navigation rules.",
   "hints": [
     "The route is present already. Watch the debug panel for Package here and Delivery here.",
     "A package needs an interaction rule, not another move rule: WHEN packageHere → DO pick-up.",
-    "Delivery must only happen while carrying cargo: WHEN deliveryHere AND carryingPackage → DO deliver. Give both interaction rules higher priority than 60."
+    "Delivery must only happen while carrying cargo: WHEN deliveryHere AND carryingPackage → DO deliver. Keep both work rules above the clear-aisle movement rule."
   ],
   "taxonomy": {
     "domain": "Warehouse",
@@ -30,7 +30,7 @@
       "id": "pick",
       "label": "Load the waiting package",
       "check": "carryingPackage || deliveredCount >= 1",
-      "hint": "WHEN packageHere → DO pick-up (high priority)."
+      "hint": "WHEN packageHere → DO pick-up, above the navigation rules."
     },
     {
       "id": "deliver",
@@ -137,7 +137,7 @@
     },
     {
       "id": "focused",
-      "label": "Use only the two interaction rules you need",
+      "label": "Keep the complete policy to five rules or fewer",
       "check": "reached && rules <= 5",
       "bonus": true
     }

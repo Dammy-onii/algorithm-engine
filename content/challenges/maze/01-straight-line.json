@@ -4,17 +4,37 @@
   "number": 1,
   "name": "The Straight Run",
   "difficulty": 1,
+  "stage": "practice",
   "worldKey": "challenge-straight",
   "tagline": "Give the robot its first instruction.",
-  "narrative": "A robot sits at the entrance of a straight corridor, staring east. It has no intelligence — no rules, no idea what to do. Left alone, it will wait there indefinitely. The exit is four tiles ahead. All it needs to do is move forward. Your job is to write its very first rule: a single instruction that tells it to keep going as long as the path is clear.",
+  "narrative": "A robot sits at the entrance of a straight corridor, facing the exit. It has no rules, so it will wait indefinitely. Give it a movement rule for a clear path and an arrival rule that keeps it on the goal long enough for the maze to confirm completion.",
   "objective": "Get the robot to the exit at the far end of the corridor and hold there for 3 ticks.",
-  "learningObjective": "Understanding the basic structure of a rule: a condition (when) and an action (do).",
-  "intelligenceExplanation": "Right now this brain has no rules at all. A brain without rules does nothing — the robot simply waits forever. A rule has two parts: a WHEN condition (what situation triggers it) and a DO action (what the robot does when triggered). You need to add one rule to get this robot moving. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so put WHEN atGoal -> DO hold above the movement rule.",
+  "learningObjective": "Understand a rule as a WHEN condition paired with a DO action, and understand that the first matching rule runs.",
+  "intelligenceExplanation": "The brain starts empty. Add an arrival rule first and a clear-path movement rule beneath it. Every tick the engine reads the rules from top to bottom and runs the first matching safe action. The maze completes after the robot remains on the goal for 3 consecutive ticks.",
   "hint": "Two rules. Put WHEN atGoal -> DO hold first, then add WHEN there is no wall ahead -> DO step.",
   "hints": [
     "The robot only acts when a rule tells it to. It needs at least one rule.",
     "Add a rule: WHEN there is no wall ahead → DO step.",
     "Put WHEN atGoal → DO hold above it so it settles once it arrives."
+  ],
+  "taxonomy": {
+    "domain": "Maze",
+    "simulation": "Navigation",
+    "tier": "tutorial",
+    "grade": 1
+  },
+  "brief": "Move through the straight corridor and remain on the exit for 3 ticks.",
+  "context": "The robot has movement primitives but begins with no rules.",
+  "steps": [
+    {
+      "id": "move",
+      "label": "Give the robot a rule for a clear path"
+    },
+    {
+      "id": "settle",
+      "label": "Reach the exit and settle on it",
+      "check": "reached"
+    }
   ],
   "availableBricks": [
     "step",

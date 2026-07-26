@@ -22,7 +22,8 @@
   ],
   "steps": [
     { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
-    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" }
+    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" },
+    { "id": "cost", "label": "Use the cheapest available route", "check": "allProcessed && totalCost <= 0.46" }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold"],
   "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "feeA", "feeB", "feeC", "always"],
@@ -48,6 +49,6 @@
   "objectives": [
     { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
     { "id": "no-failures", "label": "No failed payments", "check": "allProcessed && failed == 0" },
-    { "id": "cheapest-online", "label": "Keep total cost at or below $0.46", "check": "allProcessed && totalCost <= 0.46", "bonus": true }
+    { "id": "cheapest-online", "label": "Keep total cost at or below ₦0.46", "check": "allProcessed && totalCost <= 0.46" }
   ]
 }

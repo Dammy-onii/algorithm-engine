@@ -154,6 +154,7 @@ export function AuthoringPanel({
               initial={brain.initial}
               rules={brain.rules}
               editable={challenge.statesUnlocked ?? false}
+              domain={challenge.pack}
               onStatesChange={(states) => onBrainChange({ ...brain, states })}
               onInitialChange={(initial) => onBrainChange({ ...brain, initial })}
             />
@@ -181,6 +182,19 @@ export function AuthoringPanel({
           {activeTab === "controller" && (
             <ControllerEditor
               code={brain.controllerCode ?? ""}
+              domain={challenge.pack}
+              availableActions={Array.from(
+                new Set(
+                  brain.functions
+                    .filter(
+                      (fn) =>
+                        fn.action &&
+                        (challenge.availableBricks.length === 0 ||
+                          challenge.availableBricks.includes(fn.id)),
+                    )
+                    .map((fn) => fn.action!),
+                ),
+              )}
               onChange={(controllerCode) => onBrainChange((prev) => ({ ...prev, controllerCode }))}
             />
           )}

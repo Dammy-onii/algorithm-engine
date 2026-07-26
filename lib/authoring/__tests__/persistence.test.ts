@@ -28,6 +28,26 @@ const scaffold: VisualBrain = {
 };
 
 describe("persisted brain upgrades", () => {
+  it("upgrades saved world actions to locked primitive functions", () => {
+    const upgraded = upgradePersistedBrain(
+      {
+        functions: [
+          {
+            id: "route-a",
+            action: "routeToA",
+            description: "",
+            isBuiltIn: false,
+          },
+        ],
+      },
+      scaffold,
+    );
+
+    expect(
+      upgraded.functions.find((fn) => fn.id === "route-a")?.isBuiltIn,
+    ).toBe(true);
+  });
+
   it("merges new built-ins and removes only a redundant terminal wait", () => {
     const upgraded = upgradePersistedBrain(
       {

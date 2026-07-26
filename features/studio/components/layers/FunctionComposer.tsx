@@ -15,16 +15,6 @@ import { VisualFunction } from "@/lib/authoring/types";
 import { BUILTIN_BRICK_DOCS, brickDoc } from "@/lib/authoring/bricks";
 import { PrimitiveBlock } from "../blocks/PrimitiveBlock";
 
-const PRIMITIVES = [
-  { id: "step",        action: "moveForward", label: "Move Forward" },
-  { id: "pivot-left",  action: "turnLeft",    label: "Turn Left"    },
-  { id: "pivot-right", action: "turnRight",   label: "Turn Right"   },
-  { id: "hold",        action: "wait",        label: "Wait"         },
-  { id: "pick-up",     action: "pickUp",      label: "Pick Up"      },
-  { id: "deliver",     action: "deliver",     label: "Deliver"      },
-  { id: "charge",      action: "charge",      label: "Charge"       },
-] as const;
-
 const FIELD = "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
 
 interface Props {
@@ -70,13 +60,14 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
       ? availableBricks
       : builtIn.map((f) => f.id);
 
-  // The composer's step palette is restricted to this challenge's primitives —
-  // a maze level never offers pickUp/deliver, a warehouse level never offers a
-  // primitive it doesn't expose. No cross-world vocabulary leaks in.
-  const stepPrimitives =
-    availableBricks.length > 0
-      ? PRIMITIVES.filter((p) => availableBricks.includes(p.id))
-      : PRIMITIVES;
+  // Build the step palette from the challenge's actual primitive wrappers.
+  // This includes world actions such as Finance routing and Parking allocation.
+  const stepPrimitives = defaultBrickIds
+    .map((id) => builtIn.find((fn) => fn.id === id))
+    .filter(
+      (fn): fn is VisualFunction & { action: string } =>
+        Boolean(fn?.action),
+    );
 
   return (
     <div className="flex flex-col gap-4">
@@ -100,8 +91,13 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
         </h3>
         <div className="flex flex-col gap-1.5">
           {defaultBrickIds.map((id) => {
-            const doc = brickDoc(id);
-            const isBuiltin = id in BUILTIN_BRICK_DOCS;
+            const authoredDefinition = builtIn.find((fn) => fn.id === id);
+            const fallbackDoc = brickDoc(id);
+            const action = authoredDefinition?.action ?? fallbackDoc.action;
+            const description =
+              authoredDefinition?.description || fallbackDoc.description;
+            const isBuiltin =
+              authoredDefinition?.isBuiltIn ?? id in BUILTIN_BRICK_DOCS;
             return (
               <div
                 key={id}
@@ -111,21 +107,24 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
                   {id}
                 </span>
                 <span className="shrink-0 text-xs text-zinc-400">
-                  {isBuiltin ? `→ ${doc.action}` : "your function"}
+                  {isBuiltin ? `→ ${action}` : "your function"}
                 </span>
-                <span className="text-xs text-zinc-500">{doc.description}</span>
+                <span className="text-xs text-zinc-500">{description}</span>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* User-composed functions */}
+      {/* Multi-step functions currently present in the brain */}
       {composable && userFns.length > 0 && (
         <div>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-            Your functions
+            Composed functions
           </h3>
+          <p className="mb-2 text-xs text-zinc-500">
+            Reusable multi-step functions currently saved in this brain.
+          </p>
           <div className="flex flex-col gap-2">
             {userFns.map((fn) => (
               <div
@@ -138,7 +137,12 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
                 <span className="text-zinc-400">→</span>
                 <div className="flex flex-wrap gap-1">
                   {(fn.steps ?? []).map((step, i) => (
-                    <PrimitiveBlock key={i} actionType={step} compact />
+                    <PrimitiveBlock
+                      key={i}
+                      actionType={step}
+                      engineOwned={builtIn.some((item) => item.id === step)}
+                      compact
+                    />
                   ))}
                 </div>
                 {fn.description && (
@@ -167,7 +171,7 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
         <div className="mb-3 flex gap-2">
           <input
             className={`${FIELD} flex-1`}
-            placeholder="Function name, e.g. follow-wall"
+            placeholder="Function name, e.g. turn-and-step"
             value={newId}
             onChange={(e) => setNewId(e.target.value)}
           />
@@ -187,6 +191,7 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
               <PrimitiveBlock
                 key={p.id}
                 actionType={p.action}
+                engineOwned
                 onClick={() => addStep(p.id)}
               />
             ))}
@@ -214,7 +219,11 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
             ) : (
               newSteps.map((step, i) => (
                 <span key={i} className="flex items-center gap-0.5">
-                  <PrimitiveBlock actionType={step} compact />
+                  <PrimitiveBlock
+                    actionType={step}
+                    engineOwned={builtIn.some((item) => item.id === step)}
+                    compact
+                  />
                   <button
                     onClick={() => removeStep(i)}
                     className="text-xs text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100"

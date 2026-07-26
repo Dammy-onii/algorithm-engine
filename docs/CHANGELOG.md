@@ -5,6 +5,241 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-07-26 — All published levels available in interview assignments
+
+- Expanded the world-page assignment selector from only scored Finance/Parking
+  stages to every published Maze, Warehouse, Finance, and Parking level.
+- Kept a world's explicitly marked interview tutorial required and first where
+  one exists; worlds without that marker can share any selected levels.
+- Added assignment navigation and isolated per-assignment persistence for
+  ordinary levels that have visible objectives but no server-only hidden suite.
+- Versioned the compact token format to include world identity, preventing
+  collisions where two worlds reuse the same level number, while preserving
+  resolution of existing version-1 links.
+- Added coverage for ordinary-level API links, same-number cross-world tokens,
+  canonical ordering, and ordinary Studio pages inside interview assignments.
+
+## 2026-07-26 — Code-mode execution and multilingual runner documentation
+
+- Added `CODE_MODE.md` as the detailed source of truth for the Code editor,
+  browser compiler, observation contract, controller tick lifecycle, world
+  action handling, simulation time, Rules interaction, and Interview Submit.
+- Documented that a non-empty Code tab replaces visual rule selection during
+  Apply & Run; the two representations are saved together but do not currently
+  synchronize.
+- Specified a language-neutral persistent JSON Lines controller protocol for
+  JavaScript, Python, Java, Go, C++, Rust, and future runner adapters.
+- Defined the hybrid evaluation boundary: visible examples and candidate-authored
+  tests may run in browser workers, while hidden and final interview suites must
+  run in isolated server workers/containers.
+- Documented why downloading hidden cases or remotely accepting browser-chosen
+  actions cannot provide authoritative interview evaluation.
+
+## 2026-07-26 — Naira display and verified controller solutions
+
+- Changed every Finance monetary display from dollars to Nigerian naira,
+  including queue amounts, the active transfer, provider fees, expected costs,
+  total cost, debug facts, and cost-bearing challenge copy.
+- Added explicit currency metadata to Finance domain facts so the shared debug
+  panel renders monetary observations as `₦` values with two decimal places.
+- Kept scenario numbers and objective thresholds unchanged; this is a currency
+  denomination/display correction, not a scoring rebalance.
+- Retained the stateful right-hand-follower solution for level 6 and its
+  at-most-80-tick Branching Maze regression.
+- Added and verified a load-, deadline-, retry-, and congestion-aware Code-mode
+  solution for level 21 against every visible Peak Hour Payment Switch
+  objective.
+
+## 2026-07-26 — Condition, function, state, and Code authoring corrections
+
+- Replaced the browser-native condition `datalist` with a light/dark themed
+  autocomplete anchored below each expression input.
+- Made the suggestion list independently scrollable and caret-aware, so
+  autocomplete continues after the first condition and replaces only the
+  currently typed identifier.
+- Added a collapsible operator reference under **Your conditions** covering
+  boolean operators, grouping, comparisons, and reusable derived conditions.
+- Corrected primitive classification: every single-action wrapper contributed
+  by a world module is now locked as an engine function. Finance and Parking
+  actions no longer appear incorrectly under a deletable **Your functions**
+  section.
+- Renamed the legitimate multi-step list to **Composed functions**, enabled
+  Finance/Parking world primitives in the function composer, and upgraded old
+  saved brains to the corrected classification.
+- Added Finance-specific state guidance for normal routing, deadline
+  protection, and outage recovery while preserving the boundary between
+  controller mode and world-owned transaction lifecycle.
+- Made Code mode domain-aware: the tab lists valid return actions, explains
+  `observation.domain`, supplies a tested Finance controller example, and states
+  clearly that JavaScript runs only for local Apply & Run—not Interview Submit.
+- Added autocomplete, primitive-upgrade, Finance decompilation, and Finance
+  controller execution regression coverage.
+- Verified TypeScript, warning-free lint, all 129 tests across 23 files,
+  whitespace integrity, and the production build.
+
+## 2026-07-26 — Compact multi-problem interview assignments
+
+- Added an interview-assignment selector to Finance and Parking world pages.
+  Only challenges with real server evaluation contracts are selectable.
+- Made each world's marked interview tutorial required and normalized every
+  selection to tutorial first, then ascending difficulty, taxonomy grade, and
+  challenge number.
+- Added `POST /api/interview/assignments`, which validates same-world challenge
+  references and returns a compact signed assignment link.
+- Added `/i/[assignmentId]` for navigating an ordered interview set. The route
+  resolves existing challenges from the registry; it does not create parallel
+  challenge or fixture files.
+- Kept the link short with a versioned challenge-number payload and truncated
+  HMAC signature. Hidden tests, scoring inputs, policies, and problem text never
+  enter the token.
+- Added per-problem assignment navigation and isolated local rule persistence
+  while preserving the interview header's hidden Back, curriculum, and Lab
+  controls.
+- Added assignment ordering, token-integrity, API, route-resolution, and
+  interview-number uniqueness regression tests.
+- Verified TypeScript, lint, all 123 tests across 22 files, whitespace
+  integrity, and the production build containing both new dynamic routes.
+
+## 2026-07-26 — Cross-world debug-panel organization
+
+- Reorganized the shared Maze, Warehouse, Finance, and Parking debug panel.
+  The main decision pipeline stays first; world observation, domain facts, and
+  memory are independent accordions.
+- Made the complete debug panel collapsible in both Studio and Lab.
+- Replaced raw domain keys with each world module's human-readable flag labels.
+- Added explicit percentage metadata for Finance reliability/success/congestion
+  and Parking utilization.
+- Formatted computed domain and memory numbers to two decimal places with
+  thousands separators. For example, `6863.700000000001` now renders as
+  `6,863.70`.
+- Removed every pre-authored rule from all six Finance and Parking interview
+  stages. Primitive functions remain available, but candidates build the entire
+  decision flow.
+- Moved interview persistence to a new empty-scaffold namespace so previously
+  shipped starter rules do not reappear. Older local-storage entries remain
+  untouched rather than being deleted.
+- Added contract tests for numeric/percentage formatting and empty interview
+  scaffolds.
+- Switched the simulation stage's debug-panel reference to a direct sibling
+  import so Turbopack can recover cleanly when the panel file is replaced
+  during development.
+- Verified TypeScript, lint, all 118 tests across 21 files, whitespace
+  integrity, and the production build.
+
+## 2026-07-26 — Challenge-ID interview sharing
+
+- Corrected the original navigation-only share control. **Share interview** now
+  constructs the absolute interview URL, displays it in a selectable field, and
+  copies it automatically when the browser permits clipboard access. A manual
+  copy fallback remains visible when clipboard access is unavailable.
+- Added `/interview/[challengeId]` as the dedicated share route for an existing
+  interview stage.
+- Kept the challenge as the single source of truth: `worldKey` supplies the
+  visible case and `interviewEvaluation.suiteId` supplies the server-only set.
+  No assignment JSON, fixture copies, or parallel problem statements were added.
+- Added a **Share interview** entry point to normal interview challenges and a
+  **Copy link** action in the shared workspace.
+- Removed curriculum browsing and previous/next navigation from shared
+  interviews while retaining authoring, Apply & Run, Submit, and streamed
+  results.
+- Removed the back control and hid the Lab switch from the shared interview
+  header; normal challenge workspaces keep both.
+- Added an interview notice showing the selected stage, submission-case count,
+  passing score, and visible-versus-hidden execution boundary.
+- Added route/reference tests proving that every interview challenge resolves
+  the existing suite declared by its stage.
+- Verified TypeScript, lint, all 115 tests across 20 files, and whitespace
+  integrity. The production build includes `/interview/[challengeId]`; a valid
+  Parking interview returned 200 and a non-interview Parking challenge returned
+  404 in the production-server smoke test.
+
+## 2026-07-26 — Parking interview simulation track
+
+- Added **Smart Parking Controller**, **Autonomous Parking Operations**, and
+  **Production Parking Orchestrator** as Higher-Medium tutorial,
+  Higher-Medium, and Hard interview problems.
+- Preserved the original three Parking lessons in instant mode and introduced
+  explicit real-time mode for interview worlds.
+- Added asynchronous `entering` and `exiting` states. Assignments reserve bays
+  while cars travel in; exits release bays only after physical travel completes.
+- Added shared lane capacity, exit-gate concurrency, congestion delay,
+  close/reopen schedules, capacity schedules, inbound rerouting, priority,
+  patience expiry, cancellation, and deterministic traffic batches.
+- Split forbidden hard allocations from valid-but-lower-quality preference
+  assignments and added queue, congestion, abandonment, reassignment, fairness,
+  and combined operating-penalty metrics.
+- Expanded the Parking renderer with closed-bay and zone labels, real-time lane
+  load, abandonment, and duplicate-free inbound/outbound visualization.
+- Generalized the interview result contract so Finance and Parking report
+  domain-specific metrics through one Studio panel.
+- Extended `POST /api/interview/submit` to resolve Parking suites server-side
+  and stream 6-, 8-, or 10-case evaluations only after explicit Submit. Apply &
+  Run remains limited to the visible scenario.
+- Added hidden cases for changed layouts, arrival bursts, charging failure,
+  exit-gate failure, reservation floods, capacity oscillation, priority
+  conflict, lane collapse, adversarial fairness, and long-running stability.
+- Documented the current controller boundary honestly: candidates choose
+  category and scheduling; the facility allocator chooses the exact bay inside
+  that category. Parameterized arbitrary zone/bay actions remain a future
+  extension.
+- Added engine and interview regression coverage for delayed capacity release,
+  brittle-policy rejection, streamed Parking submission, adaptive production
+  evaluation, and all three visible stages.
+- Verified TypeScript, lint, all 112 tests across 19 files, and the production
+  build including the shared dynamic `/api/interview/submit` route.
+
+## 2026-07-26 — Finance interview simulation track
+
+- Added Intelligent Payment Routing, Peak Hour Payment Switch, and Production
+  Payment Orchestrator as higher-Medium, higher-Medium, and Hard interview
+  problems.
+- Extended Finance with asynchronous in-flight processing, live arrivals,
+  finite concurrent capacity, congestion latency, type/value restrictions,
+  deadlines, retry budgets and backoff, dynamic fee/capacity/health schedules,
+  urgent traffic, and weighted service penalties.
+- Added deterministic traffic batches so the hard visible problem processes 500
+  payments without duplicating content records.
+- Added a server-side hidden submission route with 6-, 8-, and 10-scenario
+  suites, input budgets, per-scenario diagnostics, and aggregate scoring.
+- Kept hidden suites completely dormant during Apply & Run. Explicit Submit now
+  streams actual case-start and case-result events so Studio visibly progresses
+  through every hidden case before showing the final report.
+- Added ten adversarial families covering collapse, congestion cascades,
+  priority surges, capacity oscillation, compatibility, deadline pressure,
+  preference reversal, fee shocks, and retry storms.
+- Added a Studio interview report and up to 60 decisions/second fast-forward for
+  large visible streams.
+- Kept arbitrary Code-mode JavaScript out of the server evaluator. Production
+  deployment still requires an isolated untrusted-code runner.
+- Verified JSON integrity, TypeScript, lint, all 107 tests across 18 files, and
+  the production build including `/api/interview/submit`.
+
+## 2026-07-26 — Cross-world challenge-content audit
+
+- Audited all 18 published challenges against their actual world data, module
+  observations/actions, scaffold brains, completion rules, and objective
+  metrics.
+- Completed the structured brief contract for every published Maze and
+  Warehouse challenge: brief, context, steps, staged hints, and taxonomy are now
+  authored rather than inferred from legacy prose.
+- Replaced remaining learner-facing numeric-priority language with the actual
+  top-to-bottom, first-matching-safe-rule model.
+- Corrected the Snake Corridor lesson: rules own continuous condition checks;
+  custom functions own fixed action sequences. Its documented
+  `turn-left-and-step` function now runs in a solving integration test and is a
+  required part of completion.
+- Made Finance cost requirements enforce the optimization claims in levels
+  11–14 instead of grading cost only as a bonus. Aligned Cost and Reliability
+  and Provider Health taxonomy with their Medium stages.
+- Corrected the Continuous Operations bonus label so it describes its real
+  tick check, corrected Warehouse dataset dimensions to 11×5, and updated
+  domain-brick presentation to use each scaffold's actual action and
+  description.
+- Added content-contract tests for complete briefs, taxonomy alignment, valid
+  world conditions, documented action bricks, and retired-priority wording.
+- Verified the audited content with TypeScript, lint, all 103 tests across 17
+  files, and the production build.
+
 ## 2026-07-26 — Problem workspace light/dark redesign
 
 - Rebuilt `/[pack]/[challenge]` as a compact, full-width problem workspace

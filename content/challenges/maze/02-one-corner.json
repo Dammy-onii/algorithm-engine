@@ -4,13 +4,38 @@
   "number": 2,
   "name": "The First Corner",
   "difficulty": 1,
+  "stage": "practice",
   "worldKey": "challenge-corner",
   "tagline": "Teach the robot to turn.",
   "narrative": "The corridor ahead ends in a wall. If the robot only knows how to move forward, it will walk until it hits that wall and then freeze — paralysed because it has no rule for what to do next. Walls are not failures; they are information. You need to teach the robot that when the path ahead is blocked, it should turn and look for an open direction. This is the moment a robot stops being a projectile and starts being a navigator.",
   "objective": "Guide the robot around the corner to the goal and hold there for 3 ticks.",
-  "learningObjective": "Writing multiple rules with different priorities, and using the `wallAhead` condition to react to the environment.",
+  "learningObjective": "Write ordered rules that react differently to a blocked path and a clear path.",
   "intelligenceExplanation": "This brain already has one rule: move forward if the path is clear. But when the robot reaches the wall at the end of the corridor, no rule fires — it stalls. Add a second rule that handles the wall case and place it before the general movement rule. Arriving is not enough: the robot must stay on the goal tile for 3 consecutive ticks to confirm the arrival, so put WHEN atGoal -> DO hold first.",
   "hint": "Add a second rule: when `wallAhead`, do `pivot-right`. Place it above the move-forward rule so turning takes precedence.",
+  "hints": [
+    "The existing movement rule only applies while the path ahead is clear.",
+    "Add a rule for the opposite observation: wallAhead.",
+    "Place WHEN atGoal → hold first, WHEN wallAhead → pivot-right next, and keep the clear-path step rule below them."
+  ],
+  "taxonomy": {
+    "domain": "Maze",
+    "simulation": "Navigation",
+    "tier": "tutorial",
+    "grade": 2
+  },
+  "brief": "Extend the straight-line brain so it turns the corner and settles on the goal.",
+  "context": "The robot can already move through a clear corridor but has no response to a wall.",
+  "steps": [
+    {
+      "id": "turn",
+      "label": "Handle the wall at the corner"
+    },
+    {
+      "id": "reach",
+      "label": "Reach the goal and settle",
+      "check": "reached"
+    }
+  ],
   "availableBricks": [
     "step",
     "pivot-right",

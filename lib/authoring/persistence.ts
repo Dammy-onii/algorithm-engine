@@ -28,7 +28,12 @@ export function upgradePersistedBrain(
     rules.pop();
   }
 
-  const savedFunctions = saved.functions ?? [];
+  // Older Studio builds recognized only base Maze/Warehouse action names.
+  // Reclassify every single-action wrapper as an engine/world primitive so
+  // Finance and Parking actions do not reappear as deletable user functions.
+  const savedFunctions = (saved.functions ?? []).map((fn) =>
+    fn.action ? { ...fn, isBuiltIn: true } : fn,
+  );
   const knownFunctions = new Set(savedFunctions.map((fn) => fn.id));
   const newBuiltIns = scaffold.functions.filter(
     (fn) => fn.isBuiltIn && !knownFunctions.has(fn.id),

@@ -58,6 +58,30 @@ Visual rules and a controller are alternative decision sources, never competing
 ones. The controller replaces rule selection for that run; world modules and the
 rest of the tick lifecycle remain unchanged.
 
+Studio's Code editor compiles the returned controller object locally when the
+user presses Apply & Run. Base observation fields are direct properties;
+world-module facts are under `observation.domain`. The UI derives its valid
+return-action list from the selected challenge's single-action function
+wrappers. This local compiler is not used by interview Submit.
+
+For bundled interview submissions, the safe visual policy DSL can also be sent
+to `POST /api/interview/submit`. That route resolves server-owned hidden Finance
+or Parking fixtures and streams case progress, scores, and diagnostics, not
+hidden inputs.
+Arbitrary Code-mode JavaScript remains local until deployment supplies an
+isolated untrusted-code worker.
+
+The detailed controller lifecycle, current browser compiler, Rules/Code
+interaction, language-neutral process protocol, and hidden-test placement are
+documented in [CODE_MODE.md](./CODE_MODE.md).
+
+World directory pages can combine several interview-enabled challenges into one
+short `/i/[assignmentId]` link. The assignment ID is a signed stateless token of
+registry references—not a copied challenge, fixture set, or file-backed
+assignment. Normalization always inserts the world's marked interview tutorial,
+then sorts by ascending difficulty, taxonomy grade, and challenge number. Each
+problem still submits independently to its own `interviewEvaluation.suiteId`.
+
 ---
 
 ## 2. Data contracts and mutability
@@ -108,6 +132,20 @@ simulation runs. It owns:
 
 The source data remains reusable: `Simulation.reset()` constructs a new `World`
 from the same `WorldSource` and compiled brain.
+
+World modules may implement `advanceTick(world)` for autonomous domain activity
+after the shared clock advances. Finance uses it for in-flight provider work,
+capacity, retries, deadlines, and queue pressure. Real-time Parking uses it for
+entry/exit completion, gate/lane schedules, closures, cancellations, patience,
+rerouting, and congestion. This keeps autonomous domain behavior behind the
+existing module boundary.
+
+The shared debug panel receives the selected module's `domainFlags` metadata.
+Its decision pipeline remains immediately visible, while base observation,
+domain facts, and memory use collapsible sections; the complete panel can also
+be collapsed. Computed numeric facts render to two decimal places, explicit
+percentage metrics include `%`, and raw domain ids are replaced by module
+labels.
 
 ---
 
@@ -330,6 +368,14 @@ resolves its environment, `scaffoldBrain` starts Studio, and its available
 bricks/conditions and unlock flags shape the editor. Objectives are evaluated
 after a run; only non-bonus objectives gate completion.
 
+Every bundled descriptor authors a structured brief, context, live steps, staged
+hints, and full taxonomy. Content tests check those fields, ensure exposed
+conditions belong to the selected world module, require every exposed brick to
+have an implementation and description, keep stage/taxonomy difficulty aligned,
+and reject learner copy that describes the retired numeric-priority execution
+model. Optimization claims belong in required objectives; bonus objectives may
+only describe optional quality improvements.
+
 `features/studio/pages/StudioPage.tsx` persists a user's visual brain through
 `features/studio/persistence.ts` under `ae-brain-<challenge-id>` and completion
 under `ae-complete-<challenge-id>` in `localStorage`. Persistence stays keyed by
@@ -338,10 +384,15 @@ challenge ID, so routing does not change saved work.
 Studio owns a full-width problem workspace rather than using catalogue page
 chrome. Its toolbar provides challenge-directory, previous/next, run, Lab, and
 theme actions. The authoring and simulation panes scroll independently on wide
-screens and stack on narrow screens. A local Problem list drawer searches the
-current pack and displays the same curriculum unlock state used by direct
-challenge navigation; selecting an item still changes the URL through the
-router.
+screens: the desktop page is fixed to the viewport and each pane body owns its
+visible scrollbar. Narrow screens stack the panes and use normal document
+scrolling. A local Problem list drawer searches the current pack and displays the
+same curriculum unlock state used by direct challenge navigation. Its header
+shows one pack-scoped `solved / total` fraction and the world name; the former
+duplicate “Level X of Y · N done” block and dotted progress track are not
+rendered. Drawer difficulty uses the catalogue policy, including a green
+Tutorial label for guided difficulty-1 challenges. Selecting an item still
+changes the URL through the router.
 
 Visual brains may also contain editor-only rule-folder metadata. Folders are saved
 with the visual brain and let users categorise large rule sets, but the compiler
@@ -419,11 +470,14 @@ The App Router owns what screen is displayed:
 /finance                validated Finance challenge-row directory
 /parking                validated Parking challenge-row directory
 /[pack]/[challenge]     one validated, shareable Studio challenge
+/interview/[challengeId] interview-enabled challenge; visible world + hidden suite by id
 /lab                    raw JSON engine harness
 ```
 
-Thin server route pages validate the `pack` with `findPack` and the challenge with
-strict `getChallenge`; a challenge must also belong to the requested pack. Invalid
+Thin server route pages validate the `pack` with `findPack` and the challenge
+with strict `getChallenge`; a challenge must also belong to the requested pack.
+The interview route additionally requires `interviewEvaluation` and references
+the challenge directly rather than copying it into an assignment record. Invalid
 paths call `notFound()`.
 
 Home and challenge-directory page UI are server-renderable and navigate with

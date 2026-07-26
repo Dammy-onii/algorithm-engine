@@ -1,0 +1,88 @@
+{
+  "id": "finance-production-orchestrator",
+  "pack": "finance",
+  "number": 22,
+  "name": "Production Payment Orchestrator",
+  "difficulty": 3,
+  "stage": "hard",
+  "worldKey": "finance-production-orchestrator",
+  "tagline": "Operate a national payment switch through adversarial production incidents.",
+  "narrative": "You own the policy for a national payment switch carrying retail transfers, refunds, payroll, business payments, merchant settlements, and cross-border traffic. Five hundred visible payments arrive while providers fail, recover, lose capacity, become congested, and change reliability. Providers support different transaction types and maximum values. Failed attempts may re-enter the ready queue with limited retries, but every retry consumes time and can push urgent work beyond its deadline. The submitted policy is evaluated on server-only simulations that reverse the visible assumptions.",
+  "objective": "Produce a general orchestration policy that balances throughput, infrastructure cost, reliability, deadlines, retry safety, compatibility, congestion, and customer impact across the visible production stream and ten hidden adversarial simulations.",
+  "learningObjective": "Demonstrate production-grade policy design under delayed feedback, evolving capacity, heterogeneous traffic, retries, and conflicting service objectives.",
+  "intelligenceExplanation": "The engine does not select a provider for you. It exposes the current payment, retry history, deadlines, and each provider's live facts. Routing starts asynchronous processing; future observations reflect the capacity consumed by earlier decisions. The hidden suite changes provider identities, relative prices, health schedules, traffic mixtures, deadlines, and value restrictions, so memorizing the visible best route is insufficient.",
+  "hint": "Build a hierarchy of invariants: eligibility, deadline safety, retry diversity, priority protection, then cost/load optimization. Every final fallback should have an intentional business meaning.",
+  "hints": [
+    "Never route without canRoute. Use transaction-type and value facts indirectly through canRoute rather than duplicating provider contracts.",
+    "Use lastProvider and retryCount to prevent repeated failure on one rail; use deadlineRemaining to decide whether holding or another attempt is still defensible.",
+    "A robust policy reserves reliable low-latency capacity for urgent/high-impact traffic and spreads flexible traffic across healthy eligible providers before congestion cascades."
+  ],
+  "taxonomy": {
+    "domain": "Finance",
+    "simulation": "Interview Payment Orchestration",
+    "tier": "hard",
+    "grade": 1
+  },
+  "brief": "Orchestrate 500 visible payments, then submit unchanged logic to ten server-only adversarial production simulations.",
+  "context": "Every decision alters future capacity; providers process in parallel while arrivals, deadlines, outages, recoveries, retries, and congestion advance in real time.",
+  "steps": [
+    { "id": "invariants", "label": "Encode eligibility, compatibility, amount, capacity, and deadline invariants" },
+    { "id": "classes", "label": "Treat retail, refund, payroll, business, settlement, international, high-value, and urgent traffic intentionally" },
+    { "id": "feedback", "label": "Use live congestion, health, latency, and retry history instead of static provider preference" },
+    { "id": "visible", "label": "Complete the 500-payment visible production stream", "check": "allProcessed" },
+    { "id": "hidden", "label": "Pass the ten-case adversarial submission suite" }
+  ],
+  "availableBricks": ["route-a", "route-b", "route-c", "hold", "decline"],
+  "availableConditions": [
+    "hasTransaction", "amount", "isConsumer", "isBusiness", "isInternational", "isPayroll", "isRefund", "isSettlement",
+    "isHighValue", "priority", "isPriority", "timeWaiting", "deadlineRemaining", "retryCount",
+    "maxRetries", "canRetry", "lastProviderA", "lastProviderB", "lastProviderC",
+    "queueDepth", "inFlight", "processed", "succeeded", "failed", "failedAttempts",
+    "timedOut", "priorityFailures", "overloadRejects", "processingCost", "totalCost", "score",
+    "averageProcessingTime", "throughput",
+    "onlineA", "onlineB", "onlineC", "canRouteA", "canRouteB", "canRouteC",
+    "feeA", "feeB", "feeC", "successRateA", "successRateB", "successRateC",
+    "currentLatencyA", "currentLatencyB", "currentLatencyC",
+    "expectedCostA", "expectedCostB", "expectedCostC",
+    "capacityRemainingA", "capacityRemainingB", "capacityRemainingC",
+    "queueLengthA", "queueLengthB", "queueLengthC",
+    "congestionA", "congestionB", "congestionC", "healthScoreA", "healthScoreB", "healthScoreC",
+    "always"
+  ],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "objectives": [
+    { "id": "process", "label": "Finalize all 500 visible payments", "check": "allProcessed" },
+    { "id": "timeout-rate", "label": "Keep visible timeouts at or below 5", "check": "allProcessed && timedOut <= 5" },
+    { "id": "priority", "label": "Keep visible priority failures at or below 2", "check": "allProcessed && priorityFailures <= 2" },
+    { "id": "overload", "label": "Keep overload rejections at or below 3", "check": "allProcessed && overloadRejects <= 3" },
+    { "id": "score", "label": "Keep the visible penalty score below 300", "check": "allProcessed && score < 300" }
+  ],
+  "interviewEvaluation": {
+    "suiteId": "production-orchestrator-v1",
+    "scenarioCount": 10,
+    "passingScore": 75,
+    "rubric": [
+      "Safety invariants and completion: 25%",
+      "Priority, deadline, and high-value protection: 25%",
+      "Outage, recovery, congestion, and retry resilience: 25%",
+      "Cost, throughput, and queue efficiency: 15%",
+      "Generalization across adversarial distributions: 10%"
+    ]
+  },
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "orchestrate", "priority": 1, "description": "Protect customer outcomes while sustaining national-switch throughput." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Continuously observe and control the payment switch." }] },
+    "rules": { "rules": [] },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Attempt the current payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Attempt the current payment through Provider B." },
+        { "id": "route-c", "action": "routeToC", "description": "Attempt the current payment through Provider C." },
+        { "id": "hold", "action": "hold", "description": "Wait one tick while the production environment continues evolving." },
+        { "id": "decline", "action": "decline", "description": "Permanently decline the current payment when no safe service path remains." }
+      ]
+    },
+    "memory": {}
+  }
+}

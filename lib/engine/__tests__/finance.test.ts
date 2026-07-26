@@ -4,7 +4,6 @@ import { Simulation, BrainSource, WorldSource } from "../simulation";
 import { EntitiesData, WorldData } from "../types";
 import { findChallenge } from "@/content/challenges";
 import { findWorld } from "@/lib/content/datasets";
-import { compileBrain } from "@/lib/authoring/brainCompiler";
 import { decompileBrain } from "@/lib/authoring/brainDecompiler";
 import {
   challengePassed,
@@ -242,6 +241,42 @@ describe("finance — payment routing", () => {
       const results = evaluateObjectives(challenge.objectives ?? [], metrics);
       expect(s.status, `${id} should reach`).toBe("reached");
       expect(challengePassed(results), `${id} objectives should pass`).toBe(true);
+    }
+  });
+
+  it("cost-focused challenges reject clean but needlessly expensive routes", () => {
+    const cases: Array<{ id: string; brain: BrainSource }> = [
+      {
+        id: "finance-basic-route",
+        brain: routeABrain,
+      },
+      {
+        id: "finance-skip-offline",
+        brain: {
+          ...lowestFeeBrain,
+          rules: {
+            rules: [
+              { id: "route-c", when: "onlineC", do: "route-c", priority: 1 },
+            ],
+          },
+        },
+      },
+    ];
+
+    for (const { id, brain } of cases) {
+      const challenge = findChallenge(id);
+      const simulation = new Simulation(
+        findWorld(challenge.worldKey).source,
+        brain,
+      );
+      run(simulation);
+      const metrics = metricsFromSim(simulation, decompileBrain(brain));
+      const results = evaluateObjectives(challenge.objectives ?? [], metrics);
+
+      expect(metrics.domain.failed, `${id} route remains clean`).toBe(0);
+      expect(challengePassed(results), `${id} must enforce its cost claim`).toBe(
+        false,
+      );
     }
   });
 

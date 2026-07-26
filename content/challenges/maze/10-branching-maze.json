@@ -17,6 +17,25 @@
     "A blocked route must be handled before the generic movement rule; use wallAhead and a pivot.",
     "Try a consistent wall-following policy: take an open side when possible, otherwise go forward, otherwise turn away from the wall. Keep those rules in that order."
   ],
+  "taxonomy": {
+    "domain": "Maze",
+    "simulation": "Navigation",
+    "tier": "easy",
+    "grade": 2
+  },
+  "brief": "Use a consistent ordered navigation policy to escape the branching maze.",
+  "context": "Several plausible routes terminate in dead ends, so corridor-only rules are not enough.",
+  "steps": [
+    {
+      "id": "policy",
+      "label": "Handle side openings, clear paths, and blocked routes"
+    },
+    {
+      "id": "reach",
+      "label": "Reach the maze exit and settle there",
+      "check": "reached"
+    }
+  ],
   "availableBricks": ["step", "pivot-left", "pivot-right", "hold"],
   "availableConditions": ["wallAhead", "wallLeft", "wallRight", "goalVisible", "goalAhead", "atGoal", "visitedAhead", "energy", "always"],
   "functionsUnlocked": true,
@@ -42,7 +61,7 @@
   },
   "objectives": [
     { "id": "reach", "label": "Reach the maze exit", "check": "reached" },
-    { "id": "steady", "label": "Hold at the exit", "check": "reached && ticks >= 3", "bonus": true },
+    { "id": "compact", "label": "Solve it with five rules or fewer", "check": "reached && rules <= 5", "bonus": true },
     { "id": "efficient", "label": "Finish within 80 ticks", "check": "reached && ticks <= 80", "bonus": true }
   ]
 }

@@ -79,7 +79,7 @@ owned by the engine. Users never redefine them — they compose above them.
 | # | Name | Level | World | Teaches |
 |---|------|-------|-------|---------|
 | 1 | The Straight Run | 1 | 7×3 corridor | One rule: condition + action |
-| 2 | The First Corner | 1 | 5×5 L-shape | Priority ordering, two rules |
+| 2 | The First Corner | 1 | 5×5 L-shape | Top-to-bottom rule ordering |
 | 3 | No Way Out | 1 | 7×7 (small) | Compound AND conditions |
 | 4 | Build Your Own Strategy | 2 | 11×11 snake | Composing custom functions |
 | 5 | Two Minds, One Robot | 2 | 9×9 arena | State machine with transitions |

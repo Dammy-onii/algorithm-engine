@@ -112,6 +112,65 @@ describe("measureRun + challenge objectives", () => {
     expect(challengePassed(results)).toBe(true);
   });
 
+  it("the documented custom cornering function solves the Snake Corridor", () => {
+    const challenge = CHALLENGES.find((item) => item.id === "snake-corridor")!;
+    const visual = decompileBrain(challenge.scaffoldBrain as BrainSource);
+    visual.functions.push({
+      id: "turn-left-and-step",
+      description: "Turn into an open left side and advance.",
+      steps: ["pivot-left", "step"],
+      isBuiltIn: false,
+    });
+    visual.rules = [
+      {
+        id: "settle",
+        state: null,
+        condition: { mode: "raw", expr: "atGoal" },
+        functionId: "hold",
+        setState: null,
+        priority: 4,
+        description: "",
+      },
+      {
+        id: "take-left",
+        state: null,
+        condition: { mode: "raw", expr: "!wallLeft" },
+        functionId: "turn-left-and-step",
+        setState: null,
+        priority: 3,
+        description: "",
+      },
+      {
+        id: "straight",
+        state: null,
+        condition: { mode: "raw", expr: "!wallAhead" },
+        functionId: "step",
+        setState: null,
+        priority: 2,
+        description: "",
+      },
+      {
+        id: "turn-right",
+        state: null,
+        condition: { mode: "raw", expr: "always" },
+        functionId: "pivot-right",
+        setState: null,
+        priority: 1,
+        description: "",
+      },
+    ];
+
+    const sim = new Simulation(
+      findWorld(challenge.worldKey).source,
+      compileBrain(visual),
+    );
+    const metrics = measureRun(sim, visual);
+    const results = evaluateObjectives(challenge.objectives ?? [], metrics);
+
+    expect(sim.status).toBe("reached");
+    expect(challengePassed(results)).toBe(true);
+  });
+
   it("measures metrics from an unsolved run without throwing", () => {
     const brain: BrainSource = {
       goals: { goals: [] },

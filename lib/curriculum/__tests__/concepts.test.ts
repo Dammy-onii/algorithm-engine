@@ -59,7 +59,11 @@ describe("progression gating", () => {
       "warehouse-continuous-operations", "warehouse-energy-management",
       "finance-basic-route", "finance-skip-offline", "finance-reliability-intro",
       "finance-route-selection", "finance-cost-and-reliability", "finance-provider-health",
+      "finance-interview-routing", "finance-peak-hour-switch",
+      "finance-production-orchestrator",
       "parking-first-shift", "parking-match-vehicle", "parking-priority-access",
+      "parking-interview-controller", "parking-interview-operations",
+      "parking-interview-orchestrator",
     ];
     for (const id of order) {
       expect(isChallengeUnlocked(id, done), `expected ${id} unlocked`).toBe(true);

@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { VisualDerivedCondition } from "@/lib/authoring/types";
 import { allDomainFlagSpecs } from "@/lib/engine/worlds/registry";
+import { ConditionExpressionInput } from "./ConditionExpressionInput";
 
 const FIELD =
   "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
@@ -58,7 +59,14 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
 
   /** Append a flag token to the composer expression (click-to-write). */
   const insertToken = (token: string) =>
-    setNewExpr((e) => (e.trim() ? `${e.trimEnd()} ${token}` : token));
+    setNewExpr((expression) => {
+      const current = expression.trimEnd();
+      if (!current) return token;
+      if (/(?:&&|\|\||!|\()\s*$/.test(current)) {
+        return `${current} ${token}`;
+      }
+      return `${current} && ${token}`;
+    });
 
   const add = () => {
     if (!newId.trim() || !newExpr.trim()) return;
@@ -155,12 +163,11 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
                     onChange={(e) => update(i, { id: e.target.value })}
                   />
                   <span className="text-zinc-400">=</span>
-                  <input
-                    className={`${FIELD} flex-1 font-mono text-xs`}
+                  <ConditionExpressionInput
                     value={d.expr}
                     placeholder="wallAhead && wallLeft && wallRight"
-                    list="ae-condition-suggestions"
-                    onChange={(e) => update(i, { expr: e.target.value })}
+                    suggestions={suggestions}
+                    onChange={(expr) => update(i, { expr })}
                   />
                   <button
                     onClick={() => remove(i)}
@@ -182,6 +189,58 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
         )}
       </div>
 
+      <details className="group rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+          <span>Condition operators and examples</span>
+          <span className="text-xs font-normal text-zinc-400 group-open:hidden">
+            Show
+          </span>
+          <span className="hidden text-xs font-normal text-zinc-400 group-open:inline">
+            Hide
+          </span>
+        </summary>
+        <div className="border-t border-zinc-200 px-3 py-3 dark:border-zinc-700">
+          <div className="grid gap-2 text-xs sm:grid-cols-2">
+            <OperatorHelp
+              operator="&&"
+              meaning="AND — both sides must be true"
+              example="canRouteA && isPriority"
+            />
+            <OperatorHelp
+              operator="||"
+              meaning="OR — either side may be true"
+              example="canRouteA || canRouteB"
+            />
+            <OperatorHelp
+              operator="!"
+              meaning="NOT — invert a boolean fact"
+              example="!wallAhead"
+            />
+            <OperatorHelp
+              operator="( )"
+              meaning="Group expressions before combining them"
+              example="(canRouteA || canRouteB) && isPriority"
+            />
+            <OperatorHelp
+              operator="<  <=  >  >="
+              meaning="Compare numeric facts"
+              example="deadlineRemaining <= 2"
+            />
+            <OperatorHelp
+              operator="==  !="
+              meaning="Test equality or inequality"
+              example="retryCount != 0"
+            />
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+            Boolean facts such as <code>wallAhead</code> can stand alone.
+            Numeric facts such as <code>queueDepth</code> need a comparison when
+            you want a true/false result. Derived condition names can be reused
+            inside later expressions.
+          </p>
+        </div>
+      </details>
+
       {/* 3 — Composer */}
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
@@ -195,12 +254,11 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
             onChange={(e) => setNewId(e.target.value)}
           />
           <span className="text-zinc-400">=</span>
-          <input
-            className={`${FIELD} flex-1 font-mono text-xs`}
+          <ConditionExpressionInput
             placeholder="wallAhead && wallLeft && wallRight"
             value={newExpr}
-            list="ae-condition-suggestions"
-            onChange={(e) => setNewExpr(e.target.value)}
+            suggestions={suggestions}
+            onChange={setNewExpr}
           />
         </div>
 
@@ -242,12 +300,30 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
         </p>
       </div>
 
-      {/* Autocomplete source for every condition expression field above. */}
-      <datalist id="ae-condition-suggestions">
-        {suggestions.map((flag) => (
-          <option key={flag} value={flag} />
-        ))}
-      </datalist>
+    </div>
+  );
+}
+
+function OperatorHelp({
+  operator,
+  meaning,
+  example,
+}: {
+  operator: string;
+  meaning: string;
+  example: string;
+}) {
+  return (
+    <div className="rounded-md bg-zinc-50 p-2.5 dark:bg-zinc-800/70">
+      <div className="flex items-start gap-2">
+        <code className="shrink-0 rounded bg-zinc-200 px-1.5 py-0.5 font-semibold text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100">
+          {operator}
+        </code>
+        <span className="text-zinc-600 dark:text-zinc-300">{meaning}</span>
+      </div>
+      <code className="mt-2 block overflow-x-auto text-[11px] text-zinc-500 dark:text-zinc-400">
+        {example}
+      </code>
     </div>
   );
 }

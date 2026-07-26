@@ -74,6 +74,18 @@ export function ProblemBrief({ challenge, attempts }: Props) {
                   {brief.learn}
                 </p>
               )}
+              {challenge.interviewEvaluation && (
+                <div className="mt-1 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                    Hidden evaluation contract
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-zinc-500">
+                    {challenge.interviewEvaluation.rubric.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

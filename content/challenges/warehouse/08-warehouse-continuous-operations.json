@@ -8,10 +8,40 @@
   "worldKey": "warehouse-continuous-operations",
   "tagline": "Collect work without overfilling the robot.",
   "narrative": "The 11×5 fulfilment loop has a central rack block, long travel aisles, and two pick faces. Red and blue stations each hold three orders, but expose only one package at a time. As soon as the robot picks one, the next appears. The robot carries two packages, so the task is no longer a single trip: it must stop picking up once full and unload work before returning to the stations.",
-  "objective": "Process all six station orders using two-package cargo capacity.",
-  "learningObjective": "Continuous work, carrying capacity, and planning before a delivery run.",
+  "objective": "Process all six station orders without trying to load beyond the two-package capacity.",
+  "learningObjective": "Continuous reactive work: combine replenishing stations, finite cargo capacity, and type-aware delivery.",
   "intelligenceExplanation": "The route is available but no work rules exist. Add a pickup rule guarded by packageHere AND capacityRemaining > 0. Add separate red and blue delivery rules so the robot does not repeatedly try to unload red cargo at Blue Outbound. When an item is picked, the next package appears at that station immediately; the debug panel shows packages remaining and free cargo slots.",
-  "hint": "Use WHEN packageHere AND capacityRemaining > 0 → pick-up. Then use deliveryRedHere AND carryingRed → deliver, and repeat for blue. All work rules should outrank movement.",
+  "hint": "Guard pickup with capacityRemaining > 0, add typed delivery rules, and keep all work rules above navigation.",
+  "hints": [
+    "Each station exposes its next package immediately after a pickup, but the robot has only two cargo slots.",
+    "A pickup rule should require both packageHere and capacityRemaining > 0.",
+    "Put typed red and blue delivery rules first, capacity-aware pickup next, and the supplied navigation rules last."
+  ],
+  "taxonomy": {
+    "domain": "Warehouse",
+    "simulation": "Fulfilment",
+    "tier": "easy",
+    "grade": 1
+  },
+  "brief": "Keep both replenishing stations moving while respecting two-package cargo capacity.",
+  "context": "Six orders appear one at a time across two pick faces on a continuous aisle loop.",
+  "steps": [
+    {
+      "id": "load",
+      "label": "Load work only while cargo space remains",
+      "check": "carryingRed || carryingBlue || deliveredCount >= 1"
+    },
+    {
+      "id": "flow",
+      "label": "Deliver orders from both station queues",
+      "check": "deliveredCount >= 2"
+    },
+    {
+      "id": "complete",
+      "label": "Deliver all six station orders",
+      "check": "reached"
+    }
+  ],
   "availableBricks": [
     "step",
     "pivot-right",
@@ -108,7 +138,7 @@
     },
     {
       "id": "capacity",
-      "label": "Use the full two-package capacity",
+      "label": "Finish within 60 ticks",
       "check": "reached && ticks <= 60",
       "bonus": true
     },

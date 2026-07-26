@@ -25,9 +25,15 @@ import financeReliabilityIntro from "@/content/worlds/finance-reliability-intro.
 import financeRouteSelection from "@/content/worlds/finance-route-selection.json";
 import financeCostAndReliability from "@/content/worlds/finance-cost-and-reliability.json";
 import financeProviderHealth from "@/content/worlds/finance-provider-health.json";
+import financeInterviewRouting from "@/content/worlds/finance-interview-routing.json";
+import financePeakHourSwitch from "@/content/worlds/finance-peak-hour-switch.json";
+import financeProductionOrchestrator from "@/content/worlds/finance-production-orchestrator.json";
 import parkingFirstShift from "@/content/worlds/parking-first-shift.json";
 import parkingMatchVehicle from "@/content/worlds/parking-match-vehicle.json";
 import parkingPriorityAccess from "@/content/worlds/parking-priority-access.json";
+import parkingInterviewController from "@/content/worlds/parking-interview-controller.json";
+import parkingInterviewOperations from "@/content/worlds/parking-interview-operations.json";
+import parkingInterviewDistributed from "@/content/worlds/parking-interview-distributed.json";
 import entities from "@/content/worlds/entities.json";
 
 import goals from "@/content/brains/default/goals.json";
@@ -118,17 +124,17 @@ export const WORLDS: WorldOption[] = [
   },
   {
     key: "warehouse-package-sorting",
-    label: "Warehouse Practice — Package Sorting (5×5)",
+    label: "Warehouse Practice — Package Sorting (11×5)",
     source: { world: warehousePackageSorting as WorldData, entities: sharedEntities },
   },
   {
     key: "warehouse-continuous-operations",
-    label: "Warehouse Easy — Continuous Operations (6×6)",
+    label: "Warehouse Easy — Continuous Operations (11×5)",
     source: { world: warehouseContinuousOperations as WorldData, entities: sharedEntities },
   },
   {
     key: "warehouse-energy-management",
-    label: "Warehouse Medium — Energy Management (6×6)",
+    label: "Warehouse Medium — Energy Management (11×5)",
     source: { world: warehouseEnergyManagement as WorldData, entities: sharedEntities },
   },
   {
@@ -148,7 +154,7 @@ export const WORLDS: WorldOption[] = [
   },
   {
     key: "finance-route-selection",
-    label: "Finance Easy — Basic Route Selection",
+    label: "Finance Easy — Three-Provider Routing",
     source: { world: financeRouteSelection as WorldData, entities: sharedEntities },
   },
   {
@@ -160,6 +166,21 @@ export const WORLDS: WorldOption[] = [
     key: "finance-provider-health",
     label: "Finance Medium — Real-Time Provider Health",
     source: { world: financeProviderHealth as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-interview-routing",
+    label: "Finance Interview — Intelligent Payment Routing",
+    source: { world: financeInterviewRouting as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-peak-hour-switch",
+    label: "Finance Interview — Peak Hour Payment Switch",
+    source: { world: financePeakHourSwitch as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "finance-production-orchestrator",
+    label: "Finance Interview — Production Payment Orchestrator",
+    source: { world: financeProductionOrchestrator as WorldData, entities: sharedEntities },
   },
   {
     key: "parking-first-shift",
@@ -175,6 +196,21 @@ export const WORLDS: WorldOption[] = [
     key: "parking-priority-access",
     label: "Parking Easy — Priority Access",
     source: { world: parkingPriorityAccess as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "parking-interview-controller",
+    label: "Parking Interview — Smart Parking Controller",
+    source: { world: parkingInterviewController as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "parking-interview-operations",
+    label: "Parking Interview — Autonomous Parking Operations",
+    source: { world: parkingInterviewOperations as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "parking-interview-distributed",
+    label: "Parking Interview — Production Parking Orchestrator",
+    source: { world: parkingInterviewDistributed as WorldData, entities: sharedEntities },
   },
 ];
 

@@ -1,6 +1,6 @@
 # Challenge Schema — the world-agnostic learner flow
 
-Every challenge — maze, warehouse, and the upcoming finance world — renders the
+Every challenge across Maze, Warehouse, Finance, and Parking renders the
 **same** learner experience: a short brief, a live task checklist, escalating
 hints, and a results screen. That consistency comes from one typed schema plus a
 normalizer, so a new simulation type gets the whole flow for free by filling in
@@ -13,10 +13,11 @@ Defined in [lib/authoring/types.ts](../lib/authoring/types.ts); normalized by
 
 ## Two layers: structured + legacy
 
-The structured fields are **optional and layered over** the original free-text
-fields. Older challenges keep working (the normalizer derives a brief from
-`objective` / `tagline` / `narrative` / objectives); new challenges author the
-structured fields directly. Nothing is a hard migration.
+The structured fields remain **technically optional** so external or older
+content can be normalized from the original free-text fields. Every challenge
+published by this repository now authors them directly. The content tests reject
+a bundled challenge without a brief, context, steps, staged hints, or complete
+taxonomy.
 
 | Structured field | Falls back to | Used for |
 |---|---|---|
@@ -26,6 +27,22 @@ structured fields directly. Nothing is a hard migration.
 | `taxonomy` | `pack` / `stage` / `difficulty` | Catalogue placement + the `Tier · Grade` badge. |
 | `narrative`, `intelligenceExplanation` | — | Prose behind **Learn more**. |
 | `hints[]` | `[hint]` | Escalating hint drawer. |
+| `interviewEvaluation` | — | Public contract for an optional server-owned hidden suite. |
+
+An interview challenge may declare:
+
+```ts
+interviewEvaluation: {
+  suiteId: string;
+  scenarioCount: number;
+  passingScore: number;
+  rubric: string[];
+}
+```
+
+The suite id and rubric are public, but the scenario inputs are not challenge
+content. They stay in the server route graph. Studio receives labels, aggregate
+metrics, diagnostic categories, and scores after submission.
 
 ## `steps` — the live checklist
 
@@ -81,10 +98,25 @@ values from the legacy `pack`/`stage`/`difficulty` when `taxonomy` is absent.
 
 See [content/challenges/warehouse/06-warehouse-first-delivery.json](../content/challenges/warehouse/06-warehouse-first-delivery.json).
 
-## Why this matters for new worlds
+## Published-content consistency contract
 
-When the finance (Payment Routing) world lands, its levels declare
-`taxonomy` (`Finance · Payment Routing · Easy · Grade 1`), a `brief`, and `steps`
-whose `check` references finance domain flags (e.g. `allRouted`,
-`failuresWithinBudget`). No new flow UI is needed — the brief, checklist, hints,
-stepper, and results screen all render from this same schema.
+A bundled challenge must satisfy all of these:
+
+1. `brief`, `context`, `narrative`, `intelligenceExplanation`, and
+   `learningObjective` describe the actual world and scaffold, not a planned
+   feature.
+2. Required objectives enforce every claim made by the primary objective. A
+   cost-optimization problem cannot pass merely because its queue drained.
+3. `steps` use real run metrics or active-world observations. A guidance-only
+   step omits `check` rather than using a condition that is already true.
+4. `availableConditions` must come from the base observation vocabulary or the
+   selected `WorldModule`.
+5. Every `availableBrick` must exist in the scaffold with an action/sequence and
+   a learner-facing description.
+6. Rules are described in authored top-to-bottom order. Numeric `priority`
+   fields may remain in legacy JSON for compatibility, but learner text must
+   never claim they control execution.
+7. `stage` and `taxonomy.tier` agree (`practice` is presented as `tutorial`).
+
+These checks run in `lib/content/__tests__/registry.test.ts`. The same schema
+supports future worlds without a new problem-flow UI.

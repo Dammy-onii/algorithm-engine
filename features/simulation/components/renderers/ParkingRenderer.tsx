@@ -16,6 +16,7 @@ import {
   ParkingSpace,
   currentParkingVehicle,
   departedVehicles,
+  isParkingSpaceClosed,
   occupantForSpace,
   parkedVehicles,
   parkingRuntime,
@@ -69,27 +70,33 @@ export function ParkingRenderer({
   const south = runtime.spaces
     .filter((space) => space.row === "south")
     .sort((a, b) => a.order - b.order);
+  const activeArrival = runtime.vehicles.find(
+    (vehicle) => vehicle.status === "entering",
+  );
+  const activeDeparture = runtime.vehicles.find(
+    (vehicle) => vehicle.status === "exiting",
+  );
   const departureIsLive =
     runtime.lastDepartureTick !== undefined &&
     world.tick - runtime.lastDepartureTick <= 1;
   const assignmentIsLive =
     runtime.lastAssignmentTick !== undefined &&
     world.tick - runtime.lastAssignmentTick <= 1;
-  const assignedVehicle = assignmentIsLive
+  const assignedVehicle = activeArrival ?? (assignmentIsLive
     ? runtime.vehicles.find(
         (vehicle) => vehicle.id === runtime.lastAssignedVehicleId,
       )
-    : undefined;
+    : undefined);
   const assignedSpace = assignedVehicle?.assignedSpaceId
     ? runtime.spaces.find(
         (space) => space.id === assignedVehicle.assignedSpaceId,
       )
     : undefined;
-  const departedVehicle = departureIsLive
+  const departedVehicle = activeDeparture ?? (departureIsLive
     ? runtime.vehicles.find(
         (vehicle) => vehicle.id === runtime.lastDepartedVehicleId,
       )
-    : undefined;
+    : undefined);
   const departedSpace = departedVehicle?.assignedSpaceId
     ? runtime.spaces.find(
         (space) => space.id === departedVehicle.assignedSpaceId,
@@ -114,7 +121,9 @@ export function ParkingRenderer({
         <div className="flex flex-wrap gap-1.5 text-[10px] tabular-nums text-zinc-300">
           <Metric label="queued" value={queue.length} />
           <Metric label="parked" value={parked} />
+          <Metric label="lane" value={`${runtime.vehicles.filter((vehicle) => vehicle.status === "entering" || vehicle.status === "exiting").length}/${runtime.laneCapacity}`} />
           <Metric label="departed" value={`${departed}/${runtime.vehicles.length}`} />
+          <Metric label="abandoned" value={runtime.abandoned} alert={runtime.abandoned > 0} />
           <Metric label="violations" value={runtime.violations} alert={runtime.violations > 0} />
           <Metric label="tick" value={world.tick} />
         </div>
@@ -194,6 +203,7 @@ export function ParkingRenderer({
             world={world}
             facing="south"
             movingVehicleId={assignedVehicle?.id}
+            departingVehicleId={departedVehicle?.id}
           />
 
           <div className="relative my-2 flex min-h-14 items-center overflow-hidden rounded bg-zinc-600/80 px-3">
@@ -202,12 +212,12 @@ export function ParkingRenderer({
               One-way allocation aisle
             </span>
             <div className="relative ml-auto flex items-center gap-2">
-              {assignmentIsLive && runtime.lastAssignedVehicleId && (
+              {assignedVehicle && (
                 <span className="flex items-center gap-1 rounded bg-white px-2 py-1 font-mono text-[9px] text-zinc-900">
-                  {runtime.lastAssignedVehicleId} → {runtime.lastAssignedSpaceId}
+                  {assignedVehicle.id} → {assignedVehicle.assignedSpaceId}
                 </span>
               )}
-              {departureIsLive && (
+              {departedVehicle && (
                 <div className="flex items-center gap-1 rounded border border-white/30 bg-zinc-900/70 px-1.5 py-1">
                   <span className="font-mono text-[9px]">checkpoint cleared</span>
                 </div>
@@ -220,6 +230,7 @@ export function ParkingRenderer({
             world={world}
             facing="north"
             movingVehicleId={assignedVehicle?.id}
+            departingVehicleId={departedVehicle?.id}
           />
 
           <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-md">
@@ -262,11 +273,13 @@ function ParkingRow({
   world,
   facing,
   movingVehicleId,
+  departingVehicleId,
 }: {
   spaces: ParkingSpace[];
   world: World;
   facing: "north" | "south";
   movingVehicleId?: string;
+  departingVehicleId?: string;
 }) {
   return (
     <div
@@ -275,6 +288,7 @@ function ParkingRow({
     >
       {spaces.map((space) => {
         const occupant = occupantForSpace(world, space.id);
+        const closed = isParkingSpaceClosed(space, world.tick);
         return (
           <div
             key={space.id}
@@ -282,13 +296,16 @@ function ParkingRow({
               "relative flex min-h-20 flex-col items-center justify-between overflow-hidden border-x-2 border-white/70 bg-zinc-600/35 px-1 py-1",
               facing === "south" ? "border-t-2" : "border-b-2",
               space.kind !== "standard" ? "parking-special-space" : "",
+              closed ? "border-red-400 bg-red-950/70 opacity-75" : "",
             ].join(" ")}
             title={`${space.id} · ${space.kind}${space.reservedFor ? ` · reserved for ${space.reservedFor}` : ""}`}
           >
             <span className="self-start rounded bg-zinc-900/70 px-1 font-mono text-[8px] text-zinc-300">
               {space.id}
             </span>
-            {occupant ? (
+            {occupant &&
+            occupant.status !== "entering" &&
+            occupant.id !== departingVehicleId ? (
               <div
                 className={[
                   "parking-car-park relative",
@@ -308,10 +325,16 @@ function ParkingRow({
               </div>
             ) : (
               <span className="grid h-10 place-items-center text-[11px] font-bold text-white/70">
-                {SPACE_LABEL[space.kind]}
+                {closed
+                  ? "CLOSED"
+                  : occupant?.status === "entering"
+                    ? "INBOUND"
+                    : SPACE_LABEL[space.kind]}
               </span>
             )}
-            <span className="text-[7px] uppercase tracking-wide text-zinc-300">{space.kind}</span>
+            <span className="text-[7px] uppercase tracking-wide text-zinc-300">
+              {space.zone ? `${space.zone} · ` : ""}{space.kind}
+            </span>
           </div>
         );
       })}

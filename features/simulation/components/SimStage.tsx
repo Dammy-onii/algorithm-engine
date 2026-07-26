@@ -10,7 +10,7 @@ import { ReactNode } from "react";
 import { SimStep } from "@/lib/engine/types";
 import { World } from "@/lib/engine/world/world";
 import { WorldLegend, WorldRenderer } from "@/features/simulation/components/renderers/WorldRenderer";
-import { DebugPanel } from "@/features/simulation/components/DebugPanel";
+import { DebugPanel } from "./DebugPanel";
 
 interface Props {
   world: World;
@@ -42,7 +42,7 @@ export function SimStage({
         <WorldLegend world={world} />
       </div>
       <div className="flex flex-col gap-4">
-        <DebugPanel step={step} />
+        <DebugPanel step={step} domainFlags={world.module.domainFlags} />
         {footer}
       </div>
     </div>

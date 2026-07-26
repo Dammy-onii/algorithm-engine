@@ -339,6 +339,7 @@ suite green, and only the last two change *where* content lives.
   flag metadata, runtime, observation, and status. `World`, the loader and shared
   types contain no warehouse behavior; `features/simulation/` dispatches Maze,
   Warehouse, Finance, and Parking presentations through a renderer registry.
-  The current suite passes all 96 tests. See
+  Current verification totals are recorded in
+  [CHANGELOG.md](./CHANGELOG.md). See
   [ENGINE_LOADING.md](./ENGINE_LOADING.md) for the current detail.
 - **Tier 4/5 — not started.** Runtime + remote fetch.

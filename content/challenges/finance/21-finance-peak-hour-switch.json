@@ -1,0 +1,85 @@
+{
+  "id": "finance-peak-hour-switch",
+  "pack": "finance",
+  "number": 21,
+  "name": "Peak Hour Payment Switch",
+  "difficulty": 3,
+  "stage": "medium",
+  "worldKey": "finance-peak-hour-switch",
+  "tagline": "Keep the switch stable while demand and provider health move underneath it.",
+  "narrative": "It is Friday afternoon and YamusaPay is receiving a sustained mixed-traffic surge. Cheap capacity is limited, the low-cost rail develops a latency and reliability incident, the premium rail experiences a short outage, and urgent payroll payments share the queue with low-value consumer traffic. Routing changes future capacity: every accepted payment remains in flight until its provider finishes. A weak policy creates a congestion cascade even when every provider began online.",
+  "objective": "Maximize completed throughput while controlling timeouts, priority misses, overload rejections, failed attempts, queue growth, and total operating score.",
+  "learningObjective": "Design an adaptive load-aware policy whose routing choices account for their future effect on provider capacity and queue pressure.",
+  "intelligenceExplanation": "There is no starter answer. The policy must distinguish cheap flexible traffic from urgent, high-value, payroll, and international work. Holding can be correct when capacity will recover, but unconditional holding causes expiry. Hardcoding one provider fails during the incident schedule and hidden identity swaps.",
+  "hint": "Treat deadlineRemaining and capacityRemaining as scarce resources. Send urgent traffic to the fastest eligible healthy route; distribute flexible traffic by expected cost and congestion.",
+  "hints": [
+    "Create early branches for near-deadline, priority, payroll, and high-value traffic.",
+    "For flexible traffic, compare eligible routes using expected cost, health score, current latency, and remaining capacity.",
+    "After a failed attempt, prefer an eligible provider other than lastProviderA/B/C; retry only while deadline budget remains."
+  ],
+  "taxonomy": {
+    "domain": "Finance",
+    "simulation": "Interview Payment Orchestration",
+    "tier": "medium",
+    "grade": 4
+  },
+  "brief": "Stabilize a live peak-hour switch and pass eight hidden load, outage, recovery, and traffic-surge scenarios.",
+  "context": "Provider latency rises with in-flight load, capacity is finite, failed attempts can return for retry, and transaction deadlines continue counting down.",
+  "steps": [
+    { "id": "segment", "label": "Segment traffic by urgency, value, and transaction type" },
+    { "id": "load", "label": "Route using live capacity, congestion, latency, reliability, and cost" },
+    { "id": "retry", "label": "Handle retryable failures without repeating a broken route" },
+    { "id": "visible", "label": "Finish the visible surge with at most two timeouts", "check": "allProcessed && timedOut <= 2" },
+    { "id": "hidden", "label": "Submit the unchanged policy against the peak-hour hidden suite" }
+  ],
+  "availableBricks": ["route-a", "route-b", "route-c", "hold", "decline"],
+  "availableConditions": [
+    "hasTransaction", "amount", "isConsumer", "isBusiness", "isInternational", "isPayroll", "isRefund",
+    "isHighValue", "priority", "isPriority", "timeWaiting", "deadlineRemaining", "retryCount",
+    "maxRetries", "canRetry", "lastProviderA", "lastProviderB", "lastProviderC",
+    "queueDepth", "inFlight", "processed", "failedAttempts", "timedOut",
+    "onlineA", "onlineB", "onlineC", "canRouteA", "canRouteB", "canRouteC",
+    "feeA", "feeB", "feeC", "successRateA", "successRateB", "successRateC",
+    "currentLatencyA", "currentLatencyB", "currentLatencyC",
+    "expectedCostA", "expectedCostB", "expectedCostC",
+    "capacityRemainingA", "capacityRemainingB", "capacityRemainingC",
+    "queueLengthA", "queueLengthB", "queueLengthC",
+    "congestionA", "congestionB", "congestionC", "healthScoreA", "healthScoreB", "healthScoreC",
+    "always"
+  ],
+  "functionsUnlocked": true,
+  "statesUnlocked": true,
+  "objectives": [
+    { "id": "process", "label": "Finalize the complete visible surge", "check": "allProcessed" },
+    { "id": "timeouts", "label": "Allow no more than two timeouts", "check": "allProcessed && timedOut <= 2" },
+    { "id": "priority", "label": "Allow no more than one urgent-payment failure", "check": "allProcessed && priorityFailures <= 1" },
+    { "id": "overload", "label": "Avoid provider overload rejection", "check": "allProcessed && overloadRejects == 0" },
+    { "id": "score", "label": "Keep the visible penalty score below 100", "check": "allProcessed && score < 100" }
+  ],
+  "interviewEvaluation": {
+    "suiteId": "peak-hour-switch-v1",
+    "scenarioCount": 8,
+    "passingScore": 72,
+    "rubric": [
+      "Completion and sustained throughput: 25%",
+      "Deadline and priority service-level protection: 30%",
+      "Outage, recovery, capacity, and retry correctness: 25%",
+      "Cost and congestion efficiency: 20%"
+    ]
+  },
+  "scaffoldBrain": {
+    "goals": { "goals": [{ "id": "stabilize", "priority": 1, "description": "Keep mixed payment traffic flowing safely under peak load." }] },
+    "states": { "initial": "operate", "states": [{ "id": "operate", "description": "Evaluate the live switch once per decision tick." }] },
+    "rules": { "rules": [] },
+    "functions": {
+      "functions": [
+        { "id": "route-a", "action": "routeToA", "description": "Attempt the current payment through Provider A." },
+        { "id": "route-b", "action": "routeToB", "description": "Attempt the current payment through Provider B." },
+        { "id": "route-c", "action": "routeToC", "description": "Attempt the current payment through Provider C." },
+        { "id": "hold", "action": "hold", "description": "Wait one tick while provider work and deadlines advance." },
+        { "id": "decline", "action": "decline", "description": "Permanently reject the current payment." }
+      ]
+    },
+    "memory": {}
+  }
+}

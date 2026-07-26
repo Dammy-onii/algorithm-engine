@@ -16,6 +16,7 @@
 import { useState } from "react";
 import { VisualRule, VisualRuleFolder, VisualState, VisualFunction, VisualCondition, ConditionAtom, ConditionGuided, LogicalOp } from "@/lib/authoring/types";
 import { ConditionChip } from "../blocks/ConditionChip";
+import { ConditionExpressionInput } from "./ConditionExpressionInput";
 
 const FIELD = "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
 
@@ -78,18 +79,12 @@ function ConditionEditor({ condition, availableConditions, onAtomAdd, onAtomUpda
   const raw = condition;
   return (
     <>
-      <input
-        className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1 font-mono text-xs dark:border-zinc-700 dark:bg-zinc-800"
+      <ConditionExpressionInput
         value={raw.expr}
         placeholder="condition expression"
-        list="ae-rule-conditions"
-        onChange={(e) => onConditionChange({ mode: "raw", expr: e.target.value })}
+        suggestions={availableConditions}
+        onChange={(expr) => onConditionChange({ mode: "raw", expr })}
       />
-      <datalist id="ae-rule-conditions">
-        {availableConditions.map((flag) => (
-          <option key={flag} value={flag} />
-        ))}
-      </datalist>
       <button
         onClick={() => onConditionChange({ mode: "guided", group: { operator: "&&", atoms: [{ flag: "always", negated: false }] } })}
         className="text-xs text-zinc-400 hover:text-zinc-600"
