@@ -19,6 +19,8 @@ import fMemory from "@/content/brains/finance/memory.json";
 import {
   FinanceConfig,
   createFinanceRuntime,
+  financeRuntime,
+  financeScore,
   providerStateAt,
   allProcessed,
   countByStatus,
@@ -292,5 +294,58 @@ describe("finance — payment routing", () => {
     expect(s.status).toBe("stuck");
     expect(domain.lost).toBe(1);
     expect(domain.succeeded).toBe(0);
+  });
+
+  it("does not treat holding every queued payment until timeout as success", () => {
+    const s = sim(
+      {
+        processingMode: "queued",
+        timeoutPenalty: 25,
+        queuePenaltyPerTick: 1,
+        providers: [
+          {
+            id: "A",
+            name: "A",
+            fee: 0.1,
+            successRate: 100,
+            latency: 1000,
+            online: true,
+            concurrentCapacity: 1,
+          },
+        ],
+        transactions: [
+          { id: "t1", amount: 100, deadlineTicks: 3 },
+          { id: "t2", amount: 200, deadlineTicks: 4 },
+        ],
+      },
+      holdBrain,
+    );
+
+    const domain = run(s);
+    const runtime = financeRuntime(s.world);
+
+    expect(s.status).toBe("stuck");
+    expect(domain.allProcessed).toBe(true);
+    expect(domain.succeeded).toBe(0);
+    expect(domain.lost).toBe(2);
+    expect(financeScore(s.world)).toBeGreaterThan(0);
+    expect(runtime?.lastDecision).toMatchObject({
+      action: "hold",
+      outcome: "held",
+    });
+  });
+
+  it("rejects the hold-only exploit in Peak Hour Payment Switch", () => {
+    const challenge = findChallenge("finance-peak-hour-switch");
+    const s = new Simulation(findWorld(challenge.worldKey).source, holdBrain);
+
+    run(s, 1000);
+    const metrics = metricsFromSim(s, decompileBrain(holdBrain));
+    const results = evaluateObjectives(challenge.objectives ?? [], metrics);
+
+    expect(s.status).toBe("stuck");
+    expect(metrics.domain.succeeded).toBe(0);
+    expect(metrics.domain.timedOut).toBe(96);
+    expect(challengePassed(results)).toBe(false);
   });
 });

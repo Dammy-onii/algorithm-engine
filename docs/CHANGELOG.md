@@ -5,6 +5,71 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-07-26 — Detailed walkthrough and global interview-link reset
+
+- Rebuilt the challenge walkthrough as a responsive, full workspace guide with
+  clickable step navigation, progress, independent scrolling, light/dark
+  styling, concrete interface locations, world-specific facts/actions, safe
+  rule examples, warnings, and a separate interview-submission explanation.
+- Expanded onboarding from four short paragraphs to the complete workspace map,
+  task-reading, intelligence-layer, tick-execution, visible-run, debugging, and
+  hidden-evaluation workflow. Escape, close, skip, back, direct step selection,
+  and reopen-through-Guide are supported.
+- Cleared all previously issued interview links by moving signed assignments to
+  revocation generation/token version 3 and intentionally rejecting versions 1
+  and 2.
+- Retired predictable `/interview/[challengeId]` sharing because those URLs
+  could never be revoked; the legacy route now always returns 404.
+- Consolidated both single-challenge and multi-challenge sharing through
+  `POST /api/interview/assignments` and signed `/i/[assignmentId]` URLs.
+
+## 2026-07-26 — Finance hold safety, live lanes, and challenge walkthrough
+
+- Prevented an unconditional Finance `hold` policy from appearing successful
+  after timing out every payment: an all-terminal run with zero successful
+  transfers now resolves as `stuck`.
+- Added regressions for queued timeout handling and the Peak Hour hold-only
+  exploit while preserving `allProcessed` as the terminal-state metric used by
+  timeout-tolerant objectives.
+- Recorded every Finance policy decision, including holds and declines, so the
+  AI router reflects what the program is doing on the current run.
+- Made provider lanes visibly live: available is green, saturated is amber,
+  offline is red, and the most recently routed lane is blue. Success rate,
+  effective latency, active work, capacity, and health update with the runtime.
+- Replaced ambiguous “Queue cleared” and raw score output with explicit
+  successful/exception outcomes, status chips, and a two-decimal **penalty
+  score — lower is better** label.
+- Replaced the global one-line onboarding banner with a reusable guided
+  walkthrough covering the brief, authoring, Apply & Run, diagnostics, and
+  interview Submit. A persistent **Guide** action reopens it on any challenge.
+
+## 2026-07-26 — Interview challenge workspace layout parity
+
+- Made selected shared interview problems use the normal challenge Studio
+  frame, two-panel workspace, and header problem-list interaction.
+- Replaced the interview-stage badge with an **Interview problems** trigger in
+  the same position as the normal **Problem list** trigger.
+- Removed the extra interview notice banner that changed the challenge
+  workspace's vertical layout.
+- Added an interview-only drawer showing assignment details, link access,
+  evaluation and submission information, and only the assigned problems.
+  Normal world filters, curriculum data, and unrelated levels remain excluded.
+
+## 2026-07-26 — Interview assignment directory and nested problem routes
+
+- Changed compact shared links to open an interview-only directory listing
+  every assigned challenge instead of immediately entering the first problem.
+- Added an interview sidebar containing only assignment details, link access,
+  evaluation coverage, and the assigned problem list; normal world filters,
+  curriculum details, unrelated challenges, and Lab remain absent.
+- Added `/i/[assignmentId]/[challengeId]` for entering a selected assigned
+  problem and verifying that it belongs to the signed assignment.
+- Updated in-workspace assignment navigation and next-problem actions to use the
+  nested routes. Legacy `?problem=n` links redirect to the corresponding route.
+- Documented the current link lifetime: compact links have no scheduled expiry
+  and remain valid until the signing secret or referenced registry content
+  changes.
+
 ## 2026-07-26 — All published levels available in interview assignments
 
 - Expanded the world-page assignment selector from only scored Finance/Parking

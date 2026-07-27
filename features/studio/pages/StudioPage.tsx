@@ -46,11 +46,11 @@ import { WorldRenderer } from "@/features/simulation/components/renderers/WorldR
 import { AuthoringPanel } from "@/features/studio/components/AuthoringPanel";
 import { ResultsPanel } from "@/features/studio/components/ResultsPanel";
 import { InterviewResultsPanel } from "@/features/studio/components/InterviewResultsPanel";
+import { ChallengeWalkthrough } from "@/features/studio/components/ChallengeWalkthrough";
 import {
-  InterviewStageNotice,
-  interviewAssignmentProblemPath,
+  InterviewProblemDrawer,
   type InterviewAssignmentContext,
-} from "@/features/studio/components/InterviewStageNotice";
+} from "@/features/studio/components/InterviewProblemDrawer";
 import { ShareInterviewLink } from "@/features/studio/components/ShareInterviewLink";
 import { TaskChecklist } from "@/features/studio/components/TaskChecklist";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
@@ -64,6 +64,7 @@ import {
   saveBrain,
   scaffoldBrainFor,
 } from "@/features/studio/persistence";
+import { interviewAssignmentProblemPath } from "@/lib/interview/assignmentRoutes";
 
 interface StudioPageProps {
   packId: string;
@@ -105,7 +106,7 @@ export function StudioPage({
     useState<ObjectiveResult[] | null>(null);
   const [justLearned, setJustLearned] = useState<Concept | null>(null);
   const [attempts, setAttempts] = useState(0);
-  const [onboarded, setOnboarded] = useState(true);
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [problemListOpen, setProblemListOpen] = useState(false);
   const [problemSearch, setProblemSearch] = useState("");
   const [submissionReport, setSubmissionReport] =
@@ -123,7 +124,9 @@ export function StudioPage({
     interviewAssignment.currentIndex < interviewAssignment.challengeIds.length - 1
       ? interviewAssignmentProblemPath(
           interviewAssignment.id,
-          interviewAssignment.currentIndex + 1,
+          interviewAssignment.challengeIds[
+            interviewAssignment.currentIndex + 1
+          ],
         )
       : undefined;
 
@@ -134,8 +137,10 @@ export function StudioPage({
     if (stored) setBrain(stored);
     if (completed.size) setCompletedIds(completed);
     try {
-      if (localStorage.getItem("ae-onboarded") !== "true") {
-        setOnboarded(false);
+      if (
+        localStorage.getItem("ae-challenge-walkthrough-v2") !== "complete"
+      ) {
+        setWalkthroughOpen(true);
       }
     } catch {
       // Keep the deterministic default when storage is unavailable.
@@ -150,10 +155,10 @@ export function StudioPage({
     return "session" in result ? result.session : null;
   }, [challenge]);
 
-  const dismissOnboarding = () => {
-    setOnboarded(true);
+  const finishWalkthrough = () => {
+    setWalkthroughOpen(false);
     try {
-      localStorage.setItem("ae-onboarded", "true");
+      localStorage.setItem("ae-challenge-walkthrough-v2", "complete");
     } catch {
       // Non-persistent dismissal is still valid.
     }
@@ -427,22 +432,16 @@ export function StudioPage({
               ←
             </Link>
           )}
-          {isInterviewWorkspace ? (
-            <span className="rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              Interview stage
+          <button
+            type="button"
+            onClick={() => setProblemListOpen(true)}
+            className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <ListIcon />
+            <span className="hidden text-sm font-semibold sm:inline">
+              {isInterviewWorkspace ? "Interview problems" : "Problem list"}
             </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setProblemListOpen(true)}
-              className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            >
-              <ListIcon />
-              <span className="hidden text-sm font-semibold sm:inline">
-                Problem list
-              </span>
-            </button>
-          )}
+          </button>
           {challenge.interviewEvaluation && (
             <>
               <button
@@ -526,38 +525,18 @@ export function StudioPage({
               Lab
             </Link>
           )}
+          <button
+            type="button"
+            onClick={() => setWalkthroughOpen(true)}
+            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:block"
+          >
+            Guide
+          </button>
           <ThemeToggle />
         </div>
       </header>
 
-      {isInterviewWorkspace && (
-        <InterviewStageNotice
-          challenge={challenge}
-          assignment={interviewAssignment}
-        />
-      )}
-
       <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 xl:overflow-hidden">
-        {!onboarded && (
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-[#1b1b1b]">
-            <div className="text-sm text-zinc-600 dark:text-zinc-300">
-              <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-                Welcome to the problem workspace
-              </div>
-              <p className="mt-1 leading-relaxed">
-                Author the agent on the left, then run and inspect the simulation
-                on the right.
-              </p>
-            </div>
-            <button
-              onClick={dismissOnboarding}
-              className="shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:border-zinc-600 dark:text-zinc-300"
-            >
-              Got it
-            </button>
-          </div>
-        )}
-
         {justLearned && (
           <div className="flex items-start justify-between gap-4 rounded-lg border border-zinc-900 bg-zinc-900 p-4 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900">
             <div>
@@ -606,7 +585,7 @@ export function StudioPage({
                 <span className="text-sm font-semibold">Simulation</span>
               </div>
               <span className="rounded-md bg-zinc-200/70 px-2 py-1 font-mono text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                {running ? "Running" : session?.sim.isDone ? "Complete" : "Paused"}
+                {simulationStatusLabel(running, session?.sim.status)}
               </span>
             </div>
             <div className="workspace-scrollbar min-h-0 flex-1 overflow-y-scroll p-4">
@@ -714,6 +693,14 @@ export function StudioPage({
           </section>
         </div>
       </div>
+      {isInterviewWorkspace && problemListOpen && (
+        <InterviewProblemDrawer
+          challenge={challenge}
+          packTitle={pack?.title ?? packId}
+          assignment={interviewAssignment}
+          onClose={() => setProblemListOpen(false)}
+        />
+      )}
       {!isInterviewWorkspace && problemListOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px]"
@@ -820,6 +807,14 @@ export function StudioPage({
           </aside>
         </div>
       )}
+      {walkthroughOpen && (
+        <ChallengeWalkthrough
+          challengeName={challenge.name}
+          packId={packId}
+          includesSubmission={Boolean(challenge.interviewEvaluation)}
+          onFinish={finishWalkthrough}
+        />
+      )}
     </main>
   );
 }
@@ -854,6 +849,17 @@ function ChallengeArrow({
       {direction === "previous" ? "‹" : "›"}
     </Link>
   );
+}
+
+function simulationStatusLabel(
+  running: boolean,
+  status?: "idle" | "running" | "reached" | "stuck" | "out-of-energy",
+) {
+  if (running) return "Running";
+  if (status === "reached") return "Complete";
+  if (status === "stuck") return "Stuck";
+  if (status === "out-of-energy") return "Out of energy";
+  return "Paused";
 }
 
 function difficultyLabel(difficulty: DifficultyBand) {

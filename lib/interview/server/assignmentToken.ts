@@ -7,8 +7,14 @@ import {
   type InterviewAssignment,
 } from "@/lib/interview/assignment";
 
-const TOKEN_VERSION = 2;
-const LEGACY_TOKEN_VERSION = 1;
+/**
+ * Version 3 is also the current global link-revocation generation.
+ *
+ * Versions 1 and 2 were deliberately retired on 2026-07-26 when all previously
+ * issued interview links were cleared. Supporting them here would silently
+ * reactivate those links.
+ */
+const TOKEN_VERSION = 3;
 const SIGNATURE_BYTES = 6;
 const MAX_ASSIGNMENT_PROBLEMS = 20;
 const PACK_CODES = ["maze", "warehouse", "finance", "parking"] as const;
@@ -44,7 +50,7 @@ export function createInterviewAssignmentId(challengeIds: string[]): string {
     );
   }
 
-  // v2 includes one stable world code because challenge numbers are unique only
+  // v3 includes one stable world code because challenge numbers are unique only
   // inside a world (Maze and Warehouse, for example, both use level number 6).
   const payload = Buffer.alloc(3 + challenges.length * 2);
   payload.writeUInt8(TOKEN_VERSION, 0);
@@ -92,30 +98,21 @@ export function resolveInterviewAssignment(
     return undefined;
   }
 
-  let challenges: Array<ChallengeData | undefined>;
-  if (version === LEGACY_TOKEN_VERSION) {
-    if (payload.length !== 2 + count * 2) return undefined;
-    challenges = Array.from({ length: count }, (_, index) => {
-      const number = payload.readUInt16BE(2 + index * 2);
-      return CHALLENGES.find(
-        (challenge) =>
-          challenge.number === number && challenge.interviewEvaluation,
-      );
-    });
-  } else if (version === TOKEN_VERSION) {
-    if (payload.length !== 3 + count * 2) return undefined;
-    const packId = PACK_CODES[payload.readUInt8(2)];
-    if (!packId) return undefined;
-    challenges = Array.from({ length: count }, (_, index) => {
+  if (version !== TOKEN_VERSION || payload.length !== 3 + count * 2) {
+    return undefined;
+  }
+  const packId = PACK_CODES[payload.readUInt8(2)];
+  if (!packId) return undefined;
+  const challenges: Array<ChallengeData | undefined> = Array.from(
+    { length: count },
+    (_, index) => {
       const number = payload.readUInt16BE(3 + index * 2);
       return CHALLENGES.find(
         (challenge) =>
           challenge.pack === packId && challenge.number === number,
       );
-    });
-  } else {
-    return undefined;
-  }
+    },
+  );
   if (challenges.some((challenge) => !challenge)) return undefined;
 
   try {

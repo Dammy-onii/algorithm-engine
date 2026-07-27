@@ -10,8 +10,9 @@ dedicated feature page component; there is no `view` enum or shared stateful she
 | `/` | none | World/pack picker |
 | `/[pack]` | Validate the pack | Filterable challenge-row directory with per-row difficulty |
 | `/[pack]/[challenge]` | Validate pack, challenge, and membership | Shareable Studio challenge |
-| `/interview/[challengeId]` | Validate an interview-enabled challenge id | Shared interview workspace backed by that challenge's existing visible world and hidden suite |
-| `/i/[assignmentId]` | Verify a signed compact same-world assignment and resolve its ordered published challenge references | Multi-problem interview workspace; hidden Submit appears only for stages with an evaluation contract |
+| `/interview/[challengeId]` | Legacy predictable link | Revoked; always returns 404 |
+| `/i/[assignmentId]` | Verify a signed compact same-world assignment and resolve its ordered published challenge references | Interview-only assignment directory |
+| `/i/[assignmentId]/[challengeId]` | Verify both the signed assignment and membership of the selected challenge | Interview Studio workspace; hidden Submit appears only for stages with an evaluation contract |
 | `/lab` | none | Raw JSON Engine Lab |
 | `/api/interview/assignments` | Validate a same-world problem selection and sign its canonical references | Compact assignment link |
 | `/api/interview/submit` | Validate the interview challenge and resolve its hidden suite | Streamed case results and final score |
@@ -27,7 +28,8 @@ app/
   [pack]/page.tsx                 validates pack, renders <ChallengeDirectoryPage />
   [pack]/[challenge]/page.tsx     validates membership, renders <StudioPage />
   interview/[challengeId]/page.tsx validates interview stage, renders <StudioPage />
-  i/[assignmentId]/page.tsx       verifies assignment, renders selected <StudioPage />
+  i/[assignmentId]/page.tsx       verifies assignment, renders interview directory
+  i/[assignmentId]/[challengeId]/page.tsx verifies membership, renders <StudioPage />
   lab/page.tsx                    <LabPageView />
   api/interview/assignments/route.ts compact signed assignment creation
   api/interview/submit/route.ts   hidden Finance/Parking evaluation
@@ -69,9 +71,14 @@ The URL is the source of truth for the selected pack and challenge.
 - The header links back to `/`; the Lab button goes to `/lab`.
 - Studio is keyed by challenge route, resetting its transient engine and interval
   while restoring the persisted brain by challenge ID.
-- Multi-problem interviews use `/i/[assignmentId]`; `?problem=n` selects a
-  canonical assignment position. Each assignment/problem pair receives an
-  isolated local brain key.
+- Multi-problem interviews use `/i/[assignmentId]` as their directory and
+  `/i/[assignmentId]/[challengeId]` for a selected problem. Legacy
+  `?problem=n` links redirect to the matching nested route. Each
+  assignment/problem pair receives an isolated local brain key.
+- A selected interview problem keeps the normal challenge Studio layout. The
+  usual problem-list control opens an interview-specific drawer containing
+  assignment details and only the signed problem set, without normal world
+  catalogue content.
 
 `router.push`, rather than `replace`, is intentional: selecting a level should add
 history so browser back/forward behaves as a learner expects. This corrects the

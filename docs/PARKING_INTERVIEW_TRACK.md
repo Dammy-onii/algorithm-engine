@@ -7,7 +7,7 @@ control policy for an automated parking facility. Parking supplies a concrete,
 visual environment for evaluating scheduling, state consistency, back-pressure,
 fairness, failure recovery, and algorithmic generalization.
 
-Each stage is directly shareable as `/interview/[challengeId]`; no separate
+Each stage is shareable through a signed `/i/[assignmentId]`; no separate
 assignment content is created.
 
 Every Parking interview stage begins with an empty rule set. Available primitive

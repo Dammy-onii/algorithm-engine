@@ -236,6 +236,14 @@ export interface FinanceRuntime {
   tickDurationMs: number;
   retryBackoffTicks: number;
   maxTicks: number;
+  /** Most recent policy decision, including non-terminal hold actions. */
+  lastDecision?: {
+    tick: number;
+    transactionId: string;
+    action: "route" | "hold" | "decline";
+    providerId?: string;
+    outcome: TxStatus | "held";
+  };
   /** LCG state for reproducible outcome draws. */
   rng: number;
 }
@@ -545,7 +553,17 @@ function applyFinanceAction(world: World, action: Action): boolean {
 
   const slot = ROUTE_ACTION[action.type];
   if (slot) {
+    const tx = currentTx(world);
     route(world, slot);
+    if (tx) {
+      runtime.lastDecision = {
+        tick: world.tick,
+        transactionId: tx.id,
+        action: "route",
+        providerId: slot,
+        outcome: tx.status,
+      };
+    }
     return true;
   }
   if (action.type === "decline") {
@@ -554,15 +572,29 @@ function applyFinanceAction(world: World, action: Action): boolean {
       tx.status = "declined";
       tx.completedAt = world.tick;
       if (isPriority(tx)) runtime.priorityFailures += 1;
+      runtime.lastDecision = {
+        tick: world.tick,
+        transactionId: tx.id,
+        action: "decline",
+        outcome: "declined",
+      };
     }
     return true;
   }
   if (action.type === "hold") {
     const tx = currentTx(world);
-    if (tx && runtime.processingMode === "instant") {
-      tx.waited += 1;
-      if (runtime.expireAfter > 0 && tx.waited > runtime.expireAfter) {
-        tx.status = "lost";
+    if (tx) {
+      runtime.lastDecision = {
+        tick: world.tick,
+        transactionId: tx.id,
+        action: "hold",
+        outcome: "held",
+      };
+      if (runtime.processingMode === "instant") {
+        tx.waited += 1;
+        if (runtime.expireAfter > 0 && tx.waited > runtime.expireAfter) {
+          tx.status = "lost";
+        }
       }
     }
     return true;
@@ -774,7 +806,13 @@ export const financeModule: WorldModule = {
   applyAction: applyFinanceAction,
   advanceTick: advanceFinanceTick,
   resolveStatus(world: World): SimStatus | null {
-    if (allProcessed(world)) return "reached";
+    if (allProcessed(world)) {
+      // A queue can become terminal because every payment expired or was
+      // rejected. That is operationally finished, but it is not a successful
+      // run. In particular, an unconditional hold policy must never appear to
+      // solve a payment-routing challenge by timing out the entire queue.
+      return countByStatus(world, "succeeded") > 0 ? "reached" : "stuck";
+    }
     // Safety net: a brain that never routes must still terminate. Remaining
     // payments are marked lost and the run ends as "stuck" (objectives fail).
     if (world.tick >= (financeRuntime(world)?.maxTicks ?? Infinity)) {

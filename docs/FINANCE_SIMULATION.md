@@ -30,7 +30,7 @@ changes is what each step means.
 | One **tick** | One routing decision (kept as the universal step counter). |
 | **Observation** | The payment at the head of the queue + every provider's live health. |
 | **Action** | `routeToA` / `routeToB` / `routeToC` / `hold` / `decline`. |
-| **Completion** (`resolveStatus`) | The queue is drained (`allProcessed`). |
+| **Completion** (`resolveStatus`) | Every payment is terminal; a run with no successful payment ends `stuck`, not `reached`. |
 | **Grading** (objectives) | Domain metrics: `totalCost`, `failed`, `lost`, `succeeded`. |
 
 Ticks are deliberately retained (they count algorithmic work — number of
@@ -58,10 +58,19 @@ Incoming queue → AI router → provider lanes
 
 - **Incoming queue** shows the waiting transfers, with the head of the queue
   visually distinguished.
-- **AI router** identifies the transfer currently being evaluated and the latest
-  completed routing decision.
-- **Provider lanes** show each provider's live online/offline state and how many
-  transfers it has handled; the lane used by the latest decision is highlighted.
+- **AI router** identifies the transfer currently being evaluated and the
+  latest policy decision, including `hold` and `decline` rather than only
+  completed routes.
+- **Provider lanes** recalculate every tick. Available lanes are green, saturated
+  lanes are amber, and offline lanes are red. Each lane shows live success rate,
+  effective latency, active work, and remaining capacity; the lane used by the
+  latest route is highlighted in blue.
+- **Outcome chips** distinguish waiting, in-flight, succeeded, failed, declined,
+  and timed-out payments. A terminal queue with exceptions is never labelled
+  “cleared successfully.”
+- The interview-grade total is explicitly labelled **penalty score — lower is
+  better** and formatted to two decimals, so a large positive penalty cannot be
+  mistaken for a good score.
 This view is derived solely from the Finance runtime. It does not calculate or
 display a “best provider” label; the cards show facts and the learner's policy
 selects the route.
@@ -78,6 +87,12 @@ edits. It owns:
   seeded draw against the provider's reliability; add the failure penalty on a
   miss), `decline`, `hold` (waits; can expire a payment when `expireAfter` is
   set).
+- **Hold safety**: holding is a legitimate temporary decision when capacity is
+  expected to recover, but an unconditional hold policy eventually times
+  payments out. If all payments become terminal without a single success, the
+  world resolves as `stuck`. `allProcessed` still means that all items reached a
+  terminal state so objectives can grade allowed timeout rates separately; it
+  does not by itself mean the challenge passed.
 - **Health over time**: each provider may carry a `schedule` of deterministic
   events (`{ atTick, online?, successRate?, latency? }`), so a provider can go
   offline or degrade partway through a run.

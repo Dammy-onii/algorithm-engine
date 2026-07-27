@@ -4,7 +4,7 @@ The Finance interview track turns payment routing from a fixed tutorial into a
 repeatable systems-design coding exercise for banks, fintechs, technical
 interviews, hiring events, and scored hackathons.
 
-Each stage is directly shareable as `/interview/[challengeId]`; the challenge
+Each stage is shareable through a signed `/i/[assignmentId]`; the challenge
 id resolves both its existing visible world and its server-only suite.
 
 The candidate does not receive a single static input/output pair. They author a

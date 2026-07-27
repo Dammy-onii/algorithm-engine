@@ -108,8 +108,12 @@ Shipped:
    2026-07-26 problem-workspace redesign removed that duplicate block. The
    Problem list header now contains only the pack-scoped solved fraction and
    world name; individual rows carry solved/unsolved and lock state.
-5. **First-run onboarding** — a dismissible one-time banner (`ae-onboarded`)
-   explaining the three regions.
+5. **Challenge walkthrough** —
+   [ChallengeWalkthrough.tsx](../features/studio/components/ChallengeWalkthrough.tsx)
+   replaces the old one-line first-run banner. The versioned walkthrough
+   explains the brief, authoring layers, visible Apply & Run loop, live
+   diagnostics, and the separate hidden Submit step when present. It can always
+   be reopened through **Guide** in the challenge header.
 6. **"Current intelligence" collapsed** — moved below the editor into a
    collapsible so it no longer competes with the task for attention.
 7. **Grade taxonomy** — `taxonomyFor` in

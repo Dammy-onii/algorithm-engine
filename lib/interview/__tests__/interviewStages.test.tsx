@@ -2,33 +2,19 @@ import { describe, expect, it } from "vitest";
 
 import InterviewStagePage from "@/app/interview/[challengeId]/page";
 import { CHALLENGES } from "@/content/challenges";
-import { StudioPage } from "@/features/studio/pages/StudioPage";
-import { interviewSharePath } from "@/features/studio/components/ShareInterviewLink";
 import { financeInterviewSuite } from "@/lib/interview/server/financeSuites";
 import { parkingInterviewSuite } from "@/lib/interview/server/parkingSuites";
 
 describe("shareable interview stages", () => {
-  it("generates the dedicated interview URL from the challenge id", () => {
-    expect(interviewSharePath("parking-interview-operations")).toBe(
-      "/interview/parking-interview-operations",
-    );
-    expect(interviewSharePath("stage with spaces")).toBe(
-      "/interview/stage%20with%20spaces",
-    );
-  });
-
-  it("resolves the route directly from the existing challenge id", async () => {
-    const page = await InterviewStagePage({
-      params: Promise.resolve({
-        challengeId: "parking-interview-operations",
+  it("keeps every predictable legacy challenge URL revoked", async () => {
+    await expect(
+      InterviewStagePage({
+        params: Promise.resolve({
+          challengeId: "parking-interview-operations",
+        }),
       }),
-    });
-
-    expect(page.type).toBe(StudioPage);
-    expect(page.props).toMatchObject({
-      packId: "parking",
-      challengeId: "parking-interview-operations",
-      workspaceMode: "interview",
+    ).rejects.toMatchObject({
+      digest: "NEXT_HTTP_ERROR_FALLBACK;404",
     });
   });
 

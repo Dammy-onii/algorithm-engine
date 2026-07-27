@@ -2,39 +2,30 @@
 
 ## Current models
 
-Interview sharing supports one scored interview challenge or an ordered set of
-any published challenges from one world. Neither mode copies challenge or
-hidden-case content.
+Interview sharing supports one challenge or an ordered set of published
+challenges from one world through the same signed assignment system. Neither
+mode copies challenge or hidden-case content.
 
 ```text
-/interview/[challengeId] ───────────── one interview challenge
-
 /i/[assignmentId] ──verify token──┐
                                   ├─► ordered ChallengeData references
 POST /api/interview/assignments ──┘
+
+/i/[assignmentId]/[challengeId] ───── selected assignment problem
 
 Each ChallengeData
   ├── worldKey ─────────────────────── visible Apply & Run case
   └── interviewEvaluation?.suiteId ─── server-only Submit cases, when authored
 ```
 
-Examples:
-
-```text
-/interview/finance-interview-routing
-/interview/finance-peak-hour-switch
-/interview/finance-production-orchestrator
-/interview/parking-interview-controller
-/interview/parking-interview-operations
-/interview/parking-interview-orchestrator
-```
-
 The standard challenge workspace contains **Share interview**. It constructs the
-absolute `/interview/[challengeId]` URL, attempts to copy it, and always displays
-the generated URL in a selectable field. The interview workspace offers the
-same control as **Copy link**. A recipient can author and run the visible stage,
-then submit the same compiled visual policy to the challenge's existing hidden
-suite.
+assignment through `POST /api/interview/assignments`, attempts to copy the
+resulting absolute `/i/[assignmentId]` URL, and always displays it in a
+selectable field. A single challenge is simply a one-selection assignment
+(plus a required interview tutorial where that world's ordering contract
+requires one). The interview workspace offers the same control as **Copy
+link**. A recipient can author and run the visible stage, then submit the same
+compiled visual policy to the challenge's existing hidden suite.
 
 Every Maze, Warehouse, Finance, and Parking world page contains an **Interview
 assignment** selector listing all published levels in that world. The
@@ -50,10 +41,21 @@ their published levels may form the assignment. The normalized order is:
 3. ascending taxonomy grade;
 4. ascending authored challenge number.
 
-The shared assignment notice shows `Problem n of total` and links to every
-problem, including ordinary levels without a hidden suite. Its query string
-(`?problem=2`) selects only the current position; it does not redefine the
-assignment.
+Opening `/i/[assignmentId]` renders an interview-only directory. Its main
+column lists the assigned challenge cards; its sidebar contains only interview
+details, evaluation coverage, link access, and navigation for the assigned
+problems. It does not expose normal world filters, curriculum details, Lab, or
+unrelated challenges.
+
+Selecting a card opens
+`/i/[assignmentId]/[challengeId]`. The selected problem keeps the same Studio
+frame, two-panel workspace, header placement, and problem-drawer interaction as
+a normal challenge. Its **Interview problems** drawer substitutes interview
+data for catalogue data: it shows the current position, link access, evaluation
+coverage, submission contract, and only the problems included in the signed
+assignment. It does not show unrelated world levels, normal curriculum status,
+or world search. Old links using `?problem=2` redirect to the equivalent nested
+problem route.
 
 An ordinary assigned level supports its visible **Apply & Run** objectives but
 does not display **Submit**, because it has no `interviewEvaluation` contract.
@@ -73,8 +75,9 @@ globally: Maze and Warehouse both publish a level numbered 6. A truncated HMAC
 signature prevents the sequence from being modified without detection. The
 server resolves the world/number references back to the current registry.
 
-The resolver remains compatible with version-1 links previously generated for
-interview-enabled Finance and Parking stages.
+Token version 3 is the current global link generation. Versions 1 and 2 were
+retired on 2026-07-26 to clear all previously issued interview links and are
+intentionally rejected by the resolver.
 
 The token contains no problem statement, visible scenario, brain, hidden case
 ID, fixture input, score diagnostic, or unpublished guardrail. There is no
@@ -85,11 +88,26 @@ Local development uses a deterministic fallback so links survive dev-server
 restarts. Changing the configured secret invalidates previously generated
 multi-problem links.
 
+### Link lifetime
+
+The current compact assignment token contains no creation time or expiry time.
+It therefore has **no scheduled expiry**. A link remains valid until one of the
+following happens:
+
+- `INTERVIEW_LINK_SECRET` changes;
+- a referenced challenge is removed or its world/number reference changes;
+- support for that token version is deliberately removed.
+
+Only version-3 tokens are currently supported. Adding a company-defined deadline
+later requires either an expiry timestamp inside a newly versioned signed token
+or a persisted assignment record that the server can revoke.
+
 ## Validation
 
-`/interview/[challengeId]` returns the application 404 page when the id does not
-exist or the challenge has no `interviewEvaluation`. Ordinary tutorials cannot
-therefore be presented as scored interviews without an evaluation contract.
+`/interview/[challengeId]` is a revoked legacy route and always returns the
+application 404 page. Predictable challenge-ID links could not participate in a
+global revocation, so new single-problem sharing also uses signed `/i/...`
+assignments.
 
 `/i/[assignmentId]` verifies the signature, token structure, referenced world
 and challenge numbers, one-world constraint, optional required tutorial
@@ -122,8 +140,12 @@ never duplicate challenge or fixture definitions.
 
 ## Implementation
 
-- route: `app/interview/[challengeId]/page.tsx`
+- revoked legacy route: `app/interview/[challengeId]/page.tsx`
 - compact assignment route: `app/i/[assignmentId]/page.tsx`
+- selected assignment problem route:
+  `app/i/[assignmentId]/[challengeId]/page.tsx`
+- interview-only directory:
+  `features/interview/pages/InterviewAssignmentDirectoryPage.tsx`
 - assignment creation route: `app/api/interview/assignments/route.ts`
 - reusable ordering policy: `lib/interview/assignmentOrder.ts`
 - selection validation: `lib/interview/assignment.ts`
@@ -131,8 +153,8 @@ never duplicate challenge or fixture definitions.
 - world-page selection UI:
   `features/catalogue/components/InterviewAssignmentBuilder.tsx`
 - workspace mode: `features/studio/pages/StudioPage.tsx`
-- interview notice:
-  `features/studio/components/InterviewStageNotice.tsx`
+- interview-only workspace drawer:
+  `features/studio/components/InterviewProblemDrawer.tsx`
 - generated-link control:
   `features/studio/components/ShareInterviewLink.tsx`
 - challenge registry: `lib/content/registry.ts`

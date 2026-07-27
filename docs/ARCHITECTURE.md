@@ -75,12 +75,15 @@ The detailed controller lifecycle, current browser compiler, Rules/Code
 interaction, language-neutral process protocol, and hidden-test placement are
 documented in [CODE_MODE.md](./CODE_MODE.md).
 
-World directory pages can combine several interview-enabled challenges into one
-short `/i/[assignmentId]` link. The assignment ID is a signed stateless token of
+World directory pages and single-challenge Share actions both create a short
+`/i/[assignmentId]` link. The assignment ID is a signed stateless token of
 registry references—not a copied challenge, fixture set, or file-backed
 assignment. Normalization always inserts the world's marked interview tutorial,
 then sorts by ascending difficulty, taxonomy grade, and challenge number. Each
 problem still submits independently to its own `interviewEvaluation.suiteId`.
+The current token revocation generation is version 3; versions 1 and 2 are
+rejected. Predictable `/interview/[challengeId]` links are retired because they
+cannot be individually or globally revoked.
 
 ---
 
@@ -470,14 +473,17 @@ The App Router owns what screen is displayed:
 /finance                validated Finance challenge-row directory
 /parking                validated Parking challenge-row directory
 /[pack]/[challenge]     one validated, shareable Studio challenge
-/interview/[challengeId] interview-enabled challenge; visible world + hidden suite by id
+/i/[assignmentId]       signed interview directory
+/i/[assignmentId]/[challengeId] selected signed interview problem
+/interview/[challengeId] revoked legacy route; always 404
 /lab                    raw JSON engine harness
 ```
 
 Thin server route pages validate the `pack` with `findPack` and the challenge
 with strict `getChallenge`; a challenge must also belong to the requested pack.
-The interview route additionally requires `interviewEvaluation` and references
-the challenge directly rather than copying it into an assignment record. Invalid
+The signed interview routes verify the assignment token and selected challenge
+membership, then reference registry challenges rather than copying them into an
+assignment record. Invalid
 paths call `notFound()`.
 
 Home and challenge-directory page UI are server-renderable and navigate with
