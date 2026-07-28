@@ -5,6 +5,56 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-07-28 — Global interview-link reset
+
+- Cleared every previously issued signed interview assignment by advancing the
+  global token generation from version 3 to version 4.
+- Versions 1–3 are now rejected. Only links generated after this reset can open
+  an interview assignment.
+- Added a regression using a previously valid version-3 assignment to prevent
+  an older generation from being re-enabled accidentally.
+
+## 2026-07-28 — Real-time Finance provider telemetry
+
+- Finance now records attempts, completions, successes, failures, and measured
+  latency independently for every provider.
+- Provider lanes and cards update on every simulation tick with live status,
+  observed success rate, current congestion-adjusted latency, run-average
+  latency, active work, free capacity, utilization, health, and settled attempt
+  counts.
+- Added a live operations strip for queue depth, in-flight work, overall success
+  rate, and throughput. Online lanes remain green, busy lanes amber, and offline
+  lanes red.
+- Exposed the measured values as Finance facts so both visual policies and
+  Code mode can react to `observedSuccessRateX`, `averageLatencyX`,
+  `utilizationX`, `attemptsX`, and `completedX`.
+
+## 2026-07-28 — Active-rule highlight, Code-mode reference, starter boilerplate
+
+- Studio now **highlights the rule card firing on the current tick** (soft amber)
+  live during a run, so the decision flow is visible as it advances.
+- Code tab gained a self-documenting reference: what you can read
+  (`observation.*` base senses plus this world's `observation.domain.*` facts with
+  labels) and the exact action strings you may return.
+- Code tab opens with an editable **starter skeleton** (class + `decide` stub with
+  a safe default return) per world, rather than a blank editor. It fills only when
+  empty; clearing it returns to the visual rules.
+- A `THEN` per-rule sequencing directive was prototyped and then reverted;
+  sequencing remains multi-step bricks composed in the Functions tab.
+
+## 2026-07-28 — Clearer challenge statements and learner flow
+
+- Rewrote the published Maze, Warehouse, Finance, and Parking challenge copy in
+  a consistent plain-language structure: scenario, task, learning goal, current
+  scaffold behaviour, and next action.
+- Added blank-line paragraph support to authored challenge prose so longer
+  statements no longer render as dense blocks.
+- Added labelled **Scenario**, **Problem statement**, and **What this teaches**
+  sections to the shared challenge brief, plus a short edit → run → inspect
+  instruction visible on every level.
+- Task checklists now show their authored step guidance beside each item, making
+  the live flow useful before and during a run.
+
 ## 2026-07-26 — Detailed walkthrough and global interview-link reset
 
 - Rebuilt the challenge walkthrough as a responsive, full workspace guide with

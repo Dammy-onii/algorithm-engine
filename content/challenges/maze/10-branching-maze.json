@@ -6,16 +6,18 @@
   "difficulty": 2,
   "stage": "easy",
   "worldKey": "maze-proper",
-  "tagline": "Read the walls, recover from dead ends, and find the exit.",
-  "narrative": "This is a maze, not a corridor with decorative walls. The exit lies beyond several junctions, and plausible-looking routes end abruptly. A robot that blindly repeats a turn will spend its run trapped in a branch. Build a small set of rules that responds to the walls it can sense and keeps making progress through the maze.",
-  "objective": "Reach the exit of the 11×11 Branching Maze, then hold on the goal for 3 ticks.",
-  "learningObjective": "Applying ordered rules and wall observations to navigate a branching layout with genuine dead ends.",
-  "intelligenceExplanation": "The robot has the navigation primitives but no strategy. It needs a first arrival rule, a rule for a blocked path, and a safe fallback for open space. The order matters: safety and arrival decisions must appear before ordinary movement. You may compose a reusable movement brick if it helps keep the rule set clear.",
-  "hint": "Start with WHEN atGoal → DO hold. Then decide what should happen when wallAhead is true before adding your forward-movement fallback. Test at each junction; a rule that works in a corridor may loop in a dead end.",
+  "tagline": "Follow an ordered, wall-aware policy through junctions and dead ends.",
+  "narrative": "The robot starts at the entrance of a real 11×11 maze. The route to the exit contains junctions, misleading branches, and dead ends, so a rule that only walks forward or always turns the same way can loop.\n\nThe robot cannot see the complete map. At each tick it receives only local observations relative to its current facing: whether there is a wall ahead, to the left, or to the right, and whether it is on the goal. Your job is to turn those observations into a repeatable navigation policy.",
+  "objective": "Build and run a rule policy that reaches the goal in the 11×11 Branching Maze, then keeps the robot on the goal for 3 consecutive ticks. The policy must handle open junctions, blocked corridors, and dead ends without trying to move through a wall.",
+  "learningObjective": "Learn a deterministic control loop: observe the current maze, evaluate rules from top to bottom, choose the first matching safe action, advance one primitive action, and evaluate the new observation on the next tick.",
+  "intelligenceExplanation": "The starting brain contains only the four navigation primitives — step, pivot-left, pivot-right, and hold — plus one exploration state. It has no rules, so it waits.\n\nAdd the decision flow yourself. Protect arrival first with an atGoal → hold rule. Then describe the route policy from the most specific case to the broadest fallback: prefer an open side at a junction, continue when the front is open, turn toward an available side when the route is blocked, and recover from a dead end when all three sensed directions are walls. A composed turn-and-step function is optional, but remember that its turn and move are committed on separate ticks and the move is checked against a fresh observation.",
+  "hint": "Start by writing down the cases your policy must distinguish: already at the goal, an open preferred side, an open front, another open side, and no open side. Put the arrival case first and the unconditional fallback last. At every tick the engine uses the first rule whose condition is true and whose next action is safe; the numeric field on a card does not choose the winner.",
   "hints": [
-    "Protect the goal first: an atGoal / hold rule at the top stops the robot from walking away.",
-    "A blocked route must be handled before the generic movement rule; use wallAhead and a pivot.",
-    "Try a consistent wall-following policy: take an open side when possible, otherwise go forward, otherwise turn away from the wall. Keep those rules in that order."
+    "Read wallAhead, wallLeft, and wallRight relative to the robot's current facing. A 'right' opening is not a fixed map direction.",
+    "Protect the goal first: WHEN atGoal → DO hold. The maze confirms success only after the robot remains on the goal for three ticks.",
+    "Separate decisions from actions: a rule chooses what should happen now; a function can package a turn followed by a step, one primitive per tick.",
+    "Use a consistent ordered policy for junctions and corridors. Specific cases belong above general cases, and an always fallback belongs last.",
+    "If the robot reaches a dead end, all three local wall facts are true. Turn around or otherwise choose an available escape route, then let the next tick observe the new direction."
   ],
   "taxonomy": {
     "domain": "Maze",
@@ -27,41 +29,107 @@
   "context": "Several plausible routes terminate in dead ends, so corridor-only rules are not enough.",
   "steps": [
     {
+      "id": "read",
+      "label": "Read the three relative wall facts and choose a policy",
+      "hint": "The robot sees only wallAhead, wallLeft, and wallRight at the current tick; it does not receive the complete map."
+    },
+    {
+      "id": "arrival",
+      "label": "Protect the goal with an atGoal → hold rule",
+      "hint": "Arrival is a separate case: holding is what lets the maze confirm the goal instead of walking away from it."
+    },
+    {
       "id": "policy",
-      "label": "Handle side openings, clear paths, and blocked routes"
+      "label": "Order junction, corridor, and dead-end fallbacks",
+      "hint": "Place specific route cases above broad movement rules, and keep the unconditional fallback at the bottom."
     },
     {
       "id": "reach",
-      "label": "Reach the maze exit and settle there",
+      "label": "Reach the exit and hold there for 3 ticks",
+      "hint": "Apply & Run starts a fresh run. Use Step and the decision pipeline to compare the observed walls, matched rule, and returned action.",
       "check": "reached"
     }
   ],
-  "availableBricks": ["step", "pivot-left", "pivot-right", "hold"],
-  "availableConditions": ["wallAhead", "wallLeft", "wallRight", "goalVisible", "goalAhead", "atGoal", "visitedAhead", "energy", "always"],
+  "availableBricks": [
+    "step",
+    "pivot-left",
+    "pivot-right",
+    "hold"
+  ],
+  "availableConditions": [
+    "wallAhead",
+    "wallLeft",
+    "wallRight",
+    "atGoal",
+    "always"
+  ],
   "functionsUnlocked": true,
   "statesUnlocked": false,
   "scaffoldBrain": {
     "goals": {
-      "goals": [{ "id": "reach-goal", "priority": 10, "description": "Reach the maze exit." }]
+      "goals": [
+        {
+          "id": "reach-goal",
+          "priority": 10,
+          "description": "Reach the maze exit."
+        }
+      ]
     },
     "states": {
       "initial": "explore",
-      "states": [{ "id": "explore", "description": "Navigate the branching maze." }]
+      "states": [
+        {
+          "id": "explore",
+          "description": "Navigate the branching maze."
+        }
+      ]
     },
-    "rules": { "rules": [] },
+    "rules": {
+      "rules": []
+    },
     "functions": {
       "functions": [
-        { "id": "step", "action": "moveForward", "description": "Engine primitive: move one tile forward." },
-        { "id": "pivot-left", "action": "turnLeft", "description": "Engine primitive: turn 90° counter-clockwise." },
-        { "id": "pivot-right", "action": "turnRight", "description": "Engine primitive: turn 90° clockwise." },
-        { "id": "hold", "action": "wait", "description": "Engine primitive: do nothing this tick." }
+        {
+          "id": "step",
+          "action": "moveForward",
+          "description": "Engine primitive: move one tile forward."
+        },
+        {
+          "id": "pivot-left",
+          "action": "turnLeft",
+          "description": "Engine primitive: turn 90° counter-clockwise."
+        },
+        {
+          "id": "pivot-right",
+          "action": "turnRight",
+          "description": "Engine primitive: turn 90° clockwise."
+        },
+        {
+          "id": "hold",
+          "action": "wait",
+          "description": "Engine primitive: do nothing this tick."
+        }
       ]
     },
     "memory": {}
   },
   "objectives": [
-    { "id": "reach", "label": "Reach the maze exit", "check": "reached" },
-    { "id": "compact", "label": "Solve it with five rules or fewer", "check": "reached && rules <= 5", "bonus": true },
-    { "id": "efficient", "label": "Finish within 80 ticks", "check": "reached && ticks <= 80", "bonus": true }
+    {
+      "id": "reach",
+      "label": "Reach the maze exit",
+      "check": "reached"
+    },
+    {
+      "id": "compact",
+      "label": "Solve it with five rules or fewer",
+      "check": "reached && rules <= 5",
+      "bonus": true
+    },
+    {
+      "id": "efficient",
+      "label": "Finish within 80 ticks",
+      "check": "reached && ticks <= 80",
+      "bonus": true
+    }
   ]
 }

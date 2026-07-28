@@ -78,14 +78,16 @@ describe("multi-problem interview assignments", () => {
     );
   });
 
-  it("rejects every assignment link from the cleared v1/v2 generations", () => {
+  it("rejects every assignment link from the cleared v1–v3 generations", () => {
     // Previously issued v2 link for straight-line + branching-maze.
     expect(
       resolveInterviewAssignment("AgIAAAEABhnq0VOyiw"),
     ).toBeUndefined();
+    // Previously issued v3 link for straight-line.
+    expect(resolveInterviewAssignment("AwEAAAFdSppRv5U")).toBeUndefined();
 
     const current = createInterviewAssignmentId(["straight-line"]);
-    expect(Buffer.from(current, "base64url").readUInt8(0)).toBe(3);
+    expect(Buffer.from(current, "base64url").readUInt8(0)).toBe(4);
   });
 
   it("keeps same-number levels distinct by encoding their world", () => {

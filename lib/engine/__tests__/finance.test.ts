@@ -213,6 +213,61 @@ describe("finance — payment routing", () => {
     expect(providerStateAt(runtime, "A", 4)?.online).toBe(false);
   });
 
+  it("updates provider telemetry as queued work starts and completes", () => {
+    const simulation = sim(
+      {
+        processingMode: "queued",
+        tickDurationMs: 1000,
+        providers: [
+          {
+            id: "A",
+            name: "A",
+            fee: 0.1,
+            successRate: 100,
+            latency: 2000,
+            online: true,
+            concurrentCapacity: 2,
+            congestionLatencyPerItem: 500,
+          },
+        ],
+        transactions: [{ id: "t1", amount: 100 }],
+      },
+      routeABrain,
+    );
+
+    expect(providerStateAt(financeRuntime(simulation.world)!, "A", 0)).toMatchObject({
+      active: 0,
+      attempts: 0,
+      completed: 0,
+      observedSuccessRate: 100,
+    });
+
+    simulation.tick();
+    expect(
+      providerStateAt(financeRuntime(simulation.world)!, "A", simulation.world.tick),
+    ).toMatchObject({
+      active: 1,
+      capacityRemaining: 1,
+      attempts: 1,
+      completed: 0,
+      utilization: 50,
+      latency: 2500,
+    });
+
+    simulation.tick();
+    expect(
+      providerStateAt(financeRuntime(simulation.world)!, "A", simulation.world.tick),
+    ).toMatchObject({
+      active: 0,
+      attempts: 1,
+      completed: 1,
+      succeeded: 1,
+      failed: 0,
+      observedSuccessRate: 100,
+      averageLatency: 2000,
+    });
+  });
+
   it("the best-value router passes every authored finance level", () => {
     const financeBrain: BrainSource = {
       goals: fGoals,

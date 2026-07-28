@@ -75,9 +75,8 @@ globally: Maze and Warehouse both publish a level numbered 6. A truncated HMAC
 signature prevents the sequence from being modified without detection. The
 server resolves the world/number references back to the current registry.
 
-Token version 3 is the current global link generation. Versions 1 and 2 were
-retired on 2026-07-26 to clear all previously issued interview links and are
-intentionally rejected by the resolver.
+Token version 4 is the current global link generation. Versions 1–3 have been
+retired by global link resets and are intentionally rejected by the resolver.
 
 The token contains no problem statement, visible scenario, brain, hidden case
 ID, fixture input, score diagnostic, or unpublished guardrail. There is no
@@ -98,7 +97,7 @@ following happens:
 - a referenced challenge is removed or its world/number reference changes;
 - support for that token version is deliberately removed.
 
-Only version-3 tokens are currently supported. Adding a company-defined deadline
+Only version-4 tokens are currently supported. Adding a company-defined deadline
 later requires either an expiry timestamp inside a newly versioned signed token
 or a persisted assignment record that the server can revoke.
 

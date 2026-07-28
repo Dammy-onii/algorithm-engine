@@ -62,9 +62,14 @@ Incoming queue → AI router → provider lanes
   latest policy decision, including `hold` and `decline` rather than only
   completed routes.
 - **Provider lanes** recalculate every tick. Available lanes are green, saturated
-  lanes are amber, and offline lanes are red. Each lane shows live success rate,
-  effective latency, active work, and remaining capacity; the lane used by the
-  latest route is highlighted in blue.
+  lanes are amber, and offline lanes are red. Each lane shows measured success
+  across its 20 most recent outcomes, congestion-adjusted latency, active work,
+  and remaining capacity; the lane used by the latest route is highlighted in
+  blue.
+- **Live metrics** show queue depth, in-flight work, settled payments, the
+  simulation-wide success rate, and throughput. Provider cards also distinguish
+  the configured current reliability target from observed outcomes, and show
+  measured average latency, utilization, attempt counts, and health.
 - **Outcome chips** distinguish waiting, in-flight, succeeded, failed, declined,
   and timed-out payments. A terminal queue with exceptions is never labelled
   “cleared successfully.”
@@ -96,9 +101,16 @@ edits. It owns:
 - **Health over time**: each provider may carry a `schedule` of deterministic
   events (`{ atTick, online?, successRate?, latency? }`), so a provider can go
   offline or degrade partway through a run.
+- **Measured provider telemetry**: every attempt updates provider-owned counters.
+  Completion records its outcome and elapsed latency. The latest 20 outcomes
+  form a responsive observed success rate, while the full run supplies average
+  latency and attempt/completion totals. This telemetry is deterministic for a
+  fixed scenario seed.
 - **Observation vocabulary** (per tick): the current payment (`amount`,
   `isBusiness`/`isInternational`/`isHighValue`, `queueDepth`); per provider
   `online{A,B,C}`, `fee{A,B,C}`, `success{A,B,C}`, `latency{A,B,C}`,
+  `observedSuccessRate{A,B,C}`, `averageLatency{A,B,C}`,
+  `utilization{A,B,C}`, `attempts{A,B,C}`, `completed{A,B,C}`,
   `expectedCost{A,B,C}`, `canRoute{A,B,C}`, and running totals
   `processed`, `succeeded`, `failed`, `declined`, `lost`, `totalCost`,
   `allProcessed`.

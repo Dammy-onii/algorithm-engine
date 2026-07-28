@@ -8,13 +8,12 @@ import {
 } from "@/lib/interview/assignment";
 
 /**
- * Version 3 is also the current global link-revocation generation.
+ * Version 4 is also the current global link-revocation generation.
  *
- * Versions 1 and 2 were deliberately retired on 2026-07-26 when all previously
- * issued interview links were cleared. Supporting them here would silently
- * reactivate those links.
+ * Versions 1–3 were deliberately retired through global link resets.
+ * Supporting them here would silently reactivate previously cleared links.
  */
-const TOKEN_VERSION = 3;
+const TOKEN_VERSION = 4;
 const SIGNATURE_BYTES = 6;
 const MAX_ASSIGNMENT_PROBLEMS = 20;
 const PACK_CODES = ["maze", "warehouse", "finance", "parking"] as const;
@@ -50,7 +49,7 @@ export function createInterviewAssignmentId(challengeIds: string[]): string {
     );
   }
 
-  // v3 includes one stable world code because challenge numbers are unique only
+  // The payload includes one stable world code because challenge numbers are unique only
   // inside a world (Maze and Warehouse, for example, both use level number 6).
   const payload = Buffer.alloc(3 + challenges.length * 2);
   payload.writeUInt8(TOKEN_VERSION, 0);

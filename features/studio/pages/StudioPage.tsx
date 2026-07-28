@@ -574,6 +574,11 @@ export function StudioPage({
                 runError={error}
                 objectiveResults={objectiveResults}
                 attempts={attempts}
+                activeRuleId={
+                  session && (running || session.step.tick > 0)
+                    ? session.step.trace.ruleId
+                    : null
+                }
               />
             </div>
           </section>

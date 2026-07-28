@@ -6,12 +6,12 @@
   "difficulty": 3,
   "stage": "medium",
   "worldKey": "finance-interview-routing",
-  "tagline": "Build a routing policy that survives conditions it has never seen.",
-  "narrative": "You have joined YamusaPay's Payments Infrastructure team. The switch receives consumer, business, refund, and international transfers while provider availability, capacity, latency, fees, and reliability change. Every route occupies a provider slot until processing completes. Failed attempts may be retried, but retries consume deadline budget and increase cost. The visible stream teaches the contract; submission runs the same policy against hidden outages, capacity exhaustion, fee changes, latency spikes, and late high-value traffic.",
-  "objective": "Process the visible stream without timeouts, protect urgent and high-value payments, and submit a policy that generalizes across all hidden scenarios.",
-  "learningObjective": "Combine availability, compatibility, capacity, reliability, cost, urgency, and retry history in one ordered routing policy.",
-  "intelligenceExplanation": "The interview starts with no routing rules. Build the policy from the operational contract: filter eligibility and capacity first, then express reliability, urgency, retry, and cost preferences as guarded branches. A provider being online does not mean it can accept the current payment.",
-  "hint": "Start with the non-negotiable constraints: canRoute, deadline, priority, and supported value/type. Only compare cost after those filters.",
+  "tagline": "Build a routing policy that generalises beyond the visible case.",
+  "narrative": "You are joining YamusaPay's Payments Infrastructure team. The switch receives consumer, business, refund, and international payments while provider health changes in real time.\n\nEach route consumes provider capacity until processing finishes. A failed payment may be retried, but retries consume time, capacity, and cost. The visible stream teaches the contract; Submit tests the same policy against unseen outages, capacity limits, fee changes, latency spikes, and high-value traffic.",
+  "objective": "Process the visible stream without timeouts, protect urgent payments, and submit a policy that works across the hidden scenarios.",
+  "learningObjective": "Combine eligibility, capacity, reliability, urgency, cost, and retry history in one ordered policy.",
+  "intelligenceExplanation": "The interview starts with an empty rule set. Build the decision flow from the operational facts.\n\nFilter providers that cannot accept the current payment first. Only then compare reliability, deadline risk, queue pressure, and cost. Being online does not guarantee that a provider is eligible for every payment.",
+  "hint": "Start with `canRoute`, deadline, payment type, amount, and retry history. Compare cost only after unsafe options are removed.",
   "hints": [
     "Separate eligibility from preference. Use canRouteA/B/C before fee or expected cost.",
     "Reserve the most reliable, low-latency route for urgent or high-value payments, and avoid immediately repeating a failed provider.",
@@ -23,8 +23,8 @@
     "tier": "medium",
     "grade": 3
   },
-  "brief": "Author and submit a resilient payment-routing policy against one visible and six hidden real-time scenarios.",
-  "context": "One tick is one routing decision while providers continue processing previously routed payments in parallel.",
+  "brief": "Author and submit a resilient payment policy for changing provider conditions.",
+  "context": "Each tick makes one routing decision while providers continue processing earlier payments in parallel.",
   "steps": [
     {
       "id": "eligibility",

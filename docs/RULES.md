@@ -226,6 +226,11 @@ handled. Preconditions are the safety net that makes ordered flow robust — you
 still write guards to express *intent*, but you can no longer get stuck bashing a
 wall because an earlier rule named an impossible action.
 
+To sequence actions (e.g. "turn right, then step"), compose a **multi-step brick**
+in the Functions tab and use it as a rule's DO; the engine runs its steps one per
+tick before re-checking the flow. Studio highlights the rule card firing on the
+current tick during a run.
+
 ### Rule folders in Studio
 
 Studio can group cards into named **rule folders** such as “Safety”, “Navigation”,

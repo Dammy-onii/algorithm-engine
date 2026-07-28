@@ -6,12 +6,30 @@
   "difficulty": 3,
   "stage": "medium",
   "worldKey": "challenge-arena",
-  "tagline": "Design a robot that thinks in modes.",
-  "narrative": "The Open Arena has no winding corridors to follow. It is a 9×9 space with scattered pillars — many valid paths, no single obvious route. A robot that only knows how to wander will eventually find the goal, but it will waste most of its energy doing it. The key insight is that navigation has two distinct phases: exploring when the goal is not in sight, and locking on when it is. These are different problems that call for different strategies, and a robot should know which one it is solving at any given moment. That is what a state machine does — it gives the robot the ability to change its mind based on circumstances.",
-  "objective": "Reach the goal in the Open Arena using a two-state brain (Explore and Seek), then hold for 3 ticks.",
-  "learningObjective": "Designing a state machine with transitions. Understanding that the same conditions can trigger different behavior depending on the active state — and that state transitions are how a robot changes strategy mid-run.",
-  "intelligenceExplanation": "This archived challenge scaffold has Explore and Seek states but no rules. Each state needs its own ordered rules and transitions. Arrival handling belongs first, specific goal-directed decisions follow, and broad movement fallbacks belong last.",
-  "hint": "Within each state, place the goal and arrival cases above clear-path movement and fallback turns. Use setState to move between Explore and Seek.",
+  "tagline": "Change strategy when the goal becomes visible.",
+  "narrative": "The Open Arena is a 9×9 space with scattered pillars and several valid routes. Wandering can eventually reach the goal, but it wastes energy.\n\nThis level demonstrates two navigation modes. The robot explores while the goal is hidden, then switches to a goal-seeking strategy when the goal becomes visible. A state machine gives the controller that change of mode.",
+  "objective": "Reach the goal using Explore and Seek states, then hold on it for 3 consecutive ticks.",
+  "learningObjective": "Use states and transitions to change behaviour when the environment changes.",
+  "intelligenceExplanation": "The archived scaffold already defines Explore and Seek, but it has no rules. Each state needs its own ordered decisions, and a rule can use `setState` to move between them.\n\nKeep arrival and safety cases above broad movement fallbacks. The active state determines which rules are available on the current tick.",
+  "hint": "In each state, handle `atGoal` first, then goal visibility, then clear movement. Use `setState` when the goal becomes visible.",
+  "hints": [
+    "Explore while the goal is hidden; do not use the same movement policy for every situation.",
+    "When `goalVisible` becomes true, switch from Explore to Seek.",
+    "In both states, keep `atGoal → hold` above movement rules and finish with a safe fallback."
+  ],
+  "taxonomy": {
+    "domain": "Maze",
+    "simulation": "Navigation",
+    "tier": "medium",
+    "grade": 1
+  },
+  "brief": "Build two navigation modes and switch to goal-seeking when the exit is visible.",
+  "context": "The arena has many routes, so the robot needs different behaviour for searching and arriving.",
+  "steps": [
+    { "id": "explore", "label": "Create an Explore policy for hidden-goal navigation" },
+    { "id": "seek", "label": "Switch to Seek when the goal becomes visible" },
+    { "id": "reach", "label": "Reach the goal and hold there", "check": "reached" }
+  ],
   "availableBricks": [
     "step",
     "pivot-left",

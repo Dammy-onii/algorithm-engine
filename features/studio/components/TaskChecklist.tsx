@@ -35,20 +35,30 @@ export function TaskChecklist({ steps, started }: Props) {
           </span>
         )}
       </div>
+      <p className="mb-2 text-xs leading-relaxed text-zinc-400">
+        Use these steps as a checklist while you edit, run, and inspect the result.
+      </p>
       <ul className="flex flex-col gap-1.5">
         {steps.map((s) => (
           <li key={s.id} className="flex items-start gap-2 text-sm">
             <StepMark done={started && s.done} informational={s.informational} />
-            <span
-              className={[
-                "leading-snug",
-                started && s.done
-                  ? "text-zinc-400 line-through"
-                  : "text-zinc-700 dark:text-zinc-300",
-              ].join(" ")}
-            >
-              {s.label}
-            </span>
+            <div className="min-w-0">
+              <span
+                className={[
+                  "block leading-snug",
+                  started && s.done
+                    ? "text-zinc-400 line-through"
+                    : "text-zinc-700 dark:text-zinc-300",
+                ].join(" ")}
+              >
+                {s.label}
+              </span>
+              {s.hint && (
+                <span className="mt-0.5 block text-xs leading-relaxed text-zinc-400 dark:text-zinc-500">
+                  {s.hint}
+                </span>
+              )}
+            </div>
           </li>
         ))}
       </ul>

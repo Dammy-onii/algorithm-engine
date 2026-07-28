@@ -5,7 +5,7 @@
  *
  * Always visible: a taxonomy badge, the one-line headline (what to do) and a
  * line of scenario context. Everything longer — the narrative, the intelligence
- * notes, what it teaches — lives behind "Learn more". Hints live in their own
+ * notes, what it teaches — lives behind "Read problem statement". Hints live in their own
  * drawer and escalate one at a time, nudged open after repeated failed runs.
  *
  * Driven entirely by the normalized brief, so maze, warehouse and finance
@@ -14,7 +14,11 @@
 
 import { useState } from "react";
 import { ChallengeData } from "@/lib/authoring/types";
-import { normalizeBrief, taxonomyFor } from "@/lib/authoring/challengeBrief";
+import {
+  normalizeBrief,
+  paragraphsFromText,
+  taxonomyFor,
+} from "@/lib/authoring/challengeBrief";
 
 interface Props {
   challenge: ChallengeData;
@@ -47,7 +51,19 @@ export function ProblemBrief({ challenge, attempts }: Props) {
         {brief.headline}
       </h2>
       {/* One line of scenario framing */}
-      <p className="mt-1 text-sm leading-relaxed text-zinc-500">{brief.context}</p>
+      <div className="mt-3 rounded-md border border-zinc-100 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950/40">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+          Scenario
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          {brief.context}
+        </p>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+        Read the task, edit the policy, choose <strong>Apply &amp; Run</strong>, then
+        use the simulation and debug panel to improve it one decision at a time.
+      </p>
 
       {/* Learn more — the prose, revealed on demand */}
       {(brief.detail.length > 0 || brief.learn) && (
@@ -57,22 +73,27 @@ export function ProblemBrief({ challenge, attempts }: Props) {
             className="text-xs font-medium text-zinc-500 underline-offset-2 transition-colors hover:text-zinc-800 hover:underline dark:hover:text-zinc-200"
             aria-expanded={showDetail}
           >
-            {showDetail ? "Hide background" : "Learn more"}
+            {showDetail ? "Hide problem statement" : "Read problem statement"}
           </button>
           {showDetail && (
-            <div className="mt-2 flex flex-col gap-2 border-l-2 border-zinc-200 pl-3 dark:border-zinc-700">
-              {brief.detail.map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <div className="mt-3 flex flex-col gap-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-700">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                Problem statement
+              </p>
+              {brief.detail.flatMap(paragraphsFromText).map((para, i) => (
+                <p key={i} className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                   {para}
                 </p>
               ))}
               {brief.learn && (
-                <p className="text-xs text-zinc-500">
-                  <span className="font-semibold uppercase tracking-wide text-zinc-400">
-                    Teaches ·{" "}
-                  </span>
-                  {brief.learn}
-                </p>
+                <div className="border-t border-zinc-100 pt-2 dark:border-zinc-800">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                    What this teaches
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                    {brief.learn}
+                  </p>
+                </div>
               )}
               {challenge.interviewEvaluation && (
                 <div className="mt-1 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">

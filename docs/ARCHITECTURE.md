@@ -81,7 +81,7 @@ registry references—not a copied challenge, fixture set, or file-backed
 assignment. Normalization always inserts the world's marked interview tutorial,
 then sorts by ascending difficulty, taxonomy grade, and challenge number. Each
 problem still submits independently to its own `interviewEvaluation.suiteId`.
-The current token revocation generation is version 3; versions 1 and 2 are
+The current token revocation generation is version 4; versions 1–3 are
 rejected. Predictable `/interview/[challengeId]` links are retired because they
 cannot be individually or globally revoked.
 

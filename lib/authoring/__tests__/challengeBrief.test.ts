@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeBrief, taxonomyFor } from "../challengeBrief";
+import { normalizeBrief, paragraphsFromText, taxonomyFor } from "../challengeBrief";
 import { evaluateSteps } from "../objectives";
 import { ChallengeData } from "../types";
 
@@ -59,6 +59,15 @@ describe("normalizeBrief", () => {
     expect(brief.headline).toBe("Short what-to-do.");
     expect(brief.context).toBe("Short scenario.");
     expect(brief.steps.map((s) => s.id)).toEqual(["a"]);
+  });
+});
+
+describe("paragraphsFromText", () => {
+  it("keeps authored blank-line breaks as separate readable paragraphs", () => {
+    expect(paragraphsFromText("First idea.\n\nSecond idea.\n\n")).toEqual([
+      "First idea.",
+      "Second idea.",
+    ]);
   });
 });
 

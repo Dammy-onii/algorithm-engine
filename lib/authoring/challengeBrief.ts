@@ -33,6 +33,18 @@ export interface NormalizedBrief {
   hints: string[];
 }
 
+/**
+ * Turn authored prose into readable paragraphs. Content files may use a blank
+ * line (`\n\n`) to separate ideas; keeping that convention in one helper means
+ * every world renders longer problem statements consistently.
+ */
+export function paragraphsFromText(text: string): string[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
 /** Required (non-bonus) objectives, expressed as checklist steps. */
 function objectivesAsSteps(objectives: ChallengeObjective[]): TaskStep[] {
   return objectives

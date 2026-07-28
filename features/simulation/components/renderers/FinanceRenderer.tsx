@@ -39,6 +39,11 @@ const SCORE = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 2,
 });
 
+const DECIMAL = new Intl.NumberFormat("en-NG", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 export function FinanceRenderer({ world }: { world: World }) {
   const runtime = financeRuntime(world);
   if (!runtime) return null;
@@ -57,6 +62,11 @@ export function FinanceRenderer({ world }: { world: World }) {
   const scheduled = countByStatus(world, "scheduled");
   const inFlight = countByStatus(world, "processing");
   const timedOut = runtime.timedOut;
+  const processed = succeeded + failed + declined + lost;
+  const settledAttempts = succeeded + failed;
+  const liveSuccessRate =
+    settledAttempts > 0 ? succeeded / settledAttempts * 100 : null;
+  const throughput = world.tick > 0 ? processed / world.tick : 0;
   const queued = readyTransactions(world);
   const settled = runtime.transactions.filter((item) =>
     ["succeeded", "failed", "declined", "lost"].includes(item.status),
@@ -76,8 +86,9 @@ export function FinanceRenderer({ world }: { world: World }) {
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-700 dark:text-zinc-300">Transfer flow</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Queue → AI routing decision → provider lane</p>
           </div>
-          <span className="rounded-full border border-zinc-300 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-zinc-700">
-            Tick {world.tick}
+          <span className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse" />
+            Live · Tick {world.tick}
           </span>
         </div>
 
@@ -169,8 +180,8 @@ export function FinanceRenderer({ world }: { world: World }) {
                         {state.name}
                       </span>
                       <span className="mt-0.5 block font-mono text-[9px] opacity-70">
-                        {state.successRate.toFixed(1)}% success ·{" "}
-                        {Math.round(state.latency)}ms
+                        {formatPercent(state.observedSuccessRate)} live success ·{" "}
+                        {formatMilliseconds(state.latency)} current
                       </span>
                     </span>
                     <span className="shrink-0 text-right font-mono text-[10px]">
@@ -190,6 +201,28 @@ export function FinanceRenderer({ world }: { world: World }) {
           </FlowPanel>
 
         </div>
+      </section>
+
+      <section
+        aria-label="Live payment metrics"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
+        <LiveMetric label="Queue depth" value={waiting} detail={`${scheduled} scheduled`} />
+        <LiveMetric label="In flight" value={inFlight} detail={`${processed} settled`} />
+        <LiveMetric
+          label="Success rate"
+          value={liveSuccessRate === null ? "—" : formatPercent(liveSuccessRate)}
+          detail={
+            liveSuccessRate === null
+              ? "No outcomes yet"
+              : `${succeeded} of ${settledAttempts} successful`
+          }
+        />
+        <LiveMetric
+          label="Throughput"
+          value={DECIMAL.format(throughput)}
+          detail="payments per tick"
+        />
       </section>
 
       {/* Current payment */}
@@ -265,24 +298,51 @@ export function FinanceRenderer({ world }: { world: World }) {
                 </div>
                 <span className="font-mono text-xs text-zinc-500">{s.id}</span>
               </div>
-              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-zinc-500 tabular-nums">
-                <span>fee {NAIRA_COST.format(s.fee)}</span>
-                <span>success {s.successRate.toFixed(1)}%</span>
-                <span>latency {Math.round(s.latency)}ms</span>
-                {runtime.processingMode === "queued" && (
-                  <>
-                    <span>capacity {s.capacityRemaining} free</span>
-                    <span>active {s.active}</span>
-                    <span>health {s.healthScore.toFixed(1)}%</span>
-                  </>
-                )}
-                {!usable && s.online && s.capacityRemaining > 0 && (
-                  <span className="font-medium text-amber-700 dark:text-amber-300">
-                    incompatible with current transfer
-                  </span>
-                )}
-                {penalty > 0 && <span>exp. cost {NAIRA_COST.format(exp)}</span>}
+              <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                <ProviderMetric
+                  label="Live success"
+                  value={formatPercent(s.observedSuccessRate)}
+                  detail={`current target ${formatPercent(s.successRate)}`}
+                />
+                <ProviderMetric
+                  label="Current latency"
+                  value={formatMilliseconds(s.latency)}
+                  detail={`run average ${formatMilliseconds(s.averageLatency)}`}
+                />
+                <ProviderMetric
+                  label={runtime.processingMode === "queued" ? "Active" : "Routed"}
+                  value={runtime.processingMode === "queued" ? s.active : s.handled}
+                  detail={
+                    runtime.processingMode === "queued"
+                      ? `${s.capacityRemaining} slots free`
+                      : `${s.completed} settled`
+                  }
+                />
+                <ProviderMetric
+                  label={runtime.processingMode === "queued" ? "Utilization" : "Attempts"}
+                  value={
+                    runtime.processingMode === "queued"
+                      ? formatPercent(s.utilization)
+                      : s.attempts
+                  }
+                  detail={`${s.completed}/${s.attempts} attempts settled`}
+                />
+                <ProviderMetric
+                  label="Health"
+                  value={formatPercent(s.healthScore)}
+                  detail={s.online ? "provider online" : "provider offline"}
+                />
+                <ProviderMetric
+                  label="Expected cost"
+                  value={NAIRA_COST.format(exp)}
+                  detail={`fee ${NAIRA_COST.format(s.fee)}`}
+                />
               </div>
+              {!usable && s.online && s.capacityRemaining > 0 && (
+                <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                  This provider cannot process the current transfer.
+                </p>
+              )}
             </div>
           );
         })}
@@ -375,6 +435,58 @@ function formatDecision(decision: {
     return `${decision.transactionId} → ${decision.providerId} · ${decision.outcome}`;
   }
   return `${decision.transactionId} → ${decision.action} · tick ${decision.tick}`;
+}
+
+function formatPercent(value: number): string {
+  return `${DECIMAL.format(value)}%`;
+}
+
+function formatMilliseconds(value: number): string {
+  return `${DECIMAL.format(value)}ms`;
+}
+
+function LiveMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 tabular-nums transition-colors dark:border-zinc-800 dark:bg-zinc-900/60">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+        {label}
+      </p>
+      <p className="mt-0.5 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        {value}
+      </p>
+      <p className="text-[10px] text-zinc-500">{detail}</p>
+    </div>
+  );
+}
+
+function ProviderMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <div className="rounded border border-zinc-200/80 bg-white/70 px-2 py-1.5 tabular-nums dark:border-zinc-700/80 dark:bg-zinc-950/30">
+      <p className="text-[9px] font-semibold uppercase tracking-wide text-zinc-400">
+        {label}
+      </p>
+      <p className="font-mono text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+        {value}
+      </p>
+      <p className="mt-0.5 text-[9px] text-zinc-500">{detail}</p>
+    </div>
+  );
 }
 
 function MetricChip({

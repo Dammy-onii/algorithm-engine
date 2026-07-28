@@ -25,9 +25,14 @@ taxonomy.
 | `context` | `tagline` | One line of scenario framing, always visible. |
 | `steps[]` | required `objectives[]` | The **live task checklist**. |
 | `taxonomy` | `pack` / `stage` / `difficulty` | Catalogue placement + the `Tier · Grade` badge. |
-| `narrative`, `intelligenceExplanation` | — | Prose behind **Learn more**. |
+| `narrative`, `intelligenceExplanation` | — | Prose behind **Read problem statement**. |
 | `hints[]` | `[hint]` | Escalating hint drawer. |
 | `interviewEvaluation` | — | Public contract for an optional server-owned hidden suite. |
+
+Long-form `narrative` and `intelligenceExplanation` text may contain blank lines
+(`\n\n`). The shared brief splits those breaks into separate paragraphs and labels
+the result as **Problem statement** and **How the starting brain behaves**. This
+keeps every world readable without giving each simulation its own page layout.
 
 An interview challenge may declare:
 
@@ -54,6 +59,10 @@ interface TaskStep {
   hint?: string;      // optional per-step "how"
 }
 ```
+
+When `hint` is present, it is shown directly beneath the step in the live task
+checklist. Use it for a short action-oriented explanation, not for a second
+problem statement.
 
 `check` uses the **same safe expression grammar** as rule conditions and
 objectives, evaluated every tick against `liveContext(sim, brain)` — run-quality

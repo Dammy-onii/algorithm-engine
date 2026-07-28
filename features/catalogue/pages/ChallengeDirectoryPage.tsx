@@ -156,8 +156,10 @@ export function ChallengeDirectoryPage({
             Choose a challenge
           </h2>
           <p className="mt-3 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Difficulty reflects the reasoning constraints in each challenge, not
-            simply the size of its simulation.
+            Start with an example to learn one idea. Easy, medium, and hard
+            challenges add more decisions, changing conditions, and competing
+            outcomes. Difficulty reflects the reasoning required, not simply the
+            size of the simulation.
           </p>
         </div>
 

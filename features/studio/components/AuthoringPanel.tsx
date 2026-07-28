@@ -25,6 +25,7 @@ import { FunctionComposer } from "./layers/FunctionComposer";
 import { MemoryEditor } from "./layers/MemoryEditor";
 import { ConditionEditor } from "./layers/ConditionEditor";
 import { ControllerEditor } from "./layers/ControllerEditor";
+import { resolveWorldModule } from "@/lib/engine/worlds/registry";
 import { ObjectivesPanel } from "./layers/ObjectivesPanel";
 import { ObjectiveResult } from "@/lib/authoring/objectives";
 
@@ -47,6 +48,8 @@ interface Props {
   objectiveResults: ObjectiveResult[] | null;
   /** How many runs have failed on this challenge — drives escalating hints. */
   attempts: number;
+  /** Id of the rule firing on the current tick, highlighted live during a run. */
+  activeRuleId?: string | null;
 }
 
 const TAB_LABELS: Record<LayerTab, string> = {
@@ -67,6 +70,7 @@ export function AuthoringPanel({
   runError,
   objectiveResults,
   attempts,
+  activeRuleId,
 }: Props) {
   const [activeTab, setActiveTab] = useState<LayerTab>("rules");
   const [showJson, setShowJson] = useState(false);
@@ -99,6 +103,9 @@ export function AuthoringPanel({
     ...derived.filter((d) => d.id.trim()).map((d) => d.id),
   ];
 
+  // The active world module, for the Code tab's observation/action reference.
+  const controllerWorld = resolveWorldModule(challenge.pack);
+
   return (
     <div className="flex min-h-full w-full min-w-0 max-w-full flex-col gap-4">
       {/* 1 — Problem brief (progressive disclosure: headline first, prose on demand) */}
@@ -127,6 +134,7 @@ export function AuthoringPanel({
               functions={brain.functions}
               availableBricks={challenge.availableBricks}
               availableConditions={ruleConditions}
+              activeRuleId={activeRuleId}
               onChange={(rulesOrFn) =>
                 onBrainChange((prev) => ({
                   ...prev,
@@ -183,6 +191,10 @@ export function AuthoringPanel({
             <ControllerEditor
               code={brain.controllerCode ?? ""}
               domain={challenge.pack}
+              gridWorld={controllerWorld.tracksMovement !== false}
+              observableDomain={controllerWorld.domainFlags
+                .filter((flag) => flag.id !== challenge.pack)
+                .map((flag) => ({ id: flag.id, label: flag.label }))}
               availableActions={Array.from(
                 new Set(
                   brain.functions

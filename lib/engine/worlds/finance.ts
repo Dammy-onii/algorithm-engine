@@ -215,8 +215,19 @@ export interface FinanceRuntimeTx extends FinanceTransaction {
   lastProvider?: string;
 }
 
+export interface FinanceProviderTelemetry {
+  attempts: number;
+  completed: number;
+  succeeded: number;
+  failed: number;
+  totalLatencyMs: number;
+  /** Bounded so the displayed reliability stays responsive during long runs. */
+  recentOutcomes: boolean[];
+}
+
 export interface FinanceRuntime {
   providers: FinanceProvider[];
+  providerTelemetry: Record<string, FinanceProviderTelemetry>;
   transactions: FinanceRuntimeTx[];
   totalCost: number;
   processingCost: number;
@@ -278,6 +289,19 @@ export function createFinanceRuntime(data: WorldData): FinanceRuntime | null {
   const transactions = expandTransactions(config);
   return {
     providers: structuredClone(config.providers),
+    providerTelemetry: Object.fromEntries(
+      config.providers.map((provider) => [
+        provider.id,
+        {
+          attempts: 0,
+          completed: 0,
+          succeeded: 0,
+          failed: 0,
+          totalLatencyMs: 0,
+          recentOutcomes: [],
+        },
+      ]),
+    ),
     transactions: transactions.map((t) => ({
       ...structuredClone(t),
       status: (t.arrivalTick ?? 0) > 0 ? "scheduled" as const : "waiting" as const,
@@ -352,6 +376,13 @@ export interface ProviderState {
   active: number;
   capacityRemaining: number;
   congestion: number;
+  utilization: number;
+  attempts: number;
+  completed: number;
+  succeeded: number;
+  failed: number;
+  observedSuccessRate: number;
+  averageLatency: number;
   healthScore: number;
 }
 
@@ -386,6 +417,19 @@ export function providerStateAt(
   const congestion = concurrentCapacity > 0 ? active / concurrentCapacity : 1;
   const effectiveLatency =
     latency + active * (p.congestionLatencyPerItem ?? 0);
+  const telemetry = runtime.providerTelemetry[id] ?? {
+    attempts: 0,
+    completed: 0,
+    succeeded: 0,
+    failed: 0,
+    totalLatencyMs: 0,
+    recentOutcomes: [],
+  };
+  const observedSuccessRate = telemetry.recentOutcomes.length > 0
+    ? telemetry.recentOutcomes.filter(Boolean).length /
+      telemetry.recentOutcomes.length *
+      100
+    : successRate;
   return {
     id: p.id,
     name: p.name,
@@ -401,9 +445,27 @@ export function providerStateAt(
         ? Math.max(0, concurrentCapacity - active)
         : Math.max(0, (p.capacity ?? Infinity) - handled),
     congestion,
+    utilization:
+      runtime.processingMode === "queued"
+        ? Math.max(0, Math.min(100, congestion * 100))
+        : p.capacity === undefined
+          ? 0
+          : Math.max(0, Math.min(100, handled / p.capacity * 100)),
+    attempts: telemetry.attempts,
+    completed: telemetry.completed,
+    succeeded: telemetry.succeeded,
+    failed: telemetry.failed,
+    observedSuccessRate,
+    averageLatency:
+      telemetry.completed > 0
+        ? telemetry.totalLatencyMs / telemetry.completed
+        : effectiveLatency,
     healthScore: Math.max(
       0,
-      Math.min(100, successRate - effectiveLatency / 100 - congestion * 10),
+      Math.min(
+        100,
+        observedSuccessRate - effectiveLatency / 100 - congestion * 10,
+      ),
     ),
   };
 }
@@ -472,6 +534,30 @@ function randomPercent(runtime: FinanceRuntime): number {
   return (runtime.rng / 0x100000000) * 100;
 }
 
+function beginProviderAttempt(runtime: FinanceRuntime, providerId: string): void {
+  const telemetry = runtime.providerTelemetry[providerId];
+  if (telemetry) telemetry.attempts += 1;
+}
+
+function completeProviderAttempt(
+  runtime: FinanceRuntime,
+  providerId: string,
+  succeeded: boolean,
+  latencyMs: number,
+): void {
+  const telemetry = runtime.providerTelemetry[providerId];
+  if (!telemetry) return;
+
+  telemetry.completed += 1;
+  telemetry.succeeded += succeeded ? 1 : 0;
+  telemetry.failed += succeeded ? 0 : 1;
+  telemetry.totalLatencyMs += Math.max(0, latencyMs);
+  telemetry.recentOutcomes.push(succeeded);
+  if (telemetry.recentOutcomes.length > 20) {
+    telemetry.recentOutcomes.shift();
+  }
+}
+
 function isPriority(tx: FinanceRuntimeTx): boolean {
   return (tx.priority ?? 0) >= 2;
 }
@@ -514,6 +600,7 @@ function route(world: World, slot: Slot): void {
   tx.attempts += 1;
   tx.lastProvider = tx.routedTo;
   tx.routedTo = slot;
+  beginProviderAttempt(runtime, slot);
 
   // Booking the fee models paying the provider to attempt the payment.
   const fee = state?.fee ?? 0;
@@ -523,6 +610,7 @@ function route(world: World, slot: Slot): void {
   // Routing to an unavailable provider (offline / over capacity / wrong type)
   // fails the payment — this is what the "check the provider first" lessons teach.
   if (!canRoute(world, slot)) {
+    completeProviderAttempt(runtime, slot, false, 0);
     failAttempt(world, tx, {
       overload: !!state?.online && state.capacityRemaining <= 0,
     });
@@ -531,7 +619,7 @@ function route(world: World, slot: Slot): void {
 
   if (runtime.processingMode === "queued") {
     tx.status = "processing";
-    tx.startedAt ??= world.tick;
+    tx.startedAt = world.tick;
     tx.completesAt =
       world.tick + Math.max(1, Math.ceil((state?.latency ?? 0) / runtime.tickDurationMs));
     return;
@@ -540,9 +628,11 @@ function route(world: World, slot: Slot): void {
   // Reproducible success draw: LCG advance → [0,100).
   const roll = randomPercent(runtime);
   if (roll < (state?.successRate ?? 0)) {
+    completeProviderAttempt(runtime, slot, true, state?.latency ?? 0);
     tx.status = "succeeded";
     tx.completedAt = world.tick;
   } else {
+    completeProviderAttempt(runtime, slot, false, state?.latency ?? 0);
     failAttempt(world, tx);
   }
 }
@@ -617,10 +707,16 @@ function advanceFinanceTick(world: World): void {
     if (tx.status !== "processing" || (tx.completesAt ?? Infinity) > world.tick) {
       continue;
     }
-    const state = providerStateAt(runtime, tx.routedTo ?? "", world.tick);
+    const providerId = tx.routedTo ?? "";
+    const state = providerStateAt(runtime, providerId, world.tick);
+    const elapsedLatency =
+      Math.max(1, world.tick - (tx.startedAt ?? world.tick)) *
+      runtime.tickDurationMs;
     if (!state?.online || randomPercent(runtime) >= state.successRate) {
+      completeProviderAttempt(runtime, providerId, false, elapsedLatency);
       failAttempt(world, tx);
     } else {
+      completeProviderAttempt(runtime, providerId, true, elapsedLatency);
       tx.status = "succeeded";
       tx.completedAt = world.tick;
       tx.completesAt = undefined;
@@ -633,6 +729,15 @@ function advanceFinanceTick(world: World): void {
     tx.waited = Math.max(0, world.tick - (tx.arrivalTick ?? 0));
     const deadline = tx.deadlineTicks ?? runtime.expireAfter;
     if (deadline > 0 && tx.waited >= deadline) {
+      if (tx.status === "processing" && tx.routedTo) {
+        completeProviderAttempt(
+          runtime,
+          tx.routedTo,
+          false,
+          Math.max(1, world.tick - (tx.startedAt ?? world.tick)) *
+            runtime.tickDurationMs,
+        );
+      }
       tx.status = "lost";
       tx.completedAt = world.tick;
       tx.completesAt = undefined;
@@ -730,6 +835,11 @@ function financeObserve(world: World): Record<string, number | boolean> {
     out[`queueLength${id}`] = exists ? state!.active : 0;
     out[`congestion${id}`] = exists ? state!.congestion : 0;
     out[`healthScore${id}`] = exists ? state!.healthScore : 0;
+    out[`observedSuccessRate${id}`] = exists ? state!.observedSuccessRate : 0;
+    out[`averageLatency${id}`] = exists ? state!.averageLatency : 0;
+    out[`utilization${id}`] = exists ? state!.utilization : 0;
+    out[`attempts${id}`] = exists ? state!.attempts : 0;
+    out[`completed${id}`] = exists ? state!.completed : 0;
     out[`canRoute${id}`] = canRoute(world, id);
   }
   return out;
@@ -788,6 +898,11 @@ export const FINANCE_FLAGS: DomainFlagSpec[] = [
     { id: `queueLength${id}`, type: "number", label: `Provider ${id} Queue Length`, meaning: `Payments currently in flight at provider ${id}` },
     { id: `congestion${id}`, type: "number", label: `Provider ${id} Congestion`, meaning: `Current load as a share of concurrent capacity`, format: "percentFraction" },
     { id: `healthScore${id}`, type: "number", label: `Provider ${id} Health Score`, meaning: `Live reliability score reduced by latency and congestion` },
+    { id: `observedSuccessRate${id}`, type: "number", label: `Provider ${id} Observed Success Rate`, meaning: `Success percentage across provider ${id}'s 20 most recent completed attempts`, format: "percent" },
+    { id: `averageLatency${id}`, type: "number", label: `Provider ${id} Average Latency`, meaning: `Average measured completion latency for provider ${id} in milliseconds` },
+    { id: `utilization${id}`, type: "number", label: `Provider ${id} Utilization`, meaning: `Percentage of provider ${id}'s concurrent capacity currently in use`, format: "percent" },
+    { id: `attempts${id}`, type: "number", label: `Provider ${id} Attempts`, meaning: `Routing attempts sent to provider ${id} during this run` },
+    { id: `completed${id}`, type: "number", label: `Provider ${id} Completed Attempts`, meaning: `Provider ${id} attempts that have produced an outcome` },
     { id: `canRoute${id}`, type: "bool", label: `Can Route ${id}`, meaning: `Provider ${id} can handle the current payment` },
   ]),
 ];

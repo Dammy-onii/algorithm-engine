@@ -96,6 +96,52 @@ export const FINANCE_CONTROLLER_TEMPLATE = `class PaymentRouter {
 
 return new PaymentRouter();`;
 
+// --- Starter skeletons ------------------------------------------------------
+// Minimal boilerplate the Code tab opens with: the class, the required
+// decide(observation) method, and a safe default return. Not a solution — just
+// the base a learner needs to start writing their own logic.
+
+export const MAZE_CONTROLLER_STARTER = `class Robot {
+  // decide() runs once every tick. Return one action string.
+  decide(observation) {
+    // Read facts like observation.wallAhead, observation.wallRight, observation.atGoal.
+    // Your logic here.
+    return "wait";
+  }
+}
+
+return new Robot();`;
+
+export const WAREHOUSE_CONTROLLER_STARTER = `class WarehouseRobot {
+  decide(observation) {
+    const facts = observation.domain; // e.g. facts.packageHere, facts.deliveryHere
+    // Your logic here.
+    return "wait";
+  }
+}
+
+return new WarehouseRobot();`;
+
+export const FINANCE_CONTROLLER_STARTER = `class PaymentRouter {
+  decide(observation) {
+    const facts = observation.domain; // e.g. facts.onlineA, facts.feeA
+    // Your logic here.
+    return "hold";
+  }
+}
+
+return new PaymentRouter();`;
+
+export const PARKING_CONTROLLER_STARTER = `class ParkingController {
+  decide(observation) {
+    const facts = observation.domain; // e.g. facts.hasWaitingVehicle
+    // Your logic here.
+    return "wait";
+  }
+}
+
+return new ParkingController();`;
+
 export function compileController(source: string): AgentController {
   if (!source.trim()) throw new Error("Write a controller class before running Code mode.");
   let value: unknown;

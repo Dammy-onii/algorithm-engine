@@ -109,6 +109,8 @@ interface Props {
   onChange: (rules: VisualRule[] | ((prev: VisualRule[]) => VisualRule[])) => void;
   /** Folders are editor metadata: they organise cards but never change execution. */
   onFoldersChange: (folders: VisualRuleFolder[]) => void;
+  /** Id of the rule firing on the current tick — highlighted live during a run. */
+  activeRuleId?: string | null;
 }
 
 function makeDefaultCondition(): VisualCondition {
@@ -136,7 +138,7 @@ export function appendRuleToFlow(
   return [...rules, rule];
 }
 
-export function RuleBuilder({ rules, folders, states, functions, availableBricks, availableConditions, onChange, onFoldersChange }: Props) {
+export function RuleBuilder({ rules, folders, states, functions, availableBricks, availableConditions, onChange, onFoldersChange, activeRuleId }: Props) {
   // The array is the flowchart. Do not sort it: top-to-bottom is execution order.
   const ordered = rules;
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -285,10 +287,50 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
           the action it performs.
         </p>
         <p className="mt-1.5">
-          The engine checks cards from <strong>top to bottom</strong>. The first card
-          whose WHEN condition is true and whose next action is safe runs; the rest
-          are not checked that tick. Drag cards or use the arrows to change that flow.
+          The engine checks cards from <strong>top to bottom</strong> — the list is a
+          flowchart. The <strong>first</strong> card whose WHEN is true <em>and</em>{" "}
+          whose action is possible right now runs; every card below it is skipped that
+          tick. Order is the only thing that decides which rule wins — drag cards or use
+          the arrows to change it. (Priority numbers are ignored.)
         </p>
+        <p className="mt-1.5">
+          A DO that is a <strong>multi-step brick</strong> (e.g. &quot;turn right,
+          then step&quot;, composed in the Functions tab) runs each of its steps on the
+          next ticks before the list is checked from the top again — unless a step
+          becomes unsafe, which interrupts it. If <em>no</em> card&apos;s action is
+          possible, the robot simply waits.
+        </p>
+
+        <details className="mt-2">
+          <summary className="cursor-pointer select-none font-medium text-zinc-500 transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
+            See an example run
+          </summary>
+          <div className="mt-2 rounded border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900">
+            <p className="mb-1 font-semibold text-zinc-700 dark:text-zinc-200">
+              A wall-follower, checked top → bottom:
+            </p>
+            <pre className="overflow-x-auto rounded bg-zinc-50 p-2 font-mono text-[11px] leading-relaxed text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+{`1  WHEN atGoal      → hold
+2  WHEN !wallRight  → right-and-step   (turn right, then step)
+3  WHEN !wallAhead  → step
+4  WHEN always      → turn-around-and-step`}
+            </pre>
+            <p className="mb-1 mt-2 font-semibold text-zinc-700 dark:text-zinc-200">
+              One action per tick:
+            </p>
+            <ul className="ml-4 list-disc space-y-0.5">
+              <li>Tick 1 — right is open, so rule 2 is the first match → <strong>turn right</strong>.</li>
+              <li>Tick 2 — rule 2&apos;s brick isn&apos;t finished, so it continues → <strong>move forward</strong>.</li>
+              <li>Tick 3 — right blocked, front open → rule 3 → <strong>move forward</strong>.</li>
+              <li>Tick 4 — right open again → back to rule 2 → <strong>turn right</strong>…</li>
+            </ul>
+            <p className="mt-1.5 text-zinc-400">
+              Rules 1–3 never had to be &quot;false&quot; for rule 4 to exist — the engine
+              just takes the first one that applies. Because rule 2&apos;s DO is a two-step
+              brick, it commits to both steps before the list restarts from the top.
+            </p>
+          </div>
+        </details>
       </div>
 
       <section className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900" aria-label="Rule folders">
@@ -359,6 +401,9 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
         // its cards; it never filters, renumbers, or otherwise changes rules.
         if (folder?.collapsed) return null;
 
+        // The rule firing on the current tick glows softly during a run.
+        const isActive = !!activeRuleId && rule.id === activeRuleId;
+
         return (
         <div
           key={index}
@@ -370,7 +415,12 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
             if (dragIndex !== null) move(dragIndex, index);
             setDragIndex(null);
           }}
-          className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900"
+          className={[
+            "flex flex-col gap-3 rounded-lg border p-3 transition-colors",
+            isActive
+              ? "border-amber-400 bg-amber-50 ring-2 ring-amber-300/70 dark:border-amber-400/60 dark:bg-amber-400/10 dark:ring-amber-400/30"
+              : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900",
+          ].join(" ")}
         >
           {/* Header row */}
           <div className="flex items-center gap-2">

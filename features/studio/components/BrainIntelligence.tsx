@@ -8,6 +8,7 @@
 
 import { VisualBrain } from "@/lib/authoring/types";
 import { summarizeBrain } from "@/lib/authoring/brainSummarizer";
+import { paragraphsFromText } from "@/lib/authoring/challengeBrief";
 
 interface Props {
   brain: VisualBrain;
@@ -53,7 +54,16 @@ export function BrainIntelligence({ brain, intelligenceExplanation }: Props) {
       <div className="border-t border-zinc-200 dark:border-zinc-800" />
 
       {/* Challenge-specific guidance */}
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">{intelligenceExplanation}</p>
+      <div className="flex flex-col gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+          How the starting brain behaves
+        </p>
+        {paragraphsFromText(intelligenceExplanation).map((paragraph, index) => (
+          <p key={index} className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+            {paragraph}
+          </p>
+        ))}
+      </div>
 
       {/* Quick stats */}
       <div className="flex gap-2 text-xs text-zinc-400">

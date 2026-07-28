@@ -57,6 +57,28 @@ when a branch fails.
 Its curriculum concept depends on reusable functions, but it does not require a
 state machine.
 
+### Learner-facing flow
+
+The Branching Maze description uses the same vocabulary as the workspace so the
+problem statement, checklist, and debug panel describe one process:
+
+1. **Observe** — on every tick the robot receives local facts relative to its
+   current facing: `wallAhead`, `wallLeft`, `wallRight`, and `atGoal`. It does
+   not receive the complete map.
+2. **Evaluate** — the engine reads rules from top to bottom. The first rule whose
+   condition is true *and* whose next action is safe becomes the decision for
+   that tick. Numeric priority fields do not decide execution.
+3. **Act** — the engine applies one primitive action, such as a step, pivot, or
+   hold. A composed function is still committed one primitive per tick.
+4. **Repeat** — the world advances and the next tick starts with a fresh
+   observation. Reaching the goal is not enough on its own; the robot must hold
+   for three consecutive ticks.
+
+The recommended reasoning order is arrival protection, preferred open route,
+clear-forward movement, alternate escape route, and finally a dead-end fallback.
+This is a control-flow pattern, not a numeric-priority scheme: a broad `always`
+rule belongs at the bottom because it is the final fallback.
+
 ## Functions in the Snake Corridor
 
 The Easy Snake Corridor teaches the boundary between decisions and reusable
