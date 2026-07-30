@@ -7,22 +7,22 @@
   "stage": "medium",
   "worldKey": "finance-provider-health",
   "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "medium", "grade": 2 },
-  "tagline": "Adapt when provider health changes.",
-  "brief": "Keep routing after the preferred provider goes offline during the run.",
-  "context": "Provider A starts strong but goes offline. Provider B remains available.",
-  "narrative": "The starter policy assumes Provider A is always the best. That works for the first payments, then A goes offline and new attempts fail.\n\nA real routing controller reevaluates live health for every decision. When A is unavailable, it should fall back to B instead of continuing to send work into a broken lane.",
+  "tagline": "Dynamically adapt when provider availability changes during a run.",
+  "brief": "Route to Provider A while online, then fallback to Provider B when Provider A drops.",
+  "context": "Provider A starts online, but drops mid-run. Provider B remains online continuously.",
+  "narrative": "Static routing breaks when provider health changes mid-run!\n\nIn this challenge, Provider A starts online and offers optimal rates, but drops offline halfway through processing the queue. Provider B remains online throughout.\n\nSet up dynamic routing: send transactions to Provider A while onlineA is true, and fall back to Provider B (onlineB) when Provider A drops.",
   "objective": "Process every payment with at most one failure while provider health changes.",
-  "learningObjective": "Make a fresh decision from live state instead of committing to one route.",
-  "intelligenceExplanation": "The provider cards update as the simulation runs. A is preferred while it is online, but B must take over after the outage.\n\nPlace the live availability rules in the correct order and watch the lane status change during the run.",
-  "hint": "Use WHEN onlineA → route-a above WHEN onlineB → route-b so B takes over after A drops.",
+  "learningObjective": "Build dynamic fallbacks that adapt to live environmental state changes and provider outages.",
+  "intelligenceExplanation": "Order rules dynamically:\n1. WHEN onlineA -> DO route-a\n2. WHEN onlineB -> DO route-b\n\nWhile A is online, rule 1 fires. When A goes offline mid-run, rule 1 fails to match and rule 2 seamlessly takes over.",
+  "hint": "Place WHEN onlineA -> DO route-a above WHEN onlineB -> DO route-b.",
   "hints": [
-    "Watch Provider A's card — it goes offline partway through the run.",
-    "A fixed 'always route A' rule can't adapt. Use a live condition: WHEN onlineA → DO route-a.",
-    "Put WHEN onlineB → DO route-b underneath it, so B takes over after A drops."
+    "Provider A goes offline mid-run.",
+    "Place WHEN onlineA -> DO route-a first.",
+    "Place WHEN onlineB -> DO route-b second as a fallback."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
-    { "id": "adapt", "label": "At most one failed payment through the health change", "check": "allProcessed && failed <= 1" }
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Process all payments through the health transition" },
+    { "id": "adapt", "label": "Allow at most one failure during the outage transition", "check": "allProcessed && failed <= 1", "hint": "Use onlineA -> route-a with onlineB -> route-b fallback" }
   ],
   "availableBricks": ["route-a", "route-b", "hold"],
   "availableConditions": ["hasTransaction", "onlineA", "onlineB", "successA", "successB", "canRouteA", "canRouteB", "always"],

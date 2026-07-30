@@ -6,16 +6,16 @@
   "difficulty": 1,
   "stage": "practice",
   "worldKey": "warehouse-first-delivery",
-  "tagline": "Turn a route into a completed delivery.",
-  "narrative": "The practice warehouse has one package and one outbound station. The robot already follows the aisle route, but movement alone does not complete warehouse work.\n\nTeach the robot to recognise the two work moments: pick up a package when it is on the same tile, and deliver it when it is carrying the package at Outbound A.",
+  "tagline": "Teach your robot warehouse interactions: loading and unloading orders.",
+  "narrative": "Welcome to the Warehouse!\n\nYour robot is driving along an automated warehouse aisle containing one waiting package and one outbound station.\n\nWhile the robot already knows how to drive along the aisle, driving alone doesn't complete orders! Teach it two interaction decisions: pick up the package when standing on its tile, and deliver it when arriving at Outbound A.",
   "objective": "Pick up the waiting package and deliver it to Outbound A.",
-  "learningObjective": "Use world facts to choose interaction actions, not just movement actions.",
-  "intelligenceExplanation": "The starting brain already knows how to travel through the fixed aisle. It does not yet know when to pick up or deliver.\n\nAdd the work rules before the navigation rules. The warehouse completes as soon as the order is delivered; it does not use the maze's three-tick goal hold.",
-  "hint": "Add `packageHere → pick-up` and `deliveryHere && carryingPackage → deliver`. Put both above navigation.",
+  "learningObjective": "Use environmental facts (packageHere, deliveryHere) to trigger interaction actions alongside navigation.",
+  "intelligenceExplanation": "The starter brain includes navigation rules for moving along the aisle. Add interaction rules placed above navigation.\n\nRules to add: 1) WHEN packageHere -> DO pick-up, 2) WHEN deliveryHere && carryingPackage -> DO deliver. Order interaction rules above navigation so the robot interacts before moving past stations.",
+  "hint": "Add WHEN packageHere -> DO pick-up and WHEN deliveryHere && carryingPackage -> DO deliver above navigation.",
   "hints": [
-    "The route is present already. Watch the debug panel for Package here and Delivery here.",
-    "A package needs an interaction rule, not another move rule: WHEN packageHere → DO pick-up.",
-    "Delivery must only happen while carrying cargo: WHEN deliveryHere AND carryingPackage → DO deliver. Keep both work rules above the clear-aisle movement rule."
+    "The aisle route is pre-configured in the rules list.",
+    "Add a pickup rule: WHEN packageHere -> DO pick-up.",
+    "Add a delivery rule: WHEN deliveryHere && carryingPackage -> DO deliver, and place both above navigation."
   ],
   "taxonomy": {
     "domain": "Warehouse",
@@ -23,20 +23,20 @@
     "tier": "tutorial",
     "grade": 1
   },
-  "brief": "Teach the robot to pick up the waiting order and drop it at Outbound A.",
-  "context": "One order, one outbound dock. The robot already drives the aisle — it just doesn't do warehouse work yet.",
+  "brief": "Program the robot to pick up the waiting order and drop it off at Outbound A.",
+  "context": "The robot already drives down the aisle, but doesn't know how to pick up or deliver packages.",
   "steps": [
     {
       "id": "pick",
-      "label": "Load the waiting package",
+      "label": "Pick up the waiting package when standing on it",
       "check": "carryingPackage || deliveredCount >= 1",
-      "hint": "WHEN packageHere → DO pick-up, above the navigation rules."
+      "hint": "WHEN packageHere -> DO pick-up"
     },
     {
       "id": "deliver",
-      "label": "Deliver it to Outbound A",
+      "label": "Deliver the package upon reaching Outbound A",
       "check": "deliveredCount >= 1",
-      "hint": "WHEN deliveryHere AND carryingPackage → DO deliver."
+      "hint": "WHEN deliveryHere && carryingPackage -> DO deliver"
     }
   ],
   "availableBricks": [
@@ -137,7 +137,7 @@
     },
     {
       "id": "focused",
-      "label": "Keep the complete policy to five rules or fewer",
+      "label": "Complete the delivery with five rules or fewer",
       "check": "reached && rules <= 5",
       "bonus": true
     }

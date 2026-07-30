@@ -364,6 +364,64 @@ export function currentTx(world: World): FinanceRuntimeTx | null {
   return readyTransactions(world)[0] ?? null;
 }
 
+// --- Lifecycle selectors (presentation reads these; no domain logic in the UI) ---
+
+/** Payments accepted for processing but not yet settled, oldest start first. */
+export function inFlightTransactions(
+  world: World,
+  providerId?: string,
+): FinanceRuntimeTx[] {
+  return (financeRuntime(world)?.transactions ?? [])
+    .filter(
+      (tx) =>
+        tx.status === "processing" &&
+        (providerId === undefined || tx.routedTo === providerId),
+    )
+    .sort((left, right) => (left.completesAt ?? 0) - (right.completesAt ?? 0));
+}
+
+/**
+ * Payments that have arrived and failed at least once, and are serving their
+ * retry backoff — visible "stuck" work rather than silently pending.
+ */
+export function retryingTransactions(world: World): FinanceRuntimeTx[] {
+  return (financeRuntime(world)?.transactions ?? []).filter(
+    (tx) =>
+      tx.status === "waiting" &&
+      tx.failedAttempts > 0 &&
+      tx.nextEligibleTick > world.tick,
+  );
+}
+
+/** Payments that have not arrived yet — the upcoming arrival pipeline. */
+export function scheduledTransactions(world: World): FinanceRuntimeTx[] {
+  return (financeRuntime(world)?.transactions ?? []).filter(
+    (tx) => tx.status === "scheduled",
+  );
+}
+
+/** Ticks left before this payment expires, or null when it has no deadline. */
+export function deadlineRemainingFor(
+  world: World,
+  tx: FinanceRuntimeTx,
+): number | null {
+  if (!tx.deadlineTicks || tx.deadlineTicks <= 0) return null;
+  return Math.max(0, (tx.arrivalTick ?? 0) + tx.deadlineTicks - world.tick);
+}
+
+/** Most recently settled payments (newest first) for a live event feed. */
+export function recentSettlements(
+  world: World,
+  limit = 6,
+): FinanceRuntimeTx[] {
+  return (financeRuntime(world)?.transactions ?? [])
+    .filter((tx) =>
+      ["succeeded", "failed", "declined", "lost"].includes(tx.status),
+    )
+    .sort((left, right) => (right.completedAt ?? 0) - (left.completedAt ?? 0))
+    .slice(0, limit);
+}
+
 export interface ProviderState {
   id: string;
   name: string;

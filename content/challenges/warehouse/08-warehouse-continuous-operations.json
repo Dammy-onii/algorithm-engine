@@ -6,16 +6,16 @@
   "difficulty": 2,
   "stage": "easy",
   "worldKey": "warehouse-continuous-operations",
-  "tagline": "Keep replenishing work moving without overfilling cargo.",
-  "narrative": "The 11×5 warehouse has two pick stations. Each station exposes another package as soon as the current one is collected.\n\nThe robot can carry only two packages. It must stop collecting when it is full, deliver the correct cargo, and then return for more work.",
+  "tagline": "Manage cargo capacity while fulfilling a continuous stream of orders.",
+  "narrative": "Six orders arrive continuously across two pick stations.\n\nYour robot has a maximum cargo capacity of 2 packages. Attempting to pick up a third package when full will fail!\n\nKeep operations running continuously: load packages only when capacityRemaining > 0, deliver red and blue cargo to their matching docks, and keep looping until all 6 orders are fulfilled.",
   "objective": "Process all six station orders without exceeding the robot's two-package capacity.",
-  "learningObjective": "Combine replenishing queues, finite capacity, and type-aware delivery in a continuous policy.",
-  "intelligenceExplanation": "The route is supplied, but no work rules are present. Pickup must require both `packageHere` and a free cargo slot.\n\nUse separate red and blue delivery rules. The debug panel shows packages remaining and available cargo slots, so you can verify that the policy is making progress instead of repeatedly trying an impossible pickup.",
-  "hint": "Guard pickup with `packageHere && capacityRemaining > 0`, then add typed delivery rules above navigation.",
+  "learningObjective": "Combine capacity tracking, replenishing order queues, and typed delivery into an automated fulfillment loop.",
+  "intelligenceExplanation": "Navigation is provided. Add pickup and delivery rules:\n1. WHEN packageHere && capacityRemaining > 0 -> DO pick-up\n2. WHEN deliveryRedHere && carryingRed -> DO deliver\n3. WHEN deliveryBlueHere && carryingBlue -> DO deliver\n\nPlace delivery and capacity-checked pickup rules above navigation.",
+  "hint": "Guard pickup with packageHere && capacityRemaining > 0, and place delivery rules at the top.",
   "hints": [
-    "Each station exposes its next package immediately after a pickup, but the robot has only two cargo slots.",
-    "A pickup rule should require both packageHere and capacityRemaining > 0.",
-    "Put typed red and blue delivery rules first, capacity-aware pickup next, and the supplied navigation rules last."
+    "The robot can carry up to 2 packages at a time.",
+    "Only load a package if capacityRemaining > 0.",
+    "Order rules: 1) typed delivery rules, 2) capacity-checked pickup, 3) navigation."
   ],
   "taxonomy": {
     "domain": "Warehouse",
@@ -23,22 +23,24 @@
     "tier": "easy",
     "grade": 1
   },
-  "brief": "Keep both replenishing stations moving while respecting two-package cargo capacity.",
-  "context": "Six orders appear one at a time across two pick faces on a continuous aisle loop.",
+  "brief": "Process all 6 warehouse orders without overloading your 2-package cargo bay.",
+  "context": "Orders continuously replenish at two stations. The robot can carry a maximum of 2 packages at once.",
   "steps": [
     {
       "id": "load",
-      "label": "Load work only while cargo space remains",
+      "label": "Load packages only when cargo space remains (capacityRemaining > 0)",
+      "hint": "Use packageHere && capacityRemaining > 0",
       "check": "carryingRed || carryingBlue || deliveredCount >= 1"
     },
     {
       "id": "flow",
-      "label": "Deliver orders from both station queues",
+      "label": "Deliver orders to matching outbound docks",
+      "hint": "Deliver red cargo to red outbound and blue cargo to blue outbound",
       "check": "deliveredCount >= 2"
     },
     {
       "id": "complete",
-      "label": "Deliver all six station orders",
+      "label": "Fulfill all six station orders",
       "check": "reached"
     }
   ],

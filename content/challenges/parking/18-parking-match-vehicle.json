@@ -7,23 +7,23 @@
   "stage": "easy",
   "worldKey": "parking-match-vehicle",
   "taxonomy": { "domain": "Parking", "simulation": "Smart Facility Operations", "tier": "easy", "grade": 1 },
-  "tagline": "Match each vehicle to a compatible space.",
-  "brief": "Handle electric, large, and ordinary arrivals with specific rules.",
-  "context": "The lot has standard spaces, charging bays, and wider spaces for large vehicles.",
-  "narrative": "The entrance queue now contains different vehicle requirements. An electric car should use a charging bay, and a large vehicle needs a large space.\n\nA broad standard rule also matches those vehicles. Order the policy so special cases are handled before the general fallback.",
+  "tagline": "Match vehicle types (electric, large, standard) to compatible parking spaces.",
+  "brief": "Route electric cars to charging bays and large vehicles to large bays.",
+  "context": "The lot has standard spaces, charging bays for electric cars, and wide bays for large vehicles.",
+  "narrative": "Vehicles with specific requirements are entering your lot.\n\nElectric vehicles need charging bays, while large trucks need wide spaces. Assigning an electric car to a standard space or a large truck to a small spot causes a category violation!\n\nOrder your rules from specific vehicle requirements (carElectric, carLarge) down to the general standard vehicle fallback.",
   "objective": "Serve all eight vehicles without assigning a vehicle to an incompatible category.",
-  "learningObjective": "Match resources by requirements and place specific rules before a general fallback.",
-  "intelligenceExplanation": "The starter controller sends every arrival to standard parking. Add electric and large rules above that fallback.\n\nThe first matching safe rule decides the allocation for the vehicle at the head of the queue.",
-  "hint": "Use this order: electric → charging, large → large, then the standard fallback.",
+  "learningObjective": "Match specific resource requirements before applying general fallbacks.",
+  "intelligenceExplanation": "The starter controller routes everything to standard parking. Place specific rules above that fallback:\n1. WHEN hasExitRequest -> DO release-vehicle\n2. WHEN carElectric -> DO park-charging\n3. WHEN carLarge -> DO park-large\n4. WHEN hasWaitingVehicle -> DO park-standard",
+  "hint": "Order rules: release-vehicle -> carElectric -> carLarge -> park-standard.",
   "hints": [
-    "A broad hasWaitingVehicle rule also matches electric cars and trucks.",
-    "Specific rules must appear before the broad fallback in a top-to-bottom decision flow.",
-    "Use carElectric → park-charging, then carLarge → park-large, then hasWaitingVehicle → park-standard."
+    "Place specific carElectric and carLarge rules above the broad hasWaitingVehicle rule.",
+    "WHEN carElectric -> DO park-charging",
+    "WHEN carLarge -> DO park-large"
   ],
   "steps": [
-    { "id": "charging", "label": "Send electric vehicles to charging bays", "check": "departedCount >= 2 && violations == 0" },
-    { "id": "large", "label": "Keep large vehicles out of standard spaces", "check": "departedCount >= 4 && violations == 0" },
-    { "id": "serve", "label": "Serve the complete mixed queue", "check": "allVehiclesServed && violations == 0" }
+    { "id": "charging", "label": "Route electric vehicles to charging bays", "check": "departedCount >= 2 && violations == 0", "hint": "WHEN carElectric -> DO park-charging" },
+    { "id": "large", "label": "Route large vehicles to wide bays", "check": "departedCount >= 4 && violations == 0", "hint": "WHEN carLarge -> DO park-large" },
+    { "id": "serve", "label": "Serve all 8 vehicles with zero violations", "check": "allVehiclesServed && violations == 0" }
   ],
   "availableBricks": ["park-standard", "park-charging", "park-large", "release-vehicle", "hold"],
   "availableConditions": ["hasExitRequest", "exitQueueLength", "hasWaitingVehicle", "carElectric", "carLarge", "standardAvailable", "chargingAvailable", "largeAvailable", "always"],

@@ -7,23 +7,23 @@
   "stage": "practice",
   "worldKey": "finance-skip-offline",
   "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "tutorial", "grade": 2 },
-  "tagline": "Check availability before choosing a fee.",
-  "brief": "Route payments through the cheapest provider that is actually online.",
-  "context": "Provider A has the lowest fee, but it is offline. Provider B is available.",
-  "narrative": "The starter rule sends every payment to Provider A because its fee is lower. That route cannot succeed while A is offline.\n\nFix the policy by checking whether a provider can accept work before using its price. A cheap route is useful only when it is available.",
+  "tagline": "Filter out offline payment providers before checking fees.",
+  "brief": "Route payments to Provider B because Provider A is offline.",
+  "context": "Provider A has a cheaper fee listed, but it is currently offline. Provider B is online.",
+  "narrative": "The starter rule attempts to route every transaction to Provider A because its fee is lower. However, Provider A is currently offline, so every attempt fails!\n\nA low fee is useless if the provider is offline. Verify provider availability first: route transactions to Provider B while Provider B is online.",
   "objective": "Process every payment with no failures and avoid the offline provider.",
-  "learningObjective": "Apply hard constraints first, then optimise among the options that remain.",
-  "intelligenceExplanation": "The provider cards show that A is cheaper but unavailable, while B is online. Replace the starter route with an available route.\n\nThe queue should clear without a failed attempt.",
-  "hint": "Use the available fallback: WHEN onlineB → DO route-b.",
+  "learningObjective": "Check availability constraints (onlineB) before evaluating price or fees.",
+  "intelligenceExplanation": "The provider status shows Provider A as offline. The naive rule `WHEN hasTransaction -> DO route-a` fails.\n\nChange the rule to: WHEN onlineB -> DO route-b to bypass the offline provider cleanly.",
+  "hint": "Change the rule to: WHEN onlineB -> DO route-b.",
   "hints": [
-    "Look at the provider cards — one is marked offline. Routing there fails.",
-    "The starter rule sends everything to A. Change it: WHEN onlineB → DO route-b.",
-    "B is the cheaper available provider in this fixed scenario."
+    "Check provider status: Provider A is offline.",
+    "Routing to an offline provider causes immediate failures.",
+    "Use WHEN onlineB -> DO route-b to send payments to the active provider."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
-    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" },
-    { "id": "cost", "label": "Use the cheapest available route", "check": "allProcessed && totalCost <= 0.46" }
+    { "id": "drain", "label": "Process all queued payments", "check": "allProcessed", "hint": "Route all payments until queue is cleared" },
+    { "id": "clean", "label": "Ensure zero failed payments", "check": "allProcessed && failed == 0", "hint": "Do not attempt routing through offline Provider A" },
+    { "id": "cost", "label": "Keep total cost at or below ₦0.46", "check": "allProcessed && totalCost <= 0.46" }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold"],
   "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "feeA", "feeB", "feeC", "always"],

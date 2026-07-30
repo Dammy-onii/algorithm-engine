@@ -6,16 +6,16 @@
   "difficulty": 3,
   "stage": "medium",
   "worldKey": "challenge-arena",
-  "tagline": "Change strategy when the goal becomes visible.",
-  "narrative": "The Open Arena is a 9×9 space with scattered pillars and several valid routes. Wandering can eventually reach the goal, but it wastes energy.\n\nThis level demonstrates two navigation modes. The robot explores while the goal is hidden, then switches to a goal-seeking strategy when the goal becomes visible. A state machine gives the controller that change of mode.",
+  "tagline": "Switch between searching and target-seeking using state machine modes.",
+  "narrative": "The Open Arena is a 9x9 space with scattered pillars.\n\nWandering aimlessly burns up energy. Instead, your robot should use two distinct operating modes (States):\n1. Explore Mode: Search the arena while the goal is hidden.\n2. Seek Mode: As soon as the exit becomes visible, switch state to Seek and head directly toward it!",
   "objective": "Reach the goal using Explore and Seek states, then hold on it for 3 consecutive ticks.",
-  "learningObjective": "Use states and transitions to change behaviour when the environment changes.",
-  "intelligenceExplanation": "The archived scaffold already defines Explore and Seek, but it has no rules. Each state needs its own ordered decisions, and a rule can use `setState` to move between them.\n\nKeep arrival and safety cases above broad movement fallbacks. The active state determines which rules are available on the current tick.",
-  "hint": "In each state, handle `atGoal` first, then goal visibility, then clear movement. Use `setState` when the goal becomes visible.",
+  "learningObjective": "Use state machine modes to change behavior dynamically when sensory conditions change.",
+  "intelligenceExplanation": "The brain defines two states: Explore and Seek.\n\nIn Explore mode, write rules to navigate around pillars. When `goalVisible` becomes true, set the state to Seek. In Seek mode, write rules that drive straight toward the goal.",
+  "hint": "In Explore state, add a rule: WHEN goalVisible -> DO step SET-STATE seek.",
   "hints": [
-    "Explore while the goal is hidden; do not use the same movement policy for every situation.",
-    "When `goalVisible` becomes true, switch from Explore to Seek.",
-    "In both states, keep `atGoal → hold` above movement rules and finish with a safe fallback."
+    "Explore while the goal is hidden to conserve energy.",
+    "When goalVisible is true, transition state from Explore to Seek.",
+    "Always place WHEN atGoal -> DO hold at the top of rules in both states."
   ],
   "taxonomy": {
     "domain": "Maze",
@@ -23,12 +23,25 @@
     "tier": "medium",
     "grade": 1
   },
-  "brief": "Build two navigation modes and switch to goal-seeking when the exit is visible.",
-  "context": "The arena has many routes, so the robot needs different behaviour for searching and arriving.",
+  "brief": "Build Explore and Seek states, switching to Seek when the exit becomes visible.",
+  "context": "The arena has scattered obstacles. Searching blindly wastes energy; direct seeking requires seeing the goal.",
   "steps": [
-    { "id": "explore", "label": "Create an Explore policy for hidden-goal navigation" },
-    { "id": "seek", "label": "Switch to Seek when the goal becomes visible" },
-    { "id": "reach", "label": "Reach the goal and hold there", "check": "reached" }
+    {
+      "id": "explore",
+      "label": "Build rules for Explore mode to search the arena",
+      "hint": "Handle walls and clear paths during exploration"
+    },
+    {
+      "id": "seek",
+      "label": "Switch to Seek mode when goalVisible is true",
+      "hint": "Use setState: seek on goalVisible"
+    },
+    {
+      "id": "reach",
+      "label": "Reach the goal and stay on it for 3 ticks",
+      "hint": "Ensure atGoal -> hold is active in Seek mode",
+      "check": "reached"
+    }
   ],
   "availableBricks": [
     "step",

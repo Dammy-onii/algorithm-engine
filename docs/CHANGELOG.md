@@ -29,6 +29,26 @@ world document.
   Code mode can react to `observedSuccessRateX`, `averageLatencyX`,
   `utilizationX`, `attemptsX`, and `completedX`.
 
+## 2026-07-29 — Finance transaction lifecycle view + reference solutions
+
+- Made the Finance board read as a running system instead of a scoreboard. It now
+  shows the **whole payment population moving** through a pipeline bar
+  (arriving → queued → in flight → settled), so progress is visible even when the
+  ready queue stays near 1 because arrivals and routing are balanced.
+- Queue entries now show **ticks waited and deadline remaining**, and turn red
+  within five ticks of expiry, making pressure and near-misses visible.
+- Provider lanes show the **actual in-flight payments** with a per-payment
+  progress bar and remaining ticks, attributed to the lane processing them.
+- Added visible **stuck work**: counts for retry backoff, near-deadline items, and
+  upcoming arrivals, plus a **latest activity feed** of settlements with
+  succeeded / failed / declined / timed-out outcome tags and overload rejections.
+- Added finance lifecycle selectors (`inFlightTransactions`,
+  `retryingTransactions`, `scheduledTransactions`, `deadlineRemainingFor`,
+  `recentSettlements`) so the renderer stays free of domain logic.
+- Added reference rule solutions as regression tests for **21 Peak Hour Payment
+  Switch** and **24 Autonomous Parking Operations**, proving both stages remain
+  solvable with visual rules alone.
+
 ## 2026-07-28 — Active-rule highlight, Code-mode reference, starter boilerplate
 
 - Studio now **highlights the rule card firing on the current tick** (soft amber)

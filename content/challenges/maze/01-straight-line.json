@@ -6,16 +6,16 @@
   "difficulty": 1,
   "stage": "practice",
   "worldKey": "challenge-straight",
-  "tagline": "Give the robot its first clear instruction.",
-  "narrative": "A robot is waiting at the entrance of a straight corridor. It is facing the exit, but it has no rules, so it cannot act.\n\nTeach it two simple responses: move while the path is clear, then wait when it reaches the goal. This is the smallest complete example of the platform's decision loop.",
-  "objective": "Move to the exit and remain on the goal for 3 consecutive ticks.",
-  "learningObjective": "Learn that a rule connects a WHEN condition to a DO action, and that rules are checked from top to bottom.",
-  "intelligenceExplanation": "The starting brain is empty. Add a rule for a clear path and a rule for arrival.\n\nOn each tick, the engine reads the current observation, finds the first matching safe rule, performs one action, and then observes again. The maze is complete only after the robot has held on the goal for three ticks.",
-  "hint": "Create two rules: WHEN atGoal → DO hold, then WHEN !wallAhead → DO step.",
+  "tagline": "Program your robot's very first movement rule.",
+  "narrative": "Welcome to Algorithm Engine!\n\nA robot stands at the entrance of a straight corridor, facing toward the exit. Although it has motors to step forward and wait, its brain has zero rules—so it just stands still.\n\nYour task is to teach it two basic decisions: move forward when the path ahead is clear, and stop once it reaches the exit goal.",
+  "objective": "Reach the corridor exit and remain on it for 3 consecutive ticks.",
+  "learningObjective": "Understand how rules link a condition (WHEN) to an action (DO), and how rules are evaluated top-to-bottom.",
+  "intelligenceExplanation": "The robot relies on you to make decisions. Every tick, the engine reads sensory inputs, finds the first matching rule, and performs its action.\n\nTo complete this level, add a rule to step forward when the path is clear, and place a rule to hold at the top so it stops upon reaching the exit.",
+  "hint": "Add two rules: WHEN atGoal -> DO hold, and WHEN !wallAhead -> DO step.",
   "hints": [
-    "The robot only acts when a rule tells it to. It needs at least one rule.",
-    "Add a rule: WHEN there is no wall ahead → DO step.",
-    "Put WHEN atGoal → DO hold above it so it settles once it arrives."
+    "The robot will not move until you add a rule.",
+    "Add a rule: WHEN !wallAhead -> DO step to make it walk forward.",
+    "Place WHEN atGoal -> DO hold at the top of the rules list so it settles on arrival."
   ],
   "taxonomy": {
     "domain": "Maze",
@@ -23,16 +23,18 @@
     "tier": "tutorial",
     "grade": 1
   },
-  "brief": "Move through the straight corridor and remain on the exit for 3 ticks.",
-  "context": "The robot has movement primitives but begins with no rules.",
+  "brief": "Guide the robot to the exit tile and stay there for 3 ticks.",
+  "context": "The corridor is straight, but the robot has no rules and doesn't know what to do.",
   "steps": [
     {
       "id": "move",
-      "label": "Give the robot a rule for a clear path"
+      "label": "Add a movement rule for a clear path",
+      "hint": "Use WHEN !wallAhead -> DO step"
     },
     {
       "id": "settle",
-      "label": "Reach the exit and settle on it",
+      "label": "Reach the exit and stay on it for 3 ticks",
+      "hint": "Use WHEN atGoal -> DO hold",
       "check": "reached"
     }
   ],

@@ -6,16 +6,16 @@
   "difficulty": 2,
   "stage": "easy",
   "worldKey": "snake",
-  "tagline": "Package a repeated turn-and-step behaviour.",
-  "narrative": "The Snake Corridor repeats the same small manoeuvre: turn into an open side, then move forward. Writing those two actions again and again would make the policy difficult to read.\n\nUse the Functions tab to name that sequence. Rules still decide when the sequence is appropriate; the function only describes the actions to perform.",
+  "tagline": "Compose reusable multi-step functions to conquer winding corridors.",
+  "narrative": "The Snake Corridor is an 11x11 winding path that requires the robot to repeatedly turn into open side passages and step forward.\n\nWriting separate turn and step rules over and over makes your intelligence cluttered. Instead, use the Functions tab to build a custom reusable action: a sequence that turns left and takes a step in one package.\n\nRules decide when to execute the function, while the function handles the fixed sequence of actions.",
   "objective": "Solve the 11×11 Snake Corridor and use at least one custom multi-step function.",
-  "learningObjective": "Separate decisions from reusable behaviour: rules choose a function, while functions run a fixed sequence one action per tick.",
-  "intelligenceExplanation": "The starting brain provides four primitive bricks and no rules. Because Functions is unlocked, you can compose a reusable sequence such as `pivot-left` followed by `step`.\n\nThe rule decides when to call it. The engine then checks each primitive against a fresh observation, so an unsafe step interrupts the sequence and lets the rules choose again.",
-  "hint": "Compose `turn-left-and-step` from `pivot-left` and `step`, then call it only when the left side is open.",
+  "learningObjective": "Separate decision logic from action sequences: rules choose when to run a function, and functions package multi-step moves.",
+  "intelligenceExplanation": "The starting brain unlocks custom Functions. Build a new function (e.g. `turn-left-and-step`) that sequences `pivot-left` followed by `step`.\n\nYour rules then call this custom function whenever the left side is open, keeping your brain clean and modular.",
+  "hint": "Compose a custom function with pivot-left + step, then trigger it with WHEN !wallLeft.",
   "hints": [
-    "Functions sequence actions; they do not contain WHEN checks. Keep sensing and branching in the rule list.",
-    "Create a two-step function: pivot-left, then step.",
-    "Use this order: atGoal → hold; !wallLeft → your turn-and-step function; !wallAhead → step; always → pivot-right."
+    "Functions group actions together; they don't contain WHEN checks.",
+    "Create a 2-step function: pivot-left then step.",
+    "Order your rules: 1) atGoal -> hold, 2) !wallLeft -> custom-function, 3) !wallAhead -> step, 4) always -> pivot-right."
   ],
   "taxonomy": {
     "domain": "Maze",
@@ -23,17 +23,19 @@
     "tier": "easy",
     "grade": 1
   },
-  "brief": "Build a reusable cornering function and use ordered rules to solve the Snake Corridor.",
-  "context": "Rules decide when to act; a custom function packages a fixed action sequence.",
+  "brief": "Create a custom cornering function and use rules to navigate the Snake Corridor.",
+  "context": "The Snake Corridor winds back and forth. Repeating turn-then-step actions manually makes rules repetitive.",
   "steps": [
     {
       "id": "compose",
-      "label": "Create at least one custom multi-step function",
+      "label": "Build a custom multi-step function in the Functions tab",
+      "hint": "Combine pivot-left and step into one function",
       "check": "functions >= 1"
     },
     {
       "id": "reach",
       "label": "Solve the corridor and settle on the goal",
+      "hint": "Trigger your custom function when !wallLeft",
       "check": "reached"
     }
   ],

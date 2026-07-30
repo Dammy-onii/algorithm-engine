@@ -7,24 +7,24 @@
   "stage": "practice",
   "worldKey": "parking-first-shift",
   "taxonomy": { "domain": "Parking", "simulation": "Smart Facility Operations", "tier": "tutorial", "grade": 1 },
-  "tagline": "Open the lot and keep capacity moving.",
-  "brief": "Park arriving cars and release finished stays through the exit checkpoint.",
-  "context": "Every arrival is a standard car, but cars finish their stays at different times.",
-  "narrative": "Cars join the entrance queue over time. Your controller sees the vehicle at the front and chooses a parking action.\n\nWhen a stay ends, the vehicle requests an exit but still occupies its space until the controller releases it. Capacity becomes reusable only after the exit process completes.",
+  "tagline": "Open the parking lot: park arriving cars and release departing ones.",
+  "brief": "Park incoming cars and authorize completed stays through the exit gate.",
+  "context": "Arriving cars join the entrance queue, while departing cars request exit authorization.",
+  "narrative": "Welcome to ParkFlow Smart Facility Operations!\n\nYour parking facility is opening its first shift. Arriving cars queue up at the entrance, while parked cars finish their stay and request to exit.\n\nControlling a facility requires managing both ends: release departing cars when an exit is requested so capacity is freed, and park arriving cars in available standard spaces.",
   "objective": "Serve every arriving car without an allocation violation.",
-  "learningObjective": "Control both sides of a facility: allocate arrivals and explicitly release completed resources.",
-  "intelligenceExplanation": "The starting brain has no rules. Add one rule for ready exits and one for waiting arrivals.\n\nThe decision flow should consider exit work before new parking work so completed vehicles can free capacity for the next arrival.",
-  "hint": "Use `hasExitRequest → release-vehicle` before `hasWaitingVehicle → park-standard`.",
+  "learningObjective": "Coordinate both entrances and exits: process exit requests first to free capacity for new arrivals.",
+  "intelligenceExplanation": "The starting brain has no rules. Add two rules:\n1. WHEN hasExitRequest -> DO release-vehicle\n2. WHEN hasWaitingVehicle -> DO park-standard\n\nOrder exit release above arrival parking so departing cars free up spots for incoming vehicles.",
+  "hint": "Add WHEN hasExitRequest -> DO release-vehicle above WHEN hasWaitingVehicle -> DO park-standard.",
   "hints": [
-    "Watch the entrance queue: its first car is the only vehicle the controller allocates this tick.",
-    "A standard car only needs the standard allocation action.",
-    "Use hasExitRequest → release-vehicle and hasWaitingVehicle → park-standard. Exit first keeps capacity turning over."
+    "Check the exit queue first so completed stays release capacity.",
+    "Place WHEN hasExitRequest -> DO release-vehicle at the top.",
+    "Place WHEN hasWaitingVehicle -> DO park-standard second."
   ],
   "steps": [
-    { "id": "allocate", "label": "Allocate an arriving car", "check": "parkedCount >= 1 || departedCount >= 1" },
-    { "id": "release", "label": "Authorize a car through the exit checkpoint", "check": "departedCount >= 1" },
-    { "id": "serve", "label": "Serve all six cars", "check": "allVehiclesServed" },
-    { "id": "clean", "label": "Finish with no allocation violations", "check": "allVehiclesServed && violations == 0" }
+    { "id": "allocate", "label": "Park an arriving car into a standard space", "check": "parkedCount >= 1 || departedCount >= 1", "hint": "Use WHEN hasWaitingVehicle -> DO park-standard" },
+    { "id": "release", "label": "Authorize departing cars through the exit gate", "check": "departedCount >= 1", "hint": "Use WHEN hasExitRequest -> DO release-vehicle" },
+    { "id": "serve", "label": "Serve all six vehicles during the shift", "check": "allVehiclesServed" },
+    { "id": "clean", "label": "Finish with zero allocation violations", "check": "allVehiclesServed && violations == 0" }
   ],
   "availableBricks": ["park-standard", "release-vehicle", "hold"],
   "availableConditions": ["hasExitRequest", "exitQueueLength", "hasWaitingVehicle", "standardAvailable", "spacesAvailable", "always"],

@@ -6,18 +6,16 @@
   "difficulty": 2,
   "stage": "easy",
   "worldKey": "maze-proper",
-  "tagline": "Follow an ordered, wall-aware policy through junctions and dead ends.",
-  "narrative": "The robot starts at the entrance of a real 11×11 maze. The route to the exit contains junctions, misleading branches, and dead ends, so a rule that only walks forward or always turns the same way can loop.\n\nThe robot cannot see the complete map. At each tick it receives only local observations relative to its current facing: whether there is a wall ahead, to the left, or to the right, and whether it is on the goal. Your job is to turn those observations into a repeatable navigation policy.",
-  "objective": "Build and run a rule policy that reaches the goal in the 11×11 Branching Maze, then keeps the robot on the goal for 3 consecutive ticks. The policy must handle open junctions, blocked corridors, and dead ends without trying to move through a wall.",
-  "learningObjective": "Learn a deterministic control loop: observe the current maze, evaluate rules from top to bottom, choose the first matching safe action, advance one primitive action, and evaluate the new observation on the next tick.",
-  "intelligenceExplanation": "The starting brain contains only the four navigation primitives — step, pivot-left, pivot-right, and hold — plus one exploration state. It has no rules, so it waits.\n\nAdd the decision flow yourself. Protect arrival first with an atGoal → hold rule. Then describe the route policy from the most specific case to the broadest fallback: prefer an open side at a junction, continue when the front is open, turn toward an available side when the route is blocked, and recover from a dead end when all three sensed directions are walls. A composed turn-and-step function is optional, but remember that its turn and move are committed on separate ticks and the move is checked against a fresh observation.",
-  "hint": "Start by writing down the cases your policy must distinguish: already at the goal, an open preferred side, an open front, another open side, and no open side. Put the arrival case first and the unconditional fallback last. At every tick the engine uses the first rule whose condition is true and whose next action is safe; the numeric field on a card does not choose the winner.",
+  "tagline": "Navigate junctions, dead ends, and open corridors using a systematic wall-following strategy.",
+  "narrative": "You face an 11x11 maze filled with open junctions, misleading dead ends, and winding corridors.\n\nThe robot only senses relative local facts at each tick: wallAhead, wallLeft, wallRight, and atGoal.\n\nYour challenge is to solve the maze using a wall-following strategy. By handling specific junction and dead-end situations before general movement fallbacks, your robot can systematically escape any maze layout!",
+  "objective": "Navigate the 11×11 Branching Maze, reach the exit, and settle for 3 consecutive ticks.",
+  "learningObjective": "Master top-to-bottom rule ordering: prioritize arrival, handle openings/junctions, manage blocked corridors, and escape dead ends.",
+  "intelligenceExplanation": "The starting brain has primitive actions and no rules.\n\nBuild your rule hierarchy: 1) WHEN atGoal -> DO hold, 2) check preferred openings, 3) step forward when clear, 4) turn at walls, and 5) fallback when fully blocked.",
+  "hint": "Order your rules: arrival first, preferred open side second, clear path third, turn fourth, and fallback last.",
   "hints": [
-    "Read wallAhead, wallLeft, and wallRight relative to the robot's current facing. A 'right' opening is not a fixed map direction.",
-    "Protect the goal first: WHEN atGoal → DO hold. The maze confirms success only after the robot remains on the goal for three ticks.",
-    "Separate decisions from actions: a rule chooses what should happen now; a function can package a turn followed by a step, one primitive per tick.",
-    "Use a consistent ordered policy for junctions and corridors. Specific cases belong above general cases, and an always fallback belongs last.",
-    "If the robot reaches a dead end, all three local wall facts are true. Turn around or otherwise choose an available escape route, then let the next tick observe the new direction."
+    "Local wall facts (wallAhead, wallLeft, wallRight) are relative to current facing direction.",
+    "Place WHEN atGoal -> DO hold at the top of the rules list.",
+    "A wall-following strategy systematically prefers an open side wall before stepping forward."
   ],
   "taxonomy": {
     "domain": "Maze",
@@ -25,28 +23,28 @@
     "tier": "easy",
     "grade": 2
   },
-  "brief": "Use a consistent ordered navigation policy to escape the branching maze.",
-  "context": "Several plausible routes terminate in dead ends, so corridor-only rules are not enough.",
+  "brief": "Solve the 11x11 Branching Maze by navigating junctions, dead ends, and winding corridors.",
+  "context": "The maze contains dead ends and multiple junctions. Unordered rules cause infinite loops.",
   "steps": [
     {
       "id": "read",
-      "label": "Read the three relative wall facts and choose a policy",
-      "hint": "The robot sees only wallAhead, wallLeft, and wallRight at the current tick; it does not receive the complete map."
+      "label": "Observe the three relative wall facts (wallAhead, wallLeft, wallRight)",
+      "hint": "Facts reflect relative facing direction, not fixed map cardinal directions"
     },
     {
       "id": "arrival",
-      "label": "Protect the goal with an atGoal → hold rule",
-      "hint": "Arrival is a separate case: holding is what lets the maze confirm the goal instead of walking away from it."
+      "label": "Protect the goal with an atGoal -> hold rule",
+      "hint": "Put atGoal -> hold at the top of the rule list"
     },
     {
       "id": "policy",
-      "label": "Order junction, corridor, and dead-end fallbacks",
-      "hint": "Place specific route cases above broad movement rules, and keep the unconditional fallback at the bottom."
+      "label": "Handle specific junction choices before general movement fallbacks",
+      "hint": "Order: arrival -> preferred open side -> clear path -> turn -> fallback"
     },
     {
       "id": "reach",
-      "label": "Reach the exit and hold there for 3 ticks",
-      "hint": "Apply & Run starts a fresh run. Use Step and the decision pipeline to compare the observed walls, matched rule, and returned action.",
+      "label": "Reach the exit and stay on it for 3 ticks",
+      "hint": "Press Apply & Run to start the simulation",
       "check": "reached"
     }
   ],

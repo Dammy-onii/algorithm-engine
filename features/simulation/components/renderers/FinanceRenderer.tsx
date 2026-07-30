@@ -9,15 +9,21 @@
 
 import { World } from "@/lib/engine/world/world";
 import {
+  FinanceRuntimeTx,
   ProviderState,
   canRoute,
   countByStatus,
   currentTx,
+  deadlineRemainingFor,
   expectedCost,
   financeScore,
   financeRuntime,
+  inFlightTransactions,
   providerStateAt,
   readyTransactions,
+  recentSettlements,
+  retryingTransactions,
+  scheduledTransactions,
   totalCost,
 } from "@/lib/engine/worlds/finance";
 
@@ -77,6 +83,18 @@ export function FinanceRenderer({ world }: { world: World }) {
   const hasExceptions = failed + declined + lost > 0;
   const decision = runtime.lastDecision;
 
+  // Live transaction lifecycle: upcoming arrivals, retry backoff, in-flight work
+  // and the newest settlements. This is what makes the board read as a running
+  // system rather than a static scoreboard.
+  const upcoming = scheduledTransactions(world);
+  const retrying = retryingTransactions(world);
+  const feed = recentSettlements(world, 6);
+  const total = runtime.transactions.length;
+  const atRisk = queued.filter((item) => {
+    const left = deadlineRemainingFor(world, item);
+    return left !== null && left <= 5;
+  }).length;
+
   return (
     <div className="flex w-full flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       {/* Operational transfer flow — intentionally lanes and queues, never a grid. */}
@@ -92,24 +110,33 @@ export function FinanceRenderer({ world }: { world: World }) {
           </span>
         </div>
 
+        {/* Pipeline — every payment is somewhere in this chain, and the bar moves. */}
+        <PipelineStrip
+          total={total}
+          upcoming={upcoming.length}
+          queued={queued.length}
+          inFlight={inFlight}
+          settled={processed}
+        />
+
         <div className="finance-flow-track">
           <FlowPanel title={`Ready queue · ${queued.length}`}>
             {queued.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {queued.slice(0, 5).map((item, index) => (
-                  <span
+              <div className="flex flex-col gap-1">
+                {queued.slice(0, 4).map((item, index) => (
+                  <QueueItem
                     key={item.id}
-                    className={[
-                      "rounded border px-1.5 py-1 font-mono text-[10px] tabular-nums",
-                      index === 0
-                        ? "border-zinc-900 bg-zinc-900 text-white motion-safe:animate-pulse dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                        : "border-zinc-300 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-                    ].join(" ")}
-                  >
-                    {item.id} · {NAIRA_AMOUNT.format(item.amount)}
-                  </span>
+                    item={item}
+                    head={index === 0}
+                    deadlineLeft={deadlineRemainingFor(world, item)}
+                    waited={Math.max(0, world.tick - (item.arrivalTick ?? 0))}
+                  />
                 ))}
-                {queued.length > 5 && <span className="self-center text-[10px] text-zinc-400">+{queued.length - 5}</span>}
+                {queued.length > 4 && (
+                  <span className="text-[10px] text-zinc-400">
+                    +{queued.length - 4} more waiting
+                  </span>
+                )}
               </div>
             ) : (
               <EmptyFlow
@@ -124,6 +151,13 @@ export function FinanceRenderer({ world }: { world: World }) {
                 }
               />
             )}
+            <div className="mt-1.5 flex flex-wrap gap-1 border-t border-zinc-200 pt-1.5 text-[9px] dark:border-zinc-700">
+              <MiniTag label={`${upcoming.length} arriving`} />
+              {retrying.length > 0 && (
+                <MiniTag label={`${retrying.length} in backoff`} tone="warn" />
+              )}
+              {atRisk > 0 && <MiniTag label={`${atRisk} near deadline`} tone="danger" />}
+            </div>
           </FlowPanel>
 
           <FlowArrow label="decide" />
@@ -197,10 +231,54 @@ export function FinanceRenderer({ world }: { world: World }) {
                   </div>
                 );
               })}
+              {runtime.processingMode === "queued" && (
+                <LaneWork world={world} states={states} />
+              )}
             </div>
           </FlowPanel>
 
         </div>
+      </section>
+
+      {/* Live event feed — settlements and exceptions as they happen. */}
+      <section
+        aria-label="Recent payment events"
+        className="rounded-md border border-zinc-200 bg-white p-2.5 dark:border-zinc-800 dark:bg-zinc-900"
+      >
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <h3 className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Latest activity
+          </h3>
+          <div className="flex flex-wrap gap-1">
+            {timedOut > 0 && <MiniTag label={`${timedOut} timed out`} tone="danger" />}
+            {failed > 0 && <MiniTag label={`${failed} failed`} tone="danger" />}
+            {declined > 0 && <MiniTag label={`${declined} declined`} tone="warn" />}
+            {runtime.overloadRejects > 0 && (
+              <MiniTag label={`${runtime.overloadRejects} overload`} tone="danger" />
+            )}
+          </div>
+        </div>
+        {feed.length > 0 ? (
+          <ul className="flex flex-col gap-0.5">
+            {feed.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-2 font-mono text-[10px] tabular-nums text-zinc-600 dark:text-zinc-300"
+              >
+                <span className="truncate">
+                  t{item.completedAt ?? "-"} · {item.id} ·{" "}
+                  {NAIRA_AMOUNT.format(item.amount)}
+                  {item.routedTo ? ` → ${item.routedTo}` : ""}
+                </span>
+                <OutcomeTag status={item.status} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[10px] text-zinc-400">
+            No settlements yet — press Apply &amp; Run to start the switch.
+          </p>
+        )}
       </section>
 
       <section
@@ -375,6 +453,166 @@ export function FinanceRenderer({ world }: { world: World }) {
         </span>
       </div>
     </div>
+  );
+}
+
+/** Every payment sits in exactly one stage; the bar shows the whole population. */
+function PipelineStrip({
+  total,
+  upcoming,
+  queued,
+  inFlight,
+  settled,
+}: {
+  total: number;
+  upcoming: number;
+  queued: number;
+  inFlight: number;
+  settled: number;
+}) {
+  const stages = [
+    { label: "Arriving", value: upcoming, bar: "bg-zinc-300 dark:bg-zinc-700" },
+    { label: "Queued", value: queued, bar: "bg-amber-400" },
+    { label: "In flight", value: inFlight, bar: "bg-blue-500" },
+    { label: "Settled", value: settled, bar: "bg-emerald-500" },
+  ];
+  const safeTotal = Math.max(1, total);
+
+  return (
+    <div className="mb-3">
+      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+        {stages.map((stage) => (
+          <div
+            key={stage.label}
+            className={`${stage.bar} transition-all duration-300`}
+            style={{ width: `${(stage.value / safeTotal) * 100}%` }}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+        {stages.map((stage) => (
+          <span
+            key={stage.label}
+            className="flex items-center gap-1 font-mono text-[9px] tabular-nums text-zinc-500"
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${stage.bar}`} />
+            {stage.label} {stage.value}
+          </span>
+        ))}
+        <span className="ml-auto font-mono text-[9px] tabular-nums text-zinc-400">
+          {settled}/{total}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** One waiting payment, with how long it has waited and how long it has left. */
+function QueueItem({
+  item,
+  head,
+  deadlineLeft,
+  waited,
+}: {
+  item: FinanceRuntimeTx;
+  head: boolean;
+  deadlineLeft: number | null;
+  waited: number;
+}) {
+  const urgent = deadlineLeft !== null && deadlineLeft <= 5;
+  return (
+    <div
+      className={[
+        "flex items-center justify-between gap-2 rounded border px-1.5 py-1 font-mono text-[10px] tabular-nums",
+        head
+          ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+          : urgent
+            ? "border-red-300 bg-red-50 text-red-900 dark:border-red-500/50 dark:bg-red-500/10 dark:text-red-200"
+            : "border-zinc-300 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+      ].join(" ")}
+    >
+      <span className="truncate">
+        {item.id} · {NAIRA_AMOUNT.format(item.amount)}
+        {item.priority ? " ★" : ""}
+      </span>
+      <span className="shrink-0 opacity-80">
+        {waited}t waited
+        {deadlineLeft !== null ? ` · ${deadlineLeft}t left` : ""}
+        {item.failedAttempts > 0 ? ` · retry ${item.failedAttempts}` : ""}
+      </span>
+    </div>
+  );
+}
+
+/** In-flight payments per lane, with progress toward completion. */
+function LaneWork({ world, states }: { world: World; states: ProviderState[] }) {
+  const rows = states.flatMap((state) =>
+    inFlightTransactions(world, state.id).map((tx) => ({ state, tx })),
+  );
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="mt-1 flex flex-col gap-0.5 border-t border-zinc-200 pt-1.5 dark:border-zinc-700">
+      <span className="text-[9px] font-semibold uppercase tracking-wide text-zinc-400">
+        Processing now
+      </span>
+      {rows.slice(0, 6).map(({ state, tx }) => {
+        const started = tx.startedAt ?? world.tick;
+        const ends = tx.completesAt ?? world.tick;
+        const span = Math.max(1, ends - started);
+        const done = Math.min(1, Math.max(0, (world.tick - started) / span));
+        return (
+          <div key={tx.id} className="flex items-center gap-1.5">
+            <span className="w-24 shrink-0 truncate font-mono text-[9px] text-zinc-500">
+              {tx.id}
+            </span>
+            <span className="h-1 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+              <span
+                className="block h-full rounded-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${done * 100}%` }}
+              />
+            </span>
+            <span className="shrink-0 font-mono text-[9px] tabular-nums text-zinc-400">
+              {state.id} · {Math.max(0, ends - world.tick)}t
+            </span>
+          </div>
+        );
+      })}
+      {rows.length > 6 && (
+        <span className="text-[9px] text-zinc-400">+{rows.length - 6} more in flight</span>
+      )}
+    </div>
+  );
+}
+
+function MiniTag({ label, tone = "muted" }: { label: string; tone?: "muted" | "warn" | "danger" }) {
+  const styles =
+    tone === "danger"
+      ? "border-red-300 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
+      : tone === "warn"
+        ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300"
+        : "border-zinc-300 bg-zinc-50 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400";
+  return (
+    <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[9px] tabular-nums ${styles}`}>
+      {label}
+    </span>
+  );
+}
+
+function OutcomeTag({ status }: { status: string }) {
+  const tone =
+    status === "succeeded"
+      ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300"
+      : status === "lost"
+        ? "border-red-400 bg-red-100 text-red-800 dark:border-red-500/50 dark:bg-red-500/15 dark:text-red-200"
+        : status === "failed"
+          ? "border-red-300 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
+          : "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300";
+  const label = status === "lost" ? "timed out" : status;
+  return (
+    <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${tone}`}>
+      {label}
+    </span>
   );
 }
 

@@ -7,23 +7,23 @@
   "stage": "easy",
   "worldKey": "finance-route-selection",
   "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "easy", "grade": 1 },
-  "tagline": "Filter three providers before choosing a route.",
-  "brief": "Ignore the offline provider, then choose the lowest-fee online route.",
-  "context": "Providers A, B, and C are connected. C is offline, so only A and B can process work.",
-  "narrative": "YamusaPay now has three providers. One is offline and must never receive a payment.\n\nFor every payment, first remove unavailable options from consideration. Then choose the lowest fee among the providers that remain.",
+  "tagline": "Filter offline providers across a 3-provider network.",
+  "brief": "Select the cheapest active provider among three available options.",
+  "context": "Three providers (A, B, C) are connected. Provider C is offline.",
+  "narrative": "YamusaPay is now connected to three providers: A, B, and C.\n\nProvider C is offline and must be avoided. Between the active providers A and B, Provider B offers the lowest fee.\n\nFilter out offline providers first, then select Provider B to process the transaction stream.",
   "objective": "Process every payment without failures and keep total cost at or below ₦0.41.",
-  "learningObjective": "Combine availability filtering and fee selection across multiple providers.",
-  "intelligenceExplanation": "The starting brain is empty. The provider cards show that B is the cheaper online option while C is offline.\n\nAuthor the route rule, then use the live queue and provider lanes to confirm that every payment is processed.",
-  "hint": "Use the cheapest available route in this scenario: WHEN onlineB → DO route-b.",
+  "learningObjective": "Filter out unavailable routes and pick the lowest-cost active option.",
+  "intelligenceExplanation": "Provider C is offline. Provider B is online and cheaper than Provider A.\n\nAdd rule: WHEN onlineB -> DO route-b to route all transactions to Provider B.",
+  "hint": "Route through Provider B: WHEN onlineB -> DO route-b.",
   "hints": [
-    "One provider is offline — do not route there.",
-    "Author WHEN onlineB → DO route-b.",
-    "B stays online and is the cheaper provider here."
+    "Provider C is offline — never route to C.",
+    "Compare active providers: B is cheaper than A.",
+    "Use WHEN onlineB -> DO route-b."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
-    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" },
-    { "id": "cost", "label": "Use the cheapest online route", "check": "allProcessed && totalCost <= 0.41" }
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Process all payments" },
+    { "id": "clean", "label": "Ensure zero failed payments", "check": "allProcessed && failed == 0", "hint": "Avoid offline Provider C" },
+    { "id": "cost", "label": "Keep total cost at or below ₦0.41", "check": "allProcessed && totalCost <= 0.41" }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold"],
   "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "feeA", "feeB", "feeC", "always"],

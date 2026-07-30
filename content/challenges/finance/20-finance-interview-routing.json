@@ -6,16 +6,16 @@
   "difficulty": 3,
   "stage": "medium",
   "worldKey": "finance-interview-routing",
-  "tagline": "Build a routing policy that generalises beyond the visible case.",
-  "narrative": "You are joining YamusaPay's Payments Infrastructure team. The switch receives consumer, business, refund, and international payments while provider health changes in real time.\n\nEach route consumes provider capacity until processing finishes. A failed payment may be retried, but retries consume time, capacity, and cost. The visible stream teaches the contract; Submit tests the same policy against unseen outages, capacity limits, fee changes, latency spikes, and high-value traffic.",
-  "objective": "Process the visible stream without timeouts, protect urgent payments, and submit a policy that works across the hidden scenarios.",
-  "learningObjective": "Combine eligibility, capacity, reliability, urgency, cost, and retry history in one ordered policy.",
-  "intelligenceExplanation": "The interview starts with an empty rule set. Build the decision flow from the operational facts.\n\nFilter providers that cannot accept the current payment first. Only then compare reliability, deadline risk, queue pressure, and cost. Being online does not guarantee that a provider is eligible for every payment.",
-  "hint": "Start with `canRoute`, deadline, payment type, amount, and retry history. Compare cost only after unsafe options are removed.",
+  "tagline": "Route payment streams safely across changing fees, outages, and hidden test cases.",
+  "narrative": "Welcome to YamusaPay's Payments Engineering interview track!\n\nYour task is to design an intelligent payment routing system. Transactions arrive with different values, types (consumer, business, refund, international), and deadlines. Meanwhile, providers vary in fees, capacity, latency, and reliability.\n\nThe visible stream teaches the contract. When you click Submit, your routing system is evaluated against hidden server-side test scenarios with unseen outages and fee changes!",
+  "objective": "Process the visible stream without timeouts, protect urgent payments, and pass all hidden test scenarios.",
+  "learningObjective": "Combine eligibility, capacity, reliability, urgency, cost, and retry history into one general routing system.",
+  "intelligenceExplanation": "Start with an empty rule set. Build decision branches:\n1. Filter out ineligible or offline providers using `canRouteA`, `canRouteB`, `canRouteC`.\n2. Reserve reliable, low-latency routes for urgent or high-value payments.\n3. Balance routine traffic across fees, latency, and remaining capacity.",
+  "hint": "Check provider eligibility first using canRouteA/B/C before evaluating fees or latency.",
   "hints": [
-    "Separate eligibility from preference. Use canRouteA/B/C before fee or expected cost.",
-    "Reserve the most reliable, low-latency route for urgent or high-value payments, and avoid immediately repeating a failed provider.",
-    "A robust fallback ends in hold only when the deadline permits waiting; otherwise choose an eligible route or decline deliberately."
+    "Separate eligibility from preference: use canRouteA/B/C before comparing fees.",
+    "Direct urgent or high-value payments to fast, reliable routes.",
+    "Avoid immediately resubmitting a retried payment to the same failing provider."
   ],
   "taxonomy": {
     "domain": "Finance",
@@ -23,27 +23,27 @@
     "tier": "medium",
     "grade": 3
   },
-  "brief": "Author and submit a resilient payment policy for changing provider conditions.",
-  "context": "Each tick makes one routing decision while providers continue processing earlier payments in parallel.",
+  "brief": "Route payment streams safely through changing provider conditions and pass hidden test scenarios.",
+  "context": "Each tick processes one payment while providers execute earlier payments in parallel.",
   "steps": [
     {
       "id": "eligibility",
-      "label": "Filter unavailable, incompatible, and capacity-exhausted providers",
-      "hint": "Use canRouteA, canRouteB, and canRouteC."
+      "label": "Filter out unavailable, incompatible, or capacity-exhausted providers",
+      "hint": "Use canRouteA, canRouteB, and canRouteC"
     },
     {
       "id": "service-level",
-      "label": "Protect urgent and high-value payments from timeout and reliability risk",
-      "hint": "Use priority, isHighValue, deadlineRemaining, latency, and success rate."
+      "label": "Protect urgent and high-value payments from timeouts",
+      "hint": "Use priority, isHighValue, and deadlineRemaining"
     },
     {
       "id": "visible",
-      "label": "Clear the visible stream without a timeout",
+      "label": "Clear the visible transaction stream with zero timeouts",
       "check": "allProcessed && timedOut == 0"
     },
     {
       "id": "hidden",
-      "label": "Submit the same policy to the hidden interview suite"
+      "label": "Pass the hidden interview evaluation suite across all test scenarios"
     }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold", "decline"],

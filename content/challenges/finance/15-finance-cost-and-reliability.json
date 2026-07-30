@@ -7,22 +7,22 @@
   "stage": "medium",
   "worldKey": "finance-cost-and-reliability",
   "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "medium", "grade": 1 },
-  "tagline": "Balance route fees against failure risk.",
-  "brief": "Use expected cost to choose among three online providers.",
-  "context": "All providers are online, but their fees and success rates are different. A failure costs ₦5.",
-  "narrative": "Availability is no longer the problem. Provider A has the lowest fee but fails more often; Provider B is more reliable but costs more.\n\nCompare expected cost instead of using fee or reliability alone. The correct route is the one that keeps the whole queue within budget.",
+  "tagline": "Evaluate composite cost metrics across three active providers.",
+  "brief": "Route payments using total expected cost across three online providers.",
+  "context": "All 3 providers are online, but differ in fees and reliability. Failures incur ₦5 penalties.",
+  "narrative": "All three providers (A, B, C) are online, but they have different fee structures and reliability rates.\n\nProvider A has the lowest base fee, but higher failure rates. Provider B offers the lowest overall expected cost when factoring in potential failure penalties.\n\nCompare expected cost rather than raw base fee to keep total processing costs low.",
   "objective": "Process every payment and keep total cost at or below ₦3.00.",
-  "learningObjective": "Use a composite expected-cost score to make a reliable cost decision.",
-  "intelligenceExplanation": "The provider cards display expected cost as fee plus expected failure cost. In this fixed setup, B has the lowest value.\n\nUse that displayed fact to route the queue and then inspect the final cost in the debug panel.",
-  "hint": "Choose the provider with the lowest displayed expected cost: WHEN onlineB → DO route-b.",
+  "learningObjective": "Optimize overall cost using composite metrics (expectedCost) rather than raw fee in isolation.",
+  "intelligenceExplanation": "The provider cards list calculated expected costs for A, B, and C. Provider B has the lowest expected cost.\n\nRoute through B: WHEN onlineB -> DO route-b.",
+  "hint": "Select Provider B: WHEN onlineB -> DO route-b.",
   "hints": [
-    "Availability isn't the issue now — every provider is online. Compare the displayed expected costs.",
-    "B has the lowest expected cost in this fixed setup: author WHEN onlineB → DO route-b.",
-    "The displayed expected cost includes the ₦5 failure penalty."
+    "All three providers are online.",
+    "Compare the expected cost (fee + failure risk) displayed on each provider card.",
+    "Use WHEN onlineB -> DO route-b."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed" },
-    { "id": "budget", "label": "Total cost at or below ₦3.00", "check": "allProcessed && totalCost <= 3" }
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Process all payments" },
+    { "id": "budget", "label": "Keep total cost at or below ₦3.00", "check": "allProcessed && totalCost <= 3" }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold"],
   "availableConditions": ["hasTransaction", "onlineA", "onlineB", "onlineC", "expectedCostA", "expectedCostB", "expectedCostC", "successA", "successB", "successC", "feeA", "feeB", "feeC", "always"],

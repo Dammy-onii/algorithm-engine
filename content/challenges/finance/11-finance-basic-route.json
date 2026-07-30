@@ -7,23 +7,23 @@
   "stage": "practice",
   "worldKey": "finance-basic-route",
   "taxonomy": { "domain": "Finance", "simulation": "Payment Routing", "tier": "tutorial", "grade": 1 },
-  "tagline": "Route the queue through the lower-fee provider.",
-  "brief": "Process every payment by choosing the cheaper online provider.",
-  "context": "Two reliable providers are online, and their only difference in this tutorial is the fee.",
-  "narrative": "YamusaPay has a queue of outgoing payments. Provider A and Provider B are both online and reliable, but they charge different fees.\n\nYour controller receives the payment at the front of the queue and chooses a route. This first tutorial asks you to optimise one fact: fee.",
-  "objective": "Process every payment with no failures and keep the total cost at or below ₦0.31.",
-  "learningObjective": "Read provider facts and use one clear criterion to make a repeatable decision.",
-  "intelligenceExplanation": "The starting brain has no routing rules. Each tick exposes the current payment and provider facts.\n\nIn this fixed scenario, Provider B has the lower fee and stays online. Route each payment through B until the queue is empty.",
-  "hint": "Create one rule: WHEN onlineB → DO route-b.",
+  "tagline": "Route payments through the lowest-fee provider.",
+  "brief": "Process every transaction by picking the cheaper online provider.",
+  "context": "Two providers are available. Provider B offers lower fees than Provider A.",
+  "narrative": "Welcome to YamusaPay's Payment Routing Switch!\n\nIncoming transactions arrive in a queue. Both Provider A and Provider B are online, but Provider B charges a lower fee per transaction.\n\nYour task is to create your very first routing rule: whenever Provider B is online, route transactions through Provider B to minimize fees!",
+  "objective": "Process every payment with no failures and keep total cost at or below ₦0.31.",
+  "learningObjective": "Read provider facts and choose the lowest-cost route.",
+  "intelligenceExplanation": "The starter brain has no rules.\n\nSince Provider B is cheaper and online, add a rule: WHEN onlineB -> DO route-b. This clears the payment queue at minimum cost.",
+  "hint": "Create one rule: WHEN onlineB -> DO route-b.",
   "hints": [
-    "Watch the queue on the right — each tick shows the payment at the head and each provider's fee.",
-    "A payment needs a routing rule: WHEN onlineB → DO route-b.",
-    "That single rule clears the queue, because B stays online and is the cheaper provider here."
+    "Watch the payment queue on the right.",
+    "Provider B has lower fees than Provider A.",
+    "Add the rule WHEN onlineB -> DO route-b to clear the queue."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Route every payment until none are waiting." },
-    { "id": "clean", "label": "No failed payments", "check": "allProcessed && failed == 0" },
-    { "id": "cost", "label": "Keep routing cost at or below ₦0.31", "check": "allProcessed && totalCost <= 0.31" }
+    { "id": "drain", "label": "Process every queued payment", "check": "allProcessed", "hint": "Route all payments until queue is empty" },
+    { "id": "clean", "label": "Ensure zero failed payments", "check": "allProcessed && failed == 0" },
+    { "id": "cost", "label": "Keep total routing cost at or below ₦0.31", "check": "allProcessed && totalCost <= 0.31" }
   ],
   "availableBricks": ["route-a", "route-b", "hold"],
   "availableConditions": ["hasTransaction", "onlineA", "onlineB", "always"],

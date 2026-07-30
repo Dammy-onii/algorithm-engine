@@ -6,16 +6,16 @@
   "difficulty": 3,
   "stage": "hard",
   "worldKey": "finance-production-orchestrator",
-  "tagline": "Operate a payment switch through changing production incidents.",
-  "narrative": "You own the policy for a national payment switch. The stream contains retail transfers, refunds, payroll, business payments, merchant settlements, and cross-border traffic.\n\nProviders have different capabilities and can fail, recover, slow down, or run out of capacity. Failed payments may be retried, but retries consume time and can push urgent work past its deadline. Submit runs the same policy against protected scenarios that deliberately change the visible assumptions.",
-  "objective": "Balance throughput, cost, reliability, deadlines, retries, compatibility, congestion, and customer impact across the visible and hidden runs.",
-  "learningObjective": "Design a production-grade policy for delayed feedback, changing capacity, mixed traffic, and conflicting service goals.",
-  "intelligenceExplanation": "The engine exposes the current payment, retry history, deadline, and provider facts. Your route starts asynchronous processing; later observations show the capacity consumed by earlier choices.\n\nHidden scenarios change provider identity, traffic mix, health schedules, prices, deadlines, and value restrictions. A policy that memorises one visible route will not generalise.",
-  "hint": "Build the policy in layers: eligibility, deadline safety, retry diversity, urgency, then cost and load optimisation. Give the final fallback a deliberate meaning.",
+  "tagline": "Orchestrate high-volume payment switches through production outages, retries, and backoffs.",
+  "narrative": "You are Principal Payments Architect for YamusaPay.\n\nYour switch processes a 500-transaction production stream—retail transfers, refunds, payroll payouts, business disbursements, and international settlements. Providers experience latency spikes, capacity exhaustion, and unexpected outages.\n\nYour system must protect safety invariants: filter incompatible providers, safeguard urgent payroll/high-value payments, handle retries without repeating failed routes, and pass 10 adversarial test scenarios!",
+  "objective": "Balance throughput, cost, reliability, deadlines, retries, compatibility, congestion, and customer impact across visible and hidden runs.",
+  "learningObjective": "Design an enterprise payment orchestrator balancing real-time telemetry, provider capacity, and retry backoffs.",
+  "intelligenceExplanation": "Build your decision tree systematically:\n1. Eligibility Invariants: Use `canRouteA/B/C` to reject incompatible or offline routes.\n2. Service-Level Protection: Route urgent payroll, priority, and near-deadline work to fast, reliable providers.\n3. Retry Management: Prevent retrying the same failed provider using `lastProvider` checks.\n4. Cost & Congestion Optimization: Spread routine traffic across healthy providers before congestion cascades.",
+  "hint": "Build in layers: eligibility first, service-level protection second, retry diversification third, and cost optimization fourth.",
   "hints": [
-    "Never route without canRoute. Use transaction-type and value facts indirectly through canRoute rather than duplicating provider contracts.",
-    "Use lastProvider and retryCount to prevent repeated failure on one rail; use deadlineRemaining to decide whether holding or another attempt is still defensible.",
-    "A robust policy reserves reliable low-latency capacity for urgent/high-impact traffic and spreads flexible traffic across healthy eligible providers before congestion cascades."
+    "Always check canRoute before routing.",
+    "Use lastProvider and retryCount to prevent repeating failed routes.",
+    "Submit evaluates your system across 10 hidden adversarial cases with unexpected outages."
   ],
   "taxonomy": {
     "domain": "Finance",
@@ -23,14 +23,14 @@
     "tier": "hard",
     "grade": 1
   },
-  "brief": "Build one general policy for high-volume traffic, failures, retries, and deadlines.",
-  "context": "Each decision changes future capacity while providers process payments in parallel and new events arrive.",
+  "brief": "Manage a 500-transaction production stream across 10 adversarial hidden test scenarios.",
+  "context": "500 retail, refund, payroll, business, and settlement payments stream through 3 providers.",
   "steps": [
-    { "id": "invariants", "label": "Encode eligibility, compatibility, amount, capacity, and deadline invariants" },
-    { "id": "classes", "label": "Treat retail, refund, payroll, business, settlement, international, high-value, and urgent traffic intentionally" },
-    { "id": "feedback", "label": "Use live congestion, health, latency, and retry history instead of static provider preference" },
+    { "id": "invariants", "label": "Filter out incompatible, offline, or saturated providers", "hint": "Use canRouteA, canRouteB, and canRouteC" },
+    { "id": "classes", "label": "Protect urgent payroll, priority, and near-deadline payments", "hint": "Route high-value and payroll transactions to low-latency providers" },
+    { "id": "feedback", "label": "Reroute retries to alternative healthy providers", "hint": "Use lastProviderA/B/C checks" },
     { "id": "visible", "label": "Complete the 500-payment visible production stream", "check": "allProcessed" },
-    { "id": "hidden", "label": "Pass the ten-case adversarial submission suite" }
+    { "id": "hidden", "label": "Pass the 10-case adversarial hidden evaluation suite" }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold", "decline"],
   "availableConditions": [
