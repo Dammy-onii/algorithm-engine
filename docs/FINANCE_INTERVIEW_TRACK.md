@@ -166,14 +166,21 @@ A submission passes only if its average reaches the challenge threshold and it
 satisfies every hidden scenario. A strong baseline cannot hide one catastrophic
 outage or high-value-surge failure.
 
-## Hidden evaluation
+## Submission evaluation
 
-`POST /api/interview/submit` accepts a challenge id and compiled policy. It
-is the only code path that resolves or executes server-owned fixtures. Apply &
-Run creates only the visible simulation; hidden cases remain dormant until the
-candidate explicitly presses Submit.
+**Submit solution** follows the active controller:
 
-After submission, the route streams newline-delimited events in execution order:
+- **Visual Policy** posts the compiled policy to
+  `POST /api/interview/submit`. The server resolves and evaluates its protected
+  suite.
+- **Code Controller** in the current Demo mode posts the challenge id to
+  `POST /api/interview/demo-suite`. Only then are the demo scenarios returned
+  and evaluated with the candidate JavaScript in the browser. Production builds
+  use a Web Worker; local `next dev` uses the documented development fallback.
+
+Apply & Run creates only the visible simulation. Neither submission suite is
+requested or run until the candidate explicitly presses **Submit solution**.
+Both paths report events in execution order:
 
 ```text
 suite-start
@@ -185,10 +192,11 @@ scenario-result
 suite-complete
 ```
 
-Studio therefore shows the active hidden case, completed-case progress, and each
-case result as it finishes. The route returns only labels, aggregate metrics,
-diagnostic categories, and scores. Raw hidden transactions, schedules, and
-guardrails are not returned. Responses use `Cache-Control: no-store`.
+Studio shows the active case, completed-case progress, and each result as it
+finishes. Visual Policy receives only server-generated results and diagnostics.
+Demo Code receives the scenario configurations because its browser must run the
+environment locally; those cases are therefore inspectable after submission
+and are not protected. Both endpoints use `Cache-Control: no-store`.
 
 The adversarial families are:
 
@@ -208,13 +216,14 @@ live-fact-driven policy can pass all ten cases.
 
 ## Security boundary
 
-The hidden route evaluates the sandbox-safe visual policy DSL and enforces
+The protected route evaluates the sandbox-safe visual policy DSL and enforces
 payload, rule, and function limits.
 
-Studio Code mode executes JavaScript locally for development. The server does
-not execute submitted arbitrary JavaScript. A bank or multi-tenant deployment
-must run Code-mode controllers in an isolated ephemeral worker/container with
-CPU, memory, time, filesystem, and network limits. `new Function`, Node `vm`, or
+Studio Code mode executes JavaScript locally for development and Demo-mode
+submission. The Web Worker protects UI responsiveness, not evaluation
+integrity. A bank or multi-tenant deployment must run Code-mode controllers in
+an isolated ephemeral server worker/container with CPU, memory, time,
+filesystem, and network limits. `new Function`, a browser worker, Node `vm`, or
 a route-handler process is not a security boundary for untrusted interview code.
 Production hosting must also add authenticated interview sessions, per-candidate
 attempt limits, rate limiting, audit logs, encrypted result persistence, and

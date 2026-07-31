@@ -16,7 +16,9 @@ Studio groups this depth without removing it:
 
 The condition picker inside a rule is not a native unbounded list. It groups
 general, navigation, world, and user-defined conditions beneath a search field
-and keeps the results in a bounded scrolling panel.
+and keeps the results in a bounded scrolling panel. The panel is rendered as a
+viewport overlay, so opening it never lengthens a rule card or forces the page
+to scroll just to expose its options.
 
 - New here? Read [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) first.
 - Want the engine internals? See [BUILD.md](./BUILD.md) and
@@ -268,6 +270,21 @@ small, safe language (not JavaScript — no arbitrary code runs).
 **Operators:** `&&` (and), `||` (or), `!` (not), parentheses, and the comparisons
 `< > <= >= == !=`.
 
+The guided Rules editor supports parenthesised child groups with their own
+connector. Start with an AND rule and choose **+ OR group** to build:
+
+```text
+retryCount > 0
+AND lastProviderA
+AND canRouteB
+AND (!canRouteC OR healthScoreB >= healthScoreC)
+```
+
+For numeric comparisons, the right side can be either a fixed number or another
+live numeric fact. Use the small **fact / number** control beside the comparison
+to switch between those forms. The **Expression** control remains available for
+advanced expressions that are easier to type directly.
+
 **Flags & values you can reference:**
 
 | Name | Type | Meaning |
@@ -335,6 +352,7 @@ canRouteA && dea
 | `!` | invert a boolean | `!wallAhead` |
 | `( )` | group expressions | `(canRouteA || canRouteB) && isPriority` |
 | `< <= > >=` | numeric comparison | `deadlineRemaining <= 2` |
+| `< <= > >=` | live-fact comparison | `healthScoreB >= healthScoreC` |
 | `== !=` | equality or inequality | `retryCount != 0` |
 
 The Conditions tab exposes the same reference through the collapsible

@@ -117,7 +117,7 @@ export function InterviewAssignmentDirectoryPage({
             <div className="mt-5 border-t border-zinc-200 pt-5 text-xs leading-relaxed text-zinc-500 dark:border-zinc-800">
               <p>
                 Apply &amp; Run evaluates every visible stage. Problems marked
-                with a hidden suite also provide Interview Submit.
+                with an interview suite also provide Submit solution.
               </p>
             </div>
           </aside>

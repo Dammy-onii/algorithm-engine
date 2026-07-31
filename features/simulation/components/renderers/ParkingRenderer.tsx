@@ -245,7 +245,7 @@ export function ParkingRenderer({
             )}
             {departedVehicle && departedSpace && (
               <RouteCar
-                key={`departure-${departedVehicle.id}-${runtime.lastDepartureTick}`}
+                key={`departure-${departedVehicle.id}-${departedVehicle.exitStartedAt ?? runtime.lastDepartureTick}`}
                 vehicle={departedVehicle}
                 space={departedSpace}
                 rowSize={departedSpace.row === "north" ? north.length : south.length}

@@ -14,7 +14,8 @@
  */
 
 import { useState } from "react";
-import { VisualRule, VisualRuleFolder, VisualState, VisualFunction, VisualCondition, ConditionAtom, ConditionGuided, LogicalOp } from "@/lib/authoring/types";
+import { VisualRule, VisualRuleFolder, VisualState, VisualFunction, VisualCondition, ConditionAtom, ConditionGroup, ConditionGuided, LogicalOp } from "@/lib/authoring/types";
+import { compileCondition } from "@/lib/authoring/brainCompiler";
 import { ConditionChip } from "../blocks/ConditionChip";
 import { ConditionExpressionInput } from "./ConditionExpressionInput";
 
@@ -26,50 +27,193 @@ const FIELD = "rounded border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm focus
 interface ConditionEditorProps {
   condition: VisualCondition;
   availableConditions: string[];
-  onAtomAdd: () => void;
-  onAtomUpdate: (i: number, atom: ConditionAtom) => void;
-  onAtomRemove: (i: number) => void;
-  onToggleOperator: () => void;
   onSwitchToRaw: () => void;
   onConditionChange: (cond: VisualCondition) => void;
 }
 
-function ConditionEditor({ condition, availableConditions, onAtomAdd, onAtomUpdate, onAtomRemove, onToggleOperator, onSwitchToRaw, onConditionChange }: ConditionEditorProps) {
+function defaultAtom(availableConditions: string[]): ConditionAtom {
+  return {
+    flag: availableConditions.includes("always")
+      ? "always"
+      : availableConditions[0] ?? "always",
+    negated: false,
+  };
+}
+
+function oppositeOperator(operator: LogicalOp): LogicalOp {
+  return operator === "&&" ? "||" : "&&";
+}
+
+function OperatorButton({
+  operator,
+  onClick,
+}: {
+  operator: LogicalOp;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded bg-zinc-100 px-1 font-mono text-xs font-semibold text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+      title="Change the connectors inside this group"
+    >
+      {operator}
+    </button>
+  );
+}
+
+function GuidedConditionGroup({
+  group,
+  availableConditions,
+  onChange,
+  depth = 0,
+}: {
+  group: ConditionGroup;
+  availableConditions: string[];
+  onChange: (group: ConditionGroup) => void;
+  depth?: number;
+}) {
+  const groups = group.groups ?? [];
+  const toggleOperator = () =>
+    onChange({ ...group, operator: oppositeOperator(group.operator) });
+  const hasPrevious = (index: number) =>
+    group.atoms.length > 0 || index > 0;
+
+  return (
+    <span className="contents">
+      {group.atoms.map((atom, index) => (
+        <span key={`atom-${index}`} className="flex items-center gap-1">
+          {index > 0 && (
+            <OperatorButton
+              operator={group.operator}
+              onClick={toggleOperator}
+            />
+          )}
+          <ConditionChip
+            atom={atom}
+            availableFlags={availableConditions}
+            onChange={(updated) =>
+              onChange({
+                ...group,
+                atoms: group.atoms.map((candidate, atomIndex) =>
+                  atomIndex === index ? updated : candidate,
+                ),
+              })
+            }
+            onRemove={() =>
+              onChange({
+                ...group,
+                atoms: group.atoms.filter((_, atomIndex) => atomIndex !== index),
+              })
+            }
+          />
+        </span>
+      ))}
+
+      {groups.map((child, index) => (
+        <span key={`group-${index}`} className="flex items-center gap-1">
+          {hasPrevious(index) && (
+            <OperatorButton
+              operator={group.operator}
+              onClick={toggleOperator}
+            />
+          )}
+          <span className="flex flex-wrap items-center gap-1 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-1.5 py-1 dark:border-zinc-600 dark:bg-zinc-800/60">
+            <span className="font-mono text-zinc-400">(</span>
+            <GuidedConditionGroup
+              group={child}
+              availableConditions={availableConditions}
+              depth={depth + 1}
+              onChange={(updated) =>
+                onChange({
+                  ...group,
+                  groups: groups.map((candidate, groupIndex) =>
+                    groupIndex === index ? updated : candidate,
+                  ),
+                })
+              }
+            />
+            <span className="font-mono text-zinc-400">)</span>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({
+                  ...group,
+                  groups: groups.filter(
+                    (_, groupIndex) => groupIndex !== index,
+                  ),
+                })
+              }
+              className="px-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+              title="Remove condition group"
+            >
+              ×
+            </button>
+          </span>
+        </span>
+      ))}
+
+      <button
+        type="button"
+        onClick={() =>
+          onChange({
+            ...group,
+            atoms: [...group.atoms, defaultAtom(availableConditions)],
+          })
+        }
+        className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+      >
+        + condition
+      </button>
+
+      {depth === 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            onChange({
+              ...group,
+              groups: [
+                ...groups,
+                {
+                  operator: oppositeOperator(group.operator),
+                  atoms: [
+                    defaultAtom(availableConditions),
+                    defaultAtom(availableConditions),
+                  ],
+                },
+              ],
+            })
+          }
+          className="rounded border border-dashed border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-800 dark:border-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-200"
+          title="Add a parenthesised group with its own connector"
+        >
+          + {oppositeOperator(group.operator) === "||" ? "OR" : "AND"} group
+        </button>
+      )}
+    </span>
+  );
+}
+
+function ConditionEditor({ condition, availableConditions, onSwitchToRaw, onConditionChange }: ConditionEditorProps) {
   if (condition.mode === "guided") {
     const guided: ConditionGuided = condition;
     return (
       <>
-        {guided.group.atoms.map((atom, i) => (
-          <span key={i} className="flex items-center gap-1">
-            {i > 0 && (
-              <button
-                onClick={onToggleOperator}
-                className="rounded bg-zinc-100 px-1 font-mono text-xs font-semibold text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800"
-                title="Toggle AND/OR"
-              >
-                {guided.group.operator}
-              </button>
-            )}
-            <ConditionChip
-              atom={atom}
-              availableFlags={availableConditions}
-              onChange={(updated) => onAtomUpdate(i, updated)}
-              onRemove={() => onAtomRemove(i)}
-            />
-          </span>
-        ))}
+        <GuidedConditionGroup
+          group={guided.group}
+          availableConditions={availableConditions}
+          onChange={(group) =>
+            onConditionChange({ mode: "guided", group })
+          }
+        />
         <button
-          onClick={onAtomAdd}
-          className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-        >
-          + condition
-        </button>
-        <button
+          type="button"
           onClick={onSwitchToRaw}
-          className="ml-auto text-zinc-300 hover:text-zinc-500 text-xs"
+          className="ml-auto text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
           title="Switch to raw expression mode"
         >
-          raw
+          Expression
         </button>
       </>
     );
@@ -86,6 +230,7 @@ function ConditionEditor({ condition, availableConditions, onAtomAdd, onAtomUpda
         onChange={(expr) => onConditionChange({ mode: "raw", expr })}
       />
       <button
+        type="button"
         onClick={() => onConditionChange({ mode: "guided", group: { operator: "&&", atoms: [{ flag: "always", negated: false }] } })}
         className="text-xs text-zinc-400 hover:text-zinc-600"
         title="Switch to guided mode"
@@ -212,51 +357,15 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
     commitOrder(next);
   };
 
-  // Condition helpers use the currently displayed flow order.
   const updateCondition = (index: number, cond: VisualCondition) =>
     update(index, { condition: cond });
 
-  const addAtom = (rule: VisualRule, index: number) => {
-    if (rule.condition.mode === "raw") return;
-    const atom: ConditionAtom = { flag: availableConditions[0] ?? "always", negated: false };
-    update(index, {
-      condition: {
-        mode: "guided",
-        group: { operator: rule.condition.group.operator, atoms: [...rule.condition.group.atoms, atom] },
-      },
-    });
-  };
-
-  const updateAtom = (rule: VisualRule, index: number, atomIndex: number, updated: ConditionAtom) => {
-    if (rule.condition.mode === "raw") return;
-    const atoms = rule.condition.group.atoms.map((a, i) => (i === atomIndex ? updated : a));
-    update(index, { condition: { mode: "guided", group: { ...rule.condition.group, atoms } } });
-  };
-
-  const removeAtom = (rule: VisualRule, index: number, atomIndex: number) => {
-    if (rule.condition.mode === "raw") return;
-    const atoms = rule.condition.group.atoms.filter((_, i) => i !== atomIndex);
-    update(index, {
-      condition: { mode: "guided", group: { ...rule.condition.group, atoms } },
-    });
-  };
-
-  const toggleOperator = (rule: VisualRule, index: number) => {
-    if (rule.condition.mode === "raw") return;
-    const op: LogicalOp = rule.condition.group.operator === "&&" ? "||" : "&&";
-    update(index, { condition: { mode: "guided", group: { ...rule.condition.group, operator: op } } });
-  };
-
   const switchToRaw = (rule: VisualRule, index: number) => {
     if (rule.condition.mode === "guided") {
-      const atoms = rule.condition.group.atoms;
-      const expr =
-        atoms.length === 0
-          ? "always"
-          : atoms
-              .map((a) => (a.comparison ? `${a.flag} ${a.comparison.op} ${a.comparison.value}` : a.negated ? `!${a.flag}` : a.flag))
-              .join(` ${rule.condition.group.operator} `);
-      updateCondition(index, { mode: "raw", expr });
+      updateCondition(index, {
+        mode: "raw",
+        expr: compileCondition(rule.condition),
+      });
     }
   };
 
@@ -537,10 +646,6 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
               <ConditionEditor
                 condition={rule.condition}
                 availableConditions={availableConditions}
-                onAtomAdd={() => addAtom(rule, index)}
-                onAtomUpdate={(i, atom) => updateAtom(rule, index, i, atom)}
-                onAtomRemove={(i) => removeAtom(rule, index, i)}
-                onToggleOperator={() => toggleOperator(rule, index)}
                 onSwitchToRaw={() => switchToRaw(rule, index)}
                 onConditionChange={(cond) => updateCondition(index, cond)}
               />

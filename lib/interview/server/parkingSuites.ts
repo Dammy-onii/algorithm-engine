@@ -10,18 +10,9 @@ import type {
   ParkingSpace,
   ParkingVehicleBatch,
 } from "@/lib/engine/worlds/parking";
+import type { ParkingEvaluationScenario } from "@/lib/interview/demoTypes";
 
-export interface ParkingInterviewScenario {
-  id: string;
-  label: string;
-  config: ParkingConfig;
-  minimumDepartureRatio: number;
-  maxAbandoned: number;
-  maxHardViolations: number;
-  maxReassignments: number;
-  maxCongestionTicks: number;
-  scoreBudget: number;
-}
+export type ParkingInterviewScenario = ParkingEvaluationScenario;
 
 function spaces(reservation = "hidden-reservation"): ParkingSpace[] {
   const kinds = [

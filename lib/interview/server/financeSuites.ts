@@ -7,21 +7,12 @@
  */
 
 import type {
-  FinanceConfig,
   FinanceProvider,
   FinanceTransactionBatch,
 } from "@/lib/engine/worlds/finance";
+import type { FinanceEvaluationScenario } from "@/lib/interview/demoTypes";
 
-export interface FinanceInterviewScenario {
-  id: string;
-  label: string;
-  config: FinanceConfig;
-  minimumSuccessRatio: number;
-  maxTimeouts: number;
-  maxPriorityFailures: number;
-  maxOverloadRejects: number;
-  scoreBudget: number;
-}
+export type FinanceInterviewScenario = FinanceEvaluationScenario;
 
 interface ScenarioOptions {
   id: string;

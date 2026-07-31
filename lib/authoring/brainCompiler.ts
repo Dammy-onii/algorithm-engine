@@ -24,13 +24,18 @@ function atomToString(atom: ConditionAtom): string {
   return atom.negated ? `!${atom.flag}` : atom.flag;
 }
 
+function groupToString(group: Extract<VisualCondition, { mode: "guided" }>["group"]): string {
+  const parts = [
+    ...group.atoms.map(atomToString),
+    ...(group.groups ?? []).map((child) => `(${groupToString(child)})`),
+  ];
+  if (parts.length === 0) return "always";
+  return parts.join(` ${group.operator} `);
+}
+
 export function compileCondition(cond: VisualCondition): string {
   if (cond.mode === "raw") return cond.expr.trim() || "always";
-
-  const { atoms, operator } = cond.group;
-  if (atoms.length === 0) return "always";
-  if (atoms.length === 1) return atomToString(atoms[0]);
-  return atoms.map(atomToString).join(` ${operator} `);
+  return groupToString(cond.group);
 }
 
 // ---------------------------------------------------------------------------

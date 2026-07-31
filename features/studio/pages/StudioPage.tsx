@@ -12,6 +12,10 @@ import type {
   InterviewSubmissionReport,
 } from "@/lib/interview/types";
 import type {
+  InterviewDemoSuite,
+  InterviewDemoWorkerRequest,
+} from "@/lib/interview/demoTypes";
+import type {
   ObjectiveResult,
   StepResult,
 } from "@/lib/authoring/objectives";
@@ -75,6 +79,224 @@ interface StudioPageProps {
   challengeId: string;
   workspaceMode?: "challenge" | "interview";
   interviewAssignment?: InterviewAssignmentContext;
+}
+
+async function streamVisualPolicySubmission(
+  challengeId: string,
+  brain: BrainSource,
+  receiveEvent: (
+    event: InterviewStreamEvent,
+  ) => InterviewSubmissionReport | undefined,
+): Promise<InterviewSubmissionReport> {
+  const response = await fetch("/api/interview/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ challengeId, brain }),
+  });
+  if (!response.ok) {
+    const payload = (await response.json()) as { error?: string };
+    throw new Error(payload.error ?? "Server evaluation failed.");
+  }
+  if (!response.body) {
+    throw new Error("The server evaluator did not return a result stream.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalReport: InterviewSubmissionReport | undefined;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const completed = receiveEvent(
+        JSON.parse(line) as InterviewStreamEvent,
+      );
+      if (completed) finalReport = completed;
+    }
+    if (done) break;
+  }
+  if (buffer.trim()) {
+    const completed = receiveEvent(
+      JSON.parse(buffer) as InterviewStreamEvent,
+    );
+    if (completed) finalReport = completed;
+  }
+  if (!finalReport) {
+    throw new Error("The server evaluator ended without a final report.");
+  }
+  return finalReport;
+}
+
+async function runBrowserCodeSubmission(
+  challengeId: string,
+  source: string,
+  receiveEvent: (
+    event: InterviewStreamEvent,
+  ) => InterviewSubmissionReport | undefined,
+): Promise<InterviewSubmissionReport> {
+  if (!source.trim()) {
+    throw new Error("Write a Code Controller before submitting your solution.");
+  }
+
+  const response = await fetch("/api/interview/demo-suite", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ challengeId }),
+  });
+  if (!response.ok) {
+    const payload = (await response.json()) as { error?: string };
+    throw new Error(payload.error ?? "The demo scenarios could not be loaded.");
+  }
+  const suite = (await response.json()) as InterviewDemoSuite;
+  if (suite.mode !== "browser-demo" || !Array.isArray(suite.scenarios)) {
+    throw new Error("The demo evaluator returned an invalid scenario suite.");
+  }
+
+  // Next 16.2's Turbopack development worker output can concatenate its
+  // source-map comment and worker bootstrap without a separating newline,
+  // which makes the generated worker invalid JavaScript. Keep Demo mode usable
+  // under `next dev` by evaluating one scenario at a time on the browser page
+  // and yielding between cases. Production keeps the isolated Web Worker path.
+  if (process.env.NODE_ENV === "development") {
+    return runDevelopmentCodeSubmission(source, suite, receiveEvent);
+  }
+
+  const worker = new Worker(
+    new URL("../workers/interviewCodeEvaluator.worker.ts", import.meta.url),
+    { type: "module", name: "interview-code-evaluator" },
+  );
+
+  try {
+    return await new Promise<InterviewSubmissionReport>((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        reject(
+          new Error(
+            "Browser evaluation exceeded two minutes. Check the controller for a loop or expensive per-tick work.",
+          ),
+        );
+      }, 120_000);
+
+      const finish = (
+        callback: () => void,
+      ) => {
+        window.clearTimeout(timeout);
+        callback();
+      };
+
+      worker.onmessage = (message: MessageEvent<InterviewStreamEvent>) => {
+        try {
+          const finalReport = receiveEvent(message.data);
+          if (finalReport) finish(() => resolve(finalReport));
+        } catch (error) {
+          finish(() =>
+            reject(error instanceof Error ? error : new Error(String(error))),
+          );
+        }
+      };
+      worker.onerror = (event) => {
+        finish(() =>
+          reject(
+            new Error(
+              event.message || "The browser Code evaluator stopped unexpectedly.",
+            ),
+          ),
+        );
+      };
+
+      const request: InterviewDemoWorkerRequest = { source, suite };
+      worker.postMessage(request);
+    });
+  } finally {
+    worker.terminate();
+  }
+}
+
+async function runDevelopmentCodeSubmission(
+  source: string,
+  suite: InterviewDemoSuite,
+  receiveEvent: (
+    event: InterviewStreamEvent,
+  ) => InterviewSubmissionReport | undefined,
+): Promise<InterviewSubmissionReport> {
+  const {
+    evaluateFinanceScenario,
+    evaluateParkingScenario,
+    summarizeFinanceSubmission,
+    summarizeParkingSubmission,
+  } = await import("@/lib/interview/evaluation/scenarioEvaluation");
+  const controllerBrain: BrainSource = {
+    goals: { goals: [{ id: "controller", priority: 1 }] },
+    states: { initial: "controller", states: [{ id: "controller" }] },
+    rules: { rules: [] },
+    functions: { functions: [{ id: "hold", action: "wait" }] },
+    memory: {},
+  };
+  const results: InterviewScenarioResult[] = [];
+
+  receiveEvent({
+    type: "suite-start",
+    suiteId: suite.suiteId,
+    scenarioCount: suite.scenarios.length,
+    passingScore: suite.passingScore,
+  });
+
+  if (suite.pack === "finance") {
+    for (let index = 0; index < suite.scenarios.length; index += 1) {
+      const scenario = suite.scenarios[index];
+      receiveEvent({
+        type: "scenario-start",
+        index,
+        scenarioCount: suite.scenarios.length,
+        label: scenario.label,
+      });
+      // Let React paint the active-case state before synchronous simulation.
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+      const result = evaluateFinanceScenario(
+        scenario,
+        controllerBrain,
+        compileController(source),
+      );
+      results.push(result);
+      receiveEvent({ type: "scenario-result", index, scenario: result });
+    }
+    const report = summarizeFinanceSubmission(
+      suite.suiteId,
+      results,
+      suite.passingScore,
+    );
+    receiveEvent({ type: "suite-complete", report });
+    return report;
+  }
+
+  for (let index = 0; index < suite.scenarios.length; index += 1) {
+    const scenario = suite.scenarios[index];
+    receiveEvent({
+      type: "scenario-start",
+      index,
+      scenarioCount: suite.scenarios.length,
+      label: scenario.label,
+    });
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+    const result = evaluateParkingScenario(
+      scenario,
+      controllerBrain,
+      compileController(source),
+    );
+    results.push(result);
+    receiveEvent({ type: "scenario-result", index, scenario: result });
+  }
+  const report = summarizeParkingSubmission(
+    suite.suiteId,
+    results,
+    suite.passingScore,
+  );
+  receiveEvent({ type: "suite-complete", report });
+  return report;
 }
 
 /** Complete interactive UI and state for `/[pack]/[challenge]`. */
@@ -276,22 +498,6 @@ export function StudioPage({
 
   const onSubmitInterview = async () => {
     if (!challenge.interviewEvaluation) return;
-    if (brain.controllerMode === "code") {
-      setSubmissionError(
-        "Switch to Visual Policy before submitting. Code-mode controllers require an isolated execution worker; the current hidden evaluator accepts the sandbox-safe visual policy DSL.",
-      );
-      return;
-    }
-
-    let brainSource: BrainSource;
-    try {
-      brainSource = compileBrain(brain);
-    } catch (submitError) {
-      setSubmissionError(
-        submitError instanceof Error ? submitError.message : String(submitError),
-      );
-      return;
-    }
 
     setSubmitting(true);
     setSubmissionError(null);
@@ -300,29 +506,6 @@ export function StudioPage({
     setActiveHiddenCase(null);
     setHiddenCasesCompleted(0);
     try {
-      const response = await fetch("/api/interview/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challengeId, brain: brainSource }),
-      });
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(
-          payload.error
-            ? payload.error
-            : "Hidden evaluation failed.",
-        );
-      }
-
-      if (!response.body) {
-        throw new Error("The hidden evaluator did not return a result stream.");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let finalReport: InterviewSubmissionReport | undefined;
-
       const receiveEvent = (
         event: InterviewStreamEvent,
       ): InterviewSubmissionReport | undefined => {
@@ -351,29 +534,19 @@ export function StudioPage({
         throw new Error(event.error);
       };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        buffer += decoder.decode(value, { stream: !done });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (line.trim()) {
-            const completed = receiveEvent(
-              JSON.parse(line) as InterviewStreamEvent,
-            );
-            if (completed) finalReport = completed;
-          }
-        }
-        if (done) break;
-      }
-      if (buffer.trim()) {
-        const completed = receiveEvent(
-          JSON.parse(buffer) as InterviewStreamEvent,
+      let finalReport: InterviewSubmissionReport;
+      if (brain.controllerMode === "code") {
+        finalReport = await runBrowserCodeSubmission(
+          challengeId,
+          brain.controllerCode ?? "",
+          receiveEvent,
         );
-        if (completed) finalReport = completed;
-      }
-      if (!finalReport) {
-        throw new Error("The hidden evaluator ended without a final report.");
+      } else {
+        finalReport = await streamVisualPolicySubmission(
+          challengeId,
+          compileBrain(brain),
+          receiveEvent,
+        );
       }
 
       if (finalReport.passed) {
@@ -475,7 +648,7 @@ export function StudioPage({
                 disabled={submitting}
                 className="hidden h-9 items-center rounded-lg border border-zinc-300 px-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 sm:inline-flex"
               >
-                {submitting ? "Testing…" : "Submit"}
+                {submitting ? "Testing…" : "Submit Solution"}
               </button>
               {!isInterviewWorkspace && (
                 <ShareInterviewLink challengeId={challengeId} />

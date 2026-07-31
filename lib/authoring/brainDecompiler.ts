@@ -26,7 +26,8 @@ import { BrainSource } from "@/lib/engine/simulation";
 // Condition parsing
 // ---------------------------------------------------------------------------
 
-const COMPARISON_RE = /^(!?)(\w+)\s*([<>]=?|[!=]=)\s*(\d+(?:\.\d+)?)$/;
+const COMPARISON_RE =
+  /^(!?)(\w+)\s*([<>]=?|[!=]=)\s*(\d+(?:\.\d+)?|\w+)$/;
 const BOOLEAN_FLAG_RE = /^(!?)(\w+)$/;
 
 /** Parse one atom from a trimmed string token. Returns null on failure. */
@@ -41,7 +42,9 @@ function parseAtom(token: string): ConditionAtom | null {
       negated: false,
       comparison: {
         op: compMatch[3] as ComparisonOp,
-        value: Number(compMatch[4]),
+        value: /^\d+(?:\.\d+)?$/.test(compMatch[4])
+          ? Number(compMatch[4])
+          : compMatch[4],
       },
     };
   }

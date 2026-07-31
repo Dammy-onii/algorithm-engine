@@ -228,6 +228,11 @@ central aisle → exit checkpoint → beyond the lot edge. The target waypoint i
 derived from the assigned space's authored row and order, so cars move to their
 actual rendered slot rather than playing a generic overlay animation.
 
+Every departure records one stable `exitStartedAt` tick. The route sprite keeps
+that identity while the engine changes the vehicle from `exiting` to
+`departed`, preventing React from remounting and replaying a second copy of the
+outgoing animation at the exit boundary.
+
 At the final assignment waypoint, ownership of the visual switches once: the
 moving route sprite becomes invisible before the stationary bay occupant is
 revealed. The two sprites never share a visible frame, preventing the apparent

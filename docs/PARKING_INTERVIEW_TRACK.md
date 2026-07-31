@@ -145,7 +145,7 @@ The new interview facts supplement the original Parking vocabulary:
 Existing category and vehicle facts remain available. Conditions expose raw
 state, not a precomputed “best bay.”
 
-## Apply & Run versus Submit
+## Apply & Run versus Submit solution
 
 These are separate execution paths:
 
@@ -156,13 +156,16 @@ These are separate execution paths:
 - shows all visible incidents, queues, movements, metrics, and trace;
 - never imports, requests, or executes a hidden Parking fixture.
 
-### Submit
+### Submit solution
 
-- sends the compiled policy and challenge id to
-  `POST /api/interview/submit`;
-- resolves the challenge's Parking suite on the server;
-- enforces payload, rule, and function budgets;
-- streams NDJSON events in this order:
+- follows the active **Visual Policy / Code Controller** selector;
+- sends a Visual Policy to `POST /api/interview/submit`, where the server
+  resolves and evaluates its protected Parking suite;
+- in Code Controller Demo mode, requests the suite from
+  `POST /api/interview/demo-suite` only after the click, then runs the
+  candidate JavaScript and simulations in the browser (a Web Worker in the
+  production build);
+- reports events in this order:
 
 ```text
 suite-start
@@ -174,15 +177,15 @@ scenario-result
 suite-complete
 ```
 
-Studio renders each completed hidden case as it arrives. “Hidden” means the
-inputs and schedules are unavailable before submission; after submission the
-candidate sees case labels, metrics, diagnostics, and the final score, but not
-the fixture definitions.
+Studio renders each completed case as it arrives. Visual Policy inputs and
+schedules remain server-protected. Code Demo inputs are unavailable before
+submission but must be delivered to the browser after submission, so they can
+then be inspected and must not be described as protected hidden tests.
 
-The server evaluator currently accepts compiled visual brains. Local Code-mode
-JavaScript is not sent to this route. Running untrusted candidate code in a
-hosted interview still requires a separate isolated worker/container with CPU,
-memory, time, and network limits.
+The browser worker prevents expensive Code from freezing the Studio UI, but it
+does not make the result authoritative. Running untrusted candidate code in a
+hosted bank or startup interview still requires a separate isolated server
+worker/container with CPU, memory, time, and network limits.
 
 ## Hidden evaluation families
 
@@ -227,7 +230,10 @@ and the average reaches the challenge threshold.
 - challenge briefs: `content/challenges/parking/23-*.json` through `25-*.json`
 - server-only fixtures: `lib/interview/server/parkingSuites.ts`
 - evaluator: `lib/interview/server/evaluateParkingSubmission.ts`
-- streamed route: `app/api/interview/submit/route.ts`
+- Visual Policy route: `app/api/interview/submit/route.ts`
+- Demo suite route: `app/api/interview/demo-suite/route.ts`
+- Code worker: `features/studio/workers/interviewCodeEvaluator.worker.ts`
+- shared scorer: `lib/interview/evaluation/scenarioEvaluation.ts`
 - generic result panel: `features/studio/components/InterviewResultsPanel.tsx`
 - renderer: `features/simulation/components/renderers/ParkingRenderer.tsx`
 - regression coverage: `lib/interview/__tests__/parkingInterview.test.ts` and

@@ -2,7 +2,7 @@
 
 This document explains what the **Code** tab currently does, how code receives
 information from a simulation world, how one returned action changes that world,
-why local **Apply & Run** and interview **Submit** are currently different, and
+why local **Apply & Run** and **Submit solution** are different, and
 how the platform can safely support Python and other languages.
 
 The most important distinction is:
@@ -16,20 +16,23 @@ The most important distinction is:
 
 The Studio currently provides two alternative decision systems:
 
-| Decision system | Authored with | Used by Apply & Run | Used by Interview Submit |
+| Decision system | Authored with | Used by Apply & Run | Used by Submit solution |
 |---|---|---:|---:|
-| Visual policy | Rules, Conditions, States, Functions | Yes, when **Visual Policy** is selected | Yes |
-| Code controller | JavaScript in the Code tab | Yes, when **Code Controller** is selected | No |
+| Visual policy | Rules, Conditions, States, Functions | Yes, when **Visual Policy** is selected | Yes — server evaluated |
+| Code controller | JavaScript in the Code tab | Yes, when **Code Controller** is selected | Yes — browser evaluated in Demo mode |
 
 The persisted **Active controller** selector decides which system handles the
 next local run. Opening the Code tab or keeping source in it does not silently
 change the selection. Rules and Code do not execute together and do not
 automatically translate into one another.
 
-The Code controller currently runs in the user's browser. Interview Submit sends
-the compiled visual policy to a server-owned hidden suite. Server execution of
-arbitrary candidate code has deliberately not been added without an isolated
-runner.
+The active-controller selector also determines what **Submit solution** sends
+through evaluation. Visual Policy uses the server-owned evaluator. In the
+current Demo mode, Code Controller requests the scenario suite only after the
+submit click, then runs that JavaScript and the real simulation engine inside a
+browser Web Worker. The candidate-facing card calls both paths hidden evaluation
+scenarios; this document records that Demo Code results are useful for the demo
+but are not tamper-proof interview evidence.
 
 ## 2. The four components
 
@@ -416,6 +419,14 @@ General code cannot reliably be converted back into cards. Arbitrary code may
 contain loops, arrays, classes, helper functions, dynamic scoring, recursion, or
 data structures that the visual policy model cannot represent.
 
+Peak Hour Payment Switch is a useful example. Its reference Code Controller
+builds an array for providers A, B, and C from `observation.domain`, filters by
+`canRouteX`, removes the last failed provider during a retry, calculates a
+different score for urgent and routine payments, sorts by that score, and
+returns the winning provider's action. The regression in
+`lib/engine/__tests__/controller.test.ts` verifies that controller against every
+visible level-21 objective.
+
 The product uses an explicit mode selector:
 
 ```text
@@ -425,9 +436,9 @@ Visual Policy  |  Code Controller
 A future **Generate code from current policy** action can create a one-way
 snapshot, but must not promise permanent two-way synchronization.
 
-## 9. Current Interview Submit behaviour
+## 9. Current Submit solution behaviour
 
-Local **Apply & Run** and **Interview Submit** are different paths.
+Local **Apply & Run** and **Submit solution** are different paths.
 
 ### Apply & Run
 
@@ -439,7 +450,7 @@ Controller instance
 Visible local simulation
 ```
 
-### Interview Submit
+### Visual Policy submission
 
 ```text
 Visual Rules/States/Functions
@@ -451,18 +462,47 @@ Server-owned hidden suite
 Results and diagnostics
 ```
 
-Interview Submit currently requires **Visual Policy** mode. Saved Code may
-remain in the editor, but it is not submitted. The API accepts only the compiled
-visual policy, creates each hidden world on the server, and runs the same
-`Simulation` without a Code controller.
+The server accepts the compiled visual policy, creates each protected world,
+and runs the same `Simulation` without a Code Controller.
 
 The restricted visual condition language is safe to evaluate on the application
 server because it is not arbitrary JavaScript. It supports known identifiers,
 numbers, comparisons, boolean operators, and parentheses. It cannot access the
 filesystem, environment variables, network, or server process.
 
-This means Code mode is currently a visible-scenario development surface, not a
-complete code-submission interview system.
+### Code Controller submission in Demo mode
+
+```text
+Candidate JavaScript source
+    ↓ explicit Submit solution click
+POST /api/interview/demo-suite
+    ↓ scenario definitions returned with Cache-Control: no-store
+Browser Web Worker
+    ├── compileController(source) once per scenario
+    ├── run the real Simulation with that controller
+    └── apply the shared Finance/Parking guardrails
+    ↓
+Results and diagnostics
+```
+
+The scenarios are not imported into the Studio page bundle and are not
+requested during **Apply & Run**. They are requested only after an explicit
+Code-mode submission. Each scenario receives a new controller instance, so
+class state can persist across ticks inside one case but cannot leak into the
+next case. Production uses the worker to keep expensive controller code off the
+page's main UI thread and terminates the whole evaluation after two minutes.
+
+During `next dev`, Next 16.2's Turbopack worker bootstrap can be emitted with a
+malformed source-map boundary. Studio therefore uses a development-only
+browser-page fallback, yields between scenarios so progress can render, and
+keeps the same simulation and scoring contract. This fallback is for local Demo
+development only; production continues to use the worker bundle.
+
+The candidate-facing result panel uses the simpler label **hidden evaluation
+scenarios**. Operationally, anything delivered to a browser can be inspected or
+modified, and a modified client can fabricate a result. The current Code path is
+therefore suitable for the present demo and product walkthrough, but it must not
+be presented to a bank as authoritative or tamper-proof candidate evidence.
 
 ## 10. Why submitted code needs an isolated runner
 
@@ -571,11 +611,12 @@ Use a hybrid model.
 | Hidden interview tests | Isolated server runner | Protect test data and verify the submitted program |
 | Final scoring suite | Isolated server runner | Authoritative, auditable, resource-controlled result |
 
-### Do not download hidden cases into the browser
+### Do not download protected cases into the browser in production
 
 Anything sent to a browser can be inspected through developer tools, memory,
 network logs, or modified client code. Obfuscation does not make a hidden case
-secret.
+secret. The current Demo-mode Code path intentionally accepts this trade-off and
+labels its cases as demo scenarios rather than protected server results.
 
 ### Can the browser run code while the server only checks answers?
 
@@ -645,7 +686,7 @@ knows that the submitted program produced the actions.
 
 ### Stage 2 — browser language adapters
 
-- Move JavaScript execution into a Web Worker.
+- JavaScript submission execution now runs in a Web Worker in Demo mode.
 - Add Python through a WebAssembly worker.
 - Run visible examples and candidate-authored tests locally.
 - Standardize observation/action messages.
@@ -681,13 +722,17 @@ knows that the submitted program produced the actions.
 | World action/update lifecycle | `lib/engine/world/world.ts` |
 | Finance observations/actions | `lib/engine/worlds/finance.ts` |
 | Visual brain compiler | `lib/authoring/brainCompiler.ts` |
-| Interview submission API | `app/api/interview/submit/route.ts` |
+| Visual Policy submission API | `app/api/interview/submit/route.ts` |
+| Demo suite delivery API | `app/api/interview/demo-suite/route.ts` |
+| Browser Code evaluator | `features/studio/workers/interviewCodeEvaluator.worker.ts` |
+| Shared scenario scoring | `lib/interview/evaluation/scenarioEvaluation.ts` |
 | Finance hidden evaluator | `lib/interview/server/evaluateFinanceSubmission.ts` |
 
 ## 15. Final architectural rule
 
-Use the browser for responsive learning feedback. Use an isolated server runner
-for authoritative hidden evaluation.
+Use the browser for responsive learning feedback and explicitly labelled demo
+evaluation. Use an isolated server runner for authoritative protected
+evaluation.
 
 The simulation engine should expose one stable observation/action protocol. A
 JavaScript class, Python object, Java class, Go process, or Rust program can then

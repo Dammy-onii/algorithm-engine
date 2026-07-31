@@ -16,7 +16,7 @@ interface Props {
   /** Present when a next challenge is available and unlocked. */
   onNext?: () => void;
   onRetry: () => void;
-  /** Interview stages pass only the visible case here; Submit owns the suite. */
+  /** Interview stages pass only the visible case here; submission owns the suite. */
   scope?: "challenge" | "visible-case";
 }
 
@@ -125,8 +125,9 @@ export function ResultsPanel({
             passed ? "text-zinc-300 dark:text-zinc-600" : "text-zinc-500",
           ].join(" ")}
         >
-          This confirms the visible scenario only. Submit runs the same policy
-          against every interview scenario and reports each failed guardrail.
+          This confirms the visible scenario only. Submit solution evaluates
+          the active controller against every interview scenario and reports
+          each failed guardrail.
         </p>
       )}
 

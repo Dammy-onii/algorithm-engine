@@ -2,10 +2,10 @@
  * Browser-side compiler for the optional Code mode.
  *
  * The source is plain JavaScript and must return a controller instance. It is
- * intentionally kept out of the content registry and is only evaluated after a
- * learner explicitly presses Apply & Run. Hosted/interview execution should run
- * this contract in an isolated worker/container; this local Studio compiler is
- * the development authoring surface.
+ * intentionally kept out of the content registry and is evaluated only after a
+ * learner explicitly presses Apply & Run or Submit solution. Demo submission
+ * uses it inside a browser worker. Authoritative hosted interview execution
+ * should run this contract in an isolated server worker/container.
  */
 
 import { assertAgentController, type AgentController } from "@/lib/engine/controller";
@@ -146,8 +146,9 @@ export function compileController(source: string): AgentController {
   if (!source.trim()) throw new Error("Write a controller class before running Code mode.");
   let value: unknown;
   try {
-    // Deliberately local/client-only. The Studio has no server-side evaluation
-    // path; a production multi-user runner must isolate this same contract.
+    // Deliberately browser-only. Apply & Run uses the page and Demo submission
+    // uses a Web Worker; a production multi-user runner must isolate this same
+    // contract on trusted infrastructure.
     value = new Function(`"use strict";\n${source}`)();
   } catch (error) {
     throw new Error(`Controller code could not run: ${error instanceof Error ? error.message : String(error)}`);

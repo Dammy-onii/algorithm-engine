@@ -15,7 +15,7 @@ POST /api/interview/assignments ──┘
 
 Each ChallengeData
   ├── worldKey ─────────────────────── visible Apply & Run case
-  └── interviewEvaluation?.suiteId ─── server-only Submit cases, when authored
+  └── interviewEvaluation?.suiteId ─── submission cases, when authored
 ```
 
 The standard challenge workspace contains **Share interview**. It constructs the
@@ -24,8 +24,8 @@ resulting absolute `/i/[assignmentId]` URL, and always displays it in a
 selectable field. A single challenge is simply a one-selection assignment
 (plus a required interview tutorial where that world's ordering contract
 requires one). The interview workspace offers the same control as **Copy
-link**. A recipient can author and run the visible stage, then submit the same
-compiled visual policy to the challenge's existing hidden suite.
+link**. A recipient can author and run the visible stage, then use **Submit
+solution** with the active Visual Policy or Code Controller.
 
 Every Maze, Warehouse, Finance, and Parking world page contains an **Interview
 assignment** selector listing all published levels in that world. The
@@ -121,7 +121,7 @@ the application 404 page.
 - one or more existing visible worlds for Apply & Run practice;
 - the complete hidden set referenced by each selected interview-grade stage's
   suite id;
-- streamed case progress after explicit Submit on those scored stages;
+- streamed case progress after explicit **Submit solution** on those scored stages;
 - case metrics, diagnostics, every guardrail's actual value and limit,
   aggregate score, and pass/fail where a hidden suite exists;
 - a separate locally persisted policy for every problem and assignment.
@@ -161,6 +161,7 @@ never duplicate challenge or fixture definitions.
   `features/studio/components/ShareInterviewLink.tsx`
 - challenge registry: `lib/content/registry.ts`
 - submit route: `app/api/interview/submit/route.ts`
+- Demo Code suite route: `app/api/interview/demo-suite/route.ts`
 - route/reference tests:
   `lib/interview/__tests__/interviewStages.test.tsx` and
   `lib/interview/__tests__/interviewAssignments.test.tsx`
@@ -171,8 +172,12 @@ Apply & Run grades the authored visible world only. On an interview-grade stage,
 that successful local result is labelled **Visible case passed**, not “challenge
 complete.”
 
-Submit runs the exact same compiled visual policy against the server-owned
-scenarios. Each scenario reports its guardrails explicitly:
+Submit solution follows the active controller. Visual Policy runs against the
+server-owned scenarios. In the current Demo mode, Code Controller fetches the
+scenario suite only after submission and runs it in the browser. The UI
+uses the shared **hidden evaluation scenarios** wording; this operator
+documentation records that browser-evaluated Code results are not tamper-proof.
+Each scenario reports its guardrails explicitly:
 
 - Finance: complete stream, success ratio, timeout limit, priority-failure
   limit, overload limit, and penalty budget.

@@ -244,10 +244,16 @@ describe("parking — smart facility operations", () => {
     while (parkingRuntime(result.world)!.vehicles[0].status !== "exiting") {
       result.tick();
     }
+    const exitingVehicle = parkingRuntime(result.world)!.vehicles[0];
+    const exitStartedAt = exitingVehicle.exitStartedAt;
+    expect(exitStartedAt).toBeTypeOf("number");
     expect(occupantForSpace(result.world, "S1")?.id).toBe("car-1");
 
     run(result);
     expect(result.status).toBe("reached");
+    expect(parkingRuntime(result.world)!.vehicles[0].exitStartedAt).toBe(
+      exitStartedAt,
+    );
     expect(occupantForSpace(result.world, "S1")).toBeNull();
   });
 

@@ -29,6 +29,13 @@ interface Props {
 export function ConditionChip({ atom, availableFlags, onChange, onRemove }: Props) {
   const isNumeric = atom.comparison !== undefined;
   const flags = availableFlags ?? [...ALL_FLAGS];
+  const numericFlagIds = new Set([
+    ...NUMERIC_FLAGS,
+    ...DOMAIN_FLAGS.filter((flag) => flag.type === "number").map(
+      (flag) => flag.id,
+    ),
+  ]);
+  const numericFlags = flags.filter((flag) => numericFlagIds.has(flag));
 
   return (
     <div className="flex items-center gap-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-800">
@@ -78,14 +85,70 @@ export function ConditionChip({ atom, availableFlags, onChange, onRemove }: Prop
               <option key={op} value={op}>{op}</option>
             ))}
           </select>
-          <input
-            type="number"
-            value={atom.comparison.value}
-            onChange={(e) =>
-              onChange({ ...atom, comparison: { ...atom.comparison!, value: Number(e.target.value) } })
-            }
-            className="w-14 border-0 bg-transparent text-right font-mono text-zinc-600 focus:outline-none dark:text-zinc-300"
-          />
+          {typeof atom.comparison.value === "number" ? (
+            <>
+              <input
+                type="number"
+                value={atom.comparison.value}
+                onChange={(e) =>
+                  onChange({
+                    ...atom,
+                    comparison: {
+                      ...atom.comparison!,
+                      value: Number(e.target.value),
+                    },
+                  })
+                }
+                className="w-14 border-0 bg-transparent text-right font-mono text-zinc-600 focus:outline-none dark:text-zinc-300"
+              />
+              {numericFlags.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      ...atom,
+                      comparison: {
+                        ...atom.comparison!,
+                        value:
+                          numericFlags.find((flag) => flag !== atom.flag) ??
+                          numericFlags[0],
+                      },
+                    })
+                  }
+                  className="rounded px-1 text-[9px] text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                  title="Compare with another live fact"
+                >
+                  fact
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <ConditionFlagPicker
+                value={atom.comparison.value}
+                flags={numericFlags}
+                onSelect={(value) =>
+                  onChange({
+                    ...atom,
+                    comparison: { ...atom.comparison!, value },
+                  })
+                }
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({
+                    ...atom,
+                    comparison: { ...atom.comparison!, value: 0 },
+                  })
+                }
+                className="rounded px-1 text-[9px] text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                title="Compare with a fixed number"
+              >
+                number
+              </button>
+            </>
+          )}
         </>
       )}
 

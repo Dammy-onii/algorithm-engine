@@ -216,6 +216,8 @@ export interface ParkingRuntimeVehicle extends ParkingVehicle {
   parkedAt?: number;
   departAt?: number;
   readyAt?: number;
+  /** Tick when the exit animation began; stable across exit completion. */
+  exitStartedAt?: number;
   movementCompletesAt?: number;
   waited: number;
   exitWaited: number;
@@ -563,10 +565,12 @@ function applyParkingAction(world: World, action: Action): boolean {
         const congestionDelay =
           laneLoad(world) * runtime.congestionDelayPerMovement;
         vehicle.status = "exiting";
+        vehicle.exitStartedAt = world.tick;
         vehicle.movementCompletesAt =
           world.tick + runtime.exitTravelTicks + congestionDelay;
       } else {
         vehicle.status = "departed";
+        vehicle.exitStartedAt = world.tick;
         runtime.lastDepartedVehicleId = vehicle.id;
         runtime.lastDepartureTick = world.tick;
       }

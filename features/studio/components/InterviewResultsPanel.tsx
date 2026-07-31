@@ -38,14 +38,14 @@ export function InterviewResultsPanel({
             Interview evaluation
           </p>
           <h3 className="mt-1 text-sm font-semibold">
-            {scenarioCount} server-only scenarios
+            {scenarioCount} hidden evaluation scenarios
           </h3>
           <p className="mt-1 max-w-xl text-xs leading-relaxed text-zinc-500">
-            The same compiled policy runs against unseen traffic, capacity,
-            timing, compatibility, and failure scenarios.
-            Passing requires every guardrail in every case and an average score
-            of {passingScore}. A strong score cannot hide a safety or service-level
-            failure.
+            Hidden scenarios test your solution against different traffic
+            patterns, failures, capacity limits, timing pressure, and edge
+            cases that are not part of Apply &amp; Run. To pass, your solution
+            must satisfy every guardrail and achieve an average score of at
+            least {passingScore}/100.
           </p>
         </div>
         <button
@@ -54,7 +54,7 @@ export function InterviewResultsPanel({
           disabled={submitting}
           className="rounded-md bg-zinc-900 px-3 py-2 text-xs font-semibold text-white hover:bg-zinc-700 disabled:cursor-wait disabled:opacity-60 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:bg-emerald-500/25"
         >
-          {submitting ? "Evaluating…" : report ? "Submit again" : "Submit policy"}
+          {submitting ? "Evaluating…" : "Submit Solution"}
         </button>
       </div>
 
@@ -70,7 +70,7 @@ export function InterviewResultsPanel({
             <span className="font-semibold">
               {activeScenario
                 ? `Running: ${activeScenario}`
-                : "Preparing next hidden case…"}
+                : "Preparing next hidden scenario…"}
             </span>
             <span className="font-mono text-zinc-500">
               {completedScenarios}/{scenarioCount}

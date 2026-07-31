@@ -28,20 +28,23 @@ export interface ConditionAtom {
   flag: string;
   /** True → rendered as `!flag`. Ignored when `comparison` is set. */
   negated: boolean;
-  /** Present only for numeric flags (energy, visitedCount, tick). */
-  comparison?: { op: ComparisonOp; value: number };
+  /**
+   * Present only for numeric flags. The right side may be a fixed number or
+   * another numeric observation, e.g. `healthScoreB >= healthScoreC`.
+   */
+  comparison?: { op: ComparisonOp; value: number | string };
 }
 
 /**
- * A flat list of atoms joined by one logical operator.
- *
- * Limitation (by design): the guided editor only supports flat AND or flat
- * OR chains — no parenthesised sub-expressions. Conditions more complex than
- * that fall back to ConditionRaw and are edited as a plain string.
+ * A list of atoms and optional parenthesised child groups joined by one logical
+ * operator. Each child chooses its own operator, allowing guided expressions
+ * such as `retrying && canRouteB && (!canRouteC || healthierB)`.
  */
 export interface ConditionGroup {
   operator: LogicalOp;
   atoms: ConditionAtom[];
+  /** Parenthesised groups joined to this group's atoms by `operator`. */
+  groups?: ConditionGroup[];
 }
 
 /** Guided mode: condition expressed as structured atoms the UI renders as chips. */

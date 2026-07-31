@@ -356,18 +356,18 @@ function walkthroughSteps(
 
   if (includesSubmission) {
     steps.push({
-      shortLabel: "Submit interview",
+      shortLabel: "Submit solution",
       eyebrow: "Evaluate",
       title: "Keep practice and final evaluation separate",
       summary:
-        "Apply & Run uses the visible scenario for iteration. Submit sends the unchanged visual policy to protected server-side scenarios designed to expose hardcoding and weak fallbacks.",
-      location: "Header or interview results panel · Submit",
+        "Apply & Run uses the visible scenario for iteration. Submit solution evaluates whichever controller is active against scenarios designed to expose hardcoding and weak fallbacks.",
+      location: "Header or interview results panel · Submit solution",
       details: [
-        "Hidden cases do not run while you edit or use Apply & Run. They begin only after an explicit Submit.",
-        "Each hidden scenario reports progress and contributes to the final interview score without revealing protected fixture data beforehand.",
-        "Code-mode JavaScript remains local Apply & Run only until an isolated multi-language execution worker is added; current hidden submission evaluates the visual policy DSL.",
+        "Interview cases do not run while you edit or use Apply & Run. They begin only after an explicit submission.",
+        "Visual Policy is server evaluated. Code Controller uses the current Demo-mode browser worker and is clearly labelled browser evaluated.",
+        "Each scenario reports progress, guardrails, and its contribution to the final score. Demo Code scenarios can be inspected after the browser receives them.",
       ],
-      note: "A policy that memorizes the visible provider, route, layout, or event timing should be expected to fail hidden evaluation.",
+      note: "A solution that memorizes the visible provider, route, layout, or event timing should be expected to fail the wider evaluation.",
     });
   }
 

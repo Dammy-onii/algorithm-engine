@@ -5,6 +5,36 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-07-31 — Demo-mode Code submission
+
+- Renamed the interview action from **Submit policy** to **Submit solution** so
+  it applies correctly to both authoring modes.
+- **Submit solution** now follows the active controller. Visual Policy keeps its
+  protected server evaluation; Code Controller requests the scenario suite only
+  after the submit click and runs the candidate JavaScript against the real
+  engine in a browser Web Worker.
+- A fresh controller instance is compiled for each scenario, preserving class
+  state between ticks without leaking state between cases. A two-minute
+  whole-suite timeout terminates runaway demo evaluation.
+- The result card presents both paths as **hidden evaluation scenarios** and
+  explains the operational variations they cover without exposing technical
+  execution details in the candidate-facing interface. The security difference
+  between Demo Code and server Visual Policy remains documented for operators.
+- Extracted Finance and Parking scenario scoring into one shared evaluator so
+  browser Demo and server Visual Policy paths use the same metrics, guardrails,
+  and pass contract.
+- Added the no-store `POST /api/interview/demo-suite` endpoint and regression
+  coverage for submit-time suite delivery and Code-driven Finance evaluation.
+- Verified strict TypeScript, clean ESLint, **26 test files / 155 tests**, the
+  production Next.js build, the emitted Turbopack worker entry, and a live
+  production response for the eight-case Peak Hour demo suite.
+- Standardized the action label as **Submit Solution**, including repeat
+  submissions.
+- Fixed `Unexpected end of input` during Code submission under `next dev`.
+  Next 16.2's Turbopack development worker concatenated a source-map directive
+  into its bootstrap. Demo development now uses the same browser evaluator
+  directly and yields between scenarios; production retains the Web Worker.
+
 ## 2026-07-31 — Explicit live Finance provider snapshots
 
 - Reworked the Finance provider-detail cards around a tick-stamped runtime
@@ -31,8 +61,7 @@ world document.
   dedicated Rules, Conditions, and Functions views; States and Memory remain
   available under Advanced.
 - Removed the duplicate editor-bottom Apply & Run action and made the workspace
-  header sticky on smaller screens. Interview stages permanently explain the
-  visible-run versus protected-submit boundary.
+  header sticky on smaller screens.
 - Added responsive **Build / Run** workspace tabs so a long policy is never
   stacked above a long simulation on small screens.
 - Replaced the rule card's unbounded native condition select with a searchable,
@@ -53,7 +82,17 @@ world document.
   removed its disclosure toggle, and added an explicit cue to scroll down and
   solve. Removed the redundant Apply & Run / Submit explanation from the Run
   panel and first-run coach.
-- Verified strict TypeScript, ESLint, **25 test files / 150 tests**, the
+- Extended guided rule conditions with parenthesised child groups whose
+  AND/OR connector is independent from the parent. Numeric comparisons can now
+  compare one live fact with another, so expressions such as
+  `A && B && (!C || scoreB >= scoreC)` no longer require raw mode.
+- Moved the searchable condition menu into a viewport-positioned portal. It
+  opens above or below the triggering chip, remains internally scrollable, and
+  no longer expands the rule card or browser scroll area.
+- Stabilized Parking departure animation identity at the tick an exit begins,
+  preventing an outgoing car from remounting and appearing twice when its
+  runtime status becomes departed.
+- Verified strict TypeScript, ESLint, **25 test files / 152 tests**, the
   production Next.js build, and successful Finance, Maze, Parking, Warehouse,
   and Lab route renders.
 

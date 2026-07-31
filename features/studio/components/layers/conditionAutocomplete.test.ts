@@ -4,7 +4,10 @@ import {
   activeIdentifierRange,
   replaceActiveIdentifier,
 } from "./conditionAutocomplete";
-import { groupConditionFlags } from "../blocks/ConditionFlagPicker";
+import {
+  conditionPickerPosition,
+  groupConditionFlags,
+} from "../blocks/ConditionFlagPicker";
 import { controllerFactGroup } from "./ControllerReference";
 
 describe("condition expression autocomplete", () => {
@@ -82,5 +85,20 @@ describe("large authoring vocabularies", () => {
     expect(controllerFactGroup("queueDepth")).toBe("Queue and outcomes");
     expect(controllerFactGroup("carElectric")).toBe("Current vehicle");
     expect(controllerFactGroup("laneAvailable")).toBe("Facility");
+  });
+
+  it("places the condition menu above a trigger near the viewport bottom", () => {
+    expect(
+      conditionPickerPosition(
+        { left: 900, right: 1040, top: 700, bottom: 730, width: 140 },
+        1100,
+        760,
+      ),
+    ).toMatchObject({
+      placement: "above",
+      left: 772,
+      bottom: 64,
+      width: 320,
+    });
   });
 });

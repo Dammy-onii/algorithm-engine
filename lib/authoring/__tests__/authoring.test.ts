@@ -55,6 +55,41 @@ describe("compileCondition", () => {
     expect(compileCondition(cond)).toBe("wallAhead && !goalVisible");
   });
 
+  it("compiles parenthesised child groups with their own operator", () => {
+    const cond: VisualCondition = {
+      mode: "guided",
+      group: {
+        operator: "&&",
+        atoms: [
+          {
+            flag: "retryCount",
+            negated: false,
+            comparison: { op: ">", value: 0 },
+          },
+          { flag: "lastProviderA", negated: false },
+          { flag: "canRouteB", negated: false },
+        ],
+        groups: [
+          {
+            operator: "||",
+            atoms: [
+              { flag: "canRouteC", negated: true },
+              {
+                flag: "healthScoreB",
+                negated: false,
+                comparison: { op: ">=", value: "healthScoreC" },
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(compileCondition(cond)).toBe(
+      "retryCount > 0 && lastProviderA && canRouteB && (!canRouteC || healthScoreB >= healthScoreC)",
+    );
+  });
+
   it("compiles numeric comparisons", () => {
     const cond: VisualCondition = {
       mode: "guided",
