@@ -58,16 +58,18 @@ Visual rules and a controller are alternative decision sources, never competing
 ones. The controller replaces rule selection for that run; world modules and the
 rest of the tick lifecycle remain unchanged.
 
-Studio's Code editor compiles the returned controller object locally when the
-user presses Apply & Run. Base observation fields are direct properties;
+Studio persists an explicit **Visual Policy / Code Controller** selection.
+Opening a tab never changes ownership. The Code editor compiles the returned
+controller object locally when Code Controller is selected and the user presses
+Apply & Run. Base observation fields are direct properties;
 world-module facts are under `observation.domain`. The UI derives its valid
 return-action list from the selected challenge's single-action function
 wrappers. This local compiler is not used by interview Submit.
 
 For bundled interview submissions, the safe visual policy DSL can also be sent
 to `POST /api/interview/submit`. That route resolves server-owned hidden Finance
-or Parking fixtures and streams case progress, scores, and diagnostics, not
-hidden inputs.
+or Parking fixtures and streams case progress, scores, diagnostics, and each
+guardrail's actual value and limit—not hidden inputs.
 Arbitrary Code-mode JavaScript remains local until deployment supplies an
 isolated untrusted-code worker.
 
@@ -303,8 +305,10 @@ missing kind → mazeModule
 ```
 
 Only shipped modules can be resolved. Content may select a known module ID, but it
-cannot inject executable behaviour. `allDomainFlags()` supplies the known domain
-vocabulary to load-time condition validation.
+cannot inject executable behaviour. `allDomainFlags()` supplies the global known
+vocabulary for initial parsing. When a `World` is assembled, conditions, derived
+conditions, and goal gates are checked again against only the active module's
+facts, so a Finance fact cannot enter a Maze run.
 
 ### Decoupling status
 
@@ -318,6 +322,11 @@ Function plans are checked a second time when a `World` is built: a plan may use
 only the base actions and actions declared by that world's active module. This keeps
 the open action identifier extensible without allowing a warehouse action to run in
 a maze.
+
+Studio resolves Code reference facts and playback behaviour from the challenge's
+actual `worldKey → WorldData.kind`, not from the catalogue pack ID. A future pack
+can therefore reuse an existing world module without presenting the wrong
+actions or facts.
 
 Each module declares typed `domainFlags`, and the registry derives both the known
 condition vocabulary and editor metadata from every registered module. Studio's
@@ -378,6 +387,13 @@ have an implementation and description, keep stage/taxonomy difficulty aligned,
 and reject learner copy that describes the retired numeric-priority execution
 model. Optimization claims belong in required objectives; bonus objectives may
 only describe optional quality improvements.
+
+Authored `steps` are learning guidance displayed in the problem brief. The live
+Task Progress checklist is derived from the same non-bonus objectives used by
+Results, so a completed visible policy cannot show a contradictory failed task.
+The collapsible Policy Constraints panel exposes the exact expressions and
+world-specific violations. Both autoplay and manual Step use the same terminal
+grading and persistence path.
 
 `features/studio/pages/StudioPage.tsx` persists a user's visual brain through
 `features/studio/persistence.ts` under `ae-brain-<challenge-id>` and completion

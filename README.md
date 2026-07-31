@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Algorithm Engine
 
-## Getting Started
+Algorithm Engine is a generic decision-system simulation platform. Learners and
+interview candidates author an agent as ordered visual policies or a JavaScript
+controller, then run it inside Maze, Warehouse, Finance, and Parking worlds.
 
-First, run the development server:
+The shared runtime follows one lifecycle:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+observe → choose one safe action → update the world → inspect the trace
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+World modules own their domain mechanics while the core engine remains unaware
+of packages, payment providers, vehicles, or parking bays.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000).
 
-To learn more about Next.js, take a look at the following resources:
+## Verification
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm test
+npm run lint
+npx tsc --noEmit
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The production build uses `next/font` and may need network access to retrieve
+the configured Google fonts.
 
-## Deploy on Vercel
+## Project map
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `app/` — thin Next.js route segments and interview APIs.
+- `features/catalogue/` — world and challenge directories.
+- `features/studio/` — challenge authoring and interview workspace.
+- `features/simulation/` — shared controls, renderers, and diagnostics.
+- `lib/engine/` — world-agnostic simulation and registered world modules.
+- `lib/authoring/` — visual brain compilation, persistence, and objectives.
+- `lib/interview/` — assignment tokens and server-owned hidden evaluation.
+- `content/` — immutable worlds, challenges, and example brains.
+- `docs/` — architecture, world behaviour, interview, and authoring reference.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Start with [docs/README.md](./docs/README.md), then use
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) and
+[docs/CHANGELOG.md](./docs/CHANGELOG.md) as the current sources of truth.

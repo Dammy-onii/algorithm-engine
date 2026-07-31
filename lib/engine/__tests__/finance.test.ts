@@ -20,6 +20,7 @@ import {
   FinanceConfig,
   createFinanceRuntime,
   financeRuntime,
+  financePenaltyBreakdown,
   financeScore,
   providerStateAt,
   allProcessed,
@@ -135,8 +136,7 @@ describe("finance — payment routing", () => {
   });
 
   it("fails payments routed to an offline provider (booking the penalty)", () => {
-    const domain = run(
-      sim(
+    const simulation = sim(
         {
           failurePenalty: 5,
           providers: [
@@ -149,12 +149,20 @@ describe("finance — payment routing", () => {
           ],
         },
         routeABrain,
-      ),
-    );
+      );
+    const domain = run(simulation);
 
     expect(domain.failed).toBe(2);
     expect(domain.succeeded).toBe(0);
     expect(domain.totalCost).toBeCloseTo(2 * (0.1 + 5), 5);
+    expect(financeRuntime(simulation.world)?.transactions[0].terminalReason)
+      .toBe("Provider A was offline.");
+    expect(financeRuntime(simulation.world)?.failureEvents).toHaveLength(2);
+    expect(financePenaltyBreakdown(simulation.world)).toMatchObject({
+      processingFees: 0.2,
+      failedAttemptCost: 10,
+      total: 10.2,
+    });
   });
 
   it("expected-cost routing beats naive cheapest when reliability differs", () => {
@@ -193,6 +201,7 @@ describe("finance — payment routing", () => {
   it("applies scheduled provider health changes deterministically", () => {
     const runtime = createFinanceRuntime(
       financeWorld({
+        processingMode: "queued",
         providers: [
           {
             id: "A",
@@ -201,7 +210,17 @@ describe("finance — payment routing", () => {
             successRate: 99,
             latency: 200,
             online: true,
-            schedule: [{ atTick: 4, online: false }],
+            concurrentCapacity: 2,
+            schedule: [
+              {
+                atTick: 4,
+                online: false,
+                fee: 0.35,
+                successRate: 84,
+                latency: 1600,
+                concurrentCapacity: 1,
+              },
+            ],
           },
         ],
         transactions: [{ id: "t1", amount: 100 }],
@@ -210,7 +229,15 @@ describe("finance — payment routing", () => {
 
     expect(providerStateAt(runtime, "A", 0)?.online).toBe(true);
     expect(providerStateAt(runtime, "A", 3)?.online).toBe(true);
-    expect(providerStateAt(runtime, "A", 4)?.online).toBe(false);
+    expect(providerStateAt(runtime, "A", 4)).toMatchObject({
+      online: false,
+      fee: 0.35,
+      successRate: 84,
+      baseLatency: 1600,
+      latency: 1600,
+      concurrentCapacity: 1,
+      capacityRemaining: 1,
+    });
   });
 
   it("updates provider telemetry as queued work starts and completes", () => {
@@ -237,8 +264,12 @@ describe("finance — payment routing", () => {
 
     expect(providerStateAt(financeRuntime(simulation.world)!, "A", 0)).toMatchObject({
       active: 0,
+      baseLatency: 2000,
+      congestionLatency: 0,
+      concurrentCapacity: 2,
       attempts: 0,
       completed: 0,
+      recentSampleSize: 0,
       observedSuccessRate: 100,
     });
 
@@ -251,7 +282,10 @@ describe("finance — payment routing", () => {
       attempts: 1,
       completed: 0,
       utilization: 50,
+      baseLatency: 2000,
+      congestionLatency: 500,
       latency: 2500,
+      recentSampleSize: 0,
     });
 
     simulation.tick();
@@ -263,6 +297,8 @@ describe("finance — payment routing", () => {
       completed: 1,
       succeeded: 1,
       failed: 0,
+      congestionLatency: 0,
+      recentSampleSize: 1,
       observedSuccessRate: 100,
       averageLatency: 2000,
     });

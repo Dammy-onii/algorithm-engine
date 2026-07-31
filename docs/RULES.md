@@ -1,9 +1,22 @@
 # Authoring a Brain — Rules, States, Functions & More
 
-This is the guide to writing an agent's **brain**: the six data layers the engine
-executes. You can edit all six live in the browser (the tabbed editor under the
-simulation) or on disk in `content/brains/<sample>/*.json`. The engine never changes — your brain is
-what makes the robot behave.
+This is the guide to writing an agent's **brain**: the six visual policy layers
+the engine executes. You can edit them in the Studio's
+**Build the decision** panel or as JSON in the Lab and bundled content.
+The engine never changes — your brain is what makes the agent behave.
+
+Studio groups this depth without removing it:
+
+- **Policy** contains Rules, dedicated Conditions and Functions explanations,
+  plus States and Memory under Advanced.
+- **Code** contains the alternative object-oriented controller and a searchable,
+  grouped input/output reference.
+- **Reference** contains the pass contract, current policy summary, and compiled
+  six-layer JSON.
+
+The condition picker inside a rule is not a native unbounded list. It groups
+general, navigation, world, and user-defined conditions beneath a search field
+and keeps the results in a bounded scrolling panel.
 
 - New here? Read [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) first.
 - Want the engine internals? See [BUILD.md](./BUILD.md) and
@@ -43,8 +56,9 @@ For the complete editor-to-runtime flow, the meaning of
 `observation.domain`, the current Apply & Run versus Submit boundary, and the
 multilingual runner design, see [CODE_MODE.md](./CODE_MODE.md).
 
-Code mode becomes active on **Apply & Run** when the Code editor contains source;
-clear that editor and apply again to return to the visual-rule brain. The two
+Use the Studio's **Active controller** selector to choose **Visual Policy** or
+**Code Controller** before **Apply & Run**. Opening Code does not activate it,
+and switching back to Visual Policy does not delete saved source. The two
 decision sources never run together.
 
 ```js
@@ -467,13 +481,13 @@ Goal: make the robot **turn around whenever it has already been to the tile ahea
    }
    ```
 
-3. Press **Apply & Reset**. If the JSON is malformed or you referenced a missing
+3. Press **Apply & Run**. If the JSON is malformed or you referenced a missing
    function/state, the editor shows the exact error. Fix and re-apply.
 
 4. Press **Start** and watch the debug panel: when the robot faces a visited tile,
    "Triggered rule" reads `avoid-retread` and it runs `about-face (1/2)` then
    `(2/2)`.
 
-That's the whole loop: edit data → Apply → the same engine executes your brain. Every
-future interface (visual blocks, handwritten code, AI) is just another way to produce
-these same five files.
+That's the whole loop: edit data → Apply & Run → the same engine executes your
+brain. Every authoring interface is another producer of the same validated
+BrainSource contract.

@@ -232,6 +232,33 @@ At the final assignment waypoint, ownership of the visual switches once: the
 moving route sprite becomes invisible before the stationary bay occupant is
 revealed. The two sprites never share a visible frame, preventing the apparent
 car duplication that a retained CSS animation endpoint would otherwise cause.
+Outgoing route sprites rotate toward the exit gate before crossing the aisle,
+so the front of the vehicle—not its rear—leads the departure animation.
+
+The Studio starts Parking playback at 5 ticks per second and allows a maximum
+of 15. Playback speed changes the animation interval only; allocation order,
+vehicle timing in ticks, and grading remain deterministic.
+
+### Violations and operating penalty
+
+Every allocation records explicit reasons. Examples include a large vehicle in
+a non-large bay, an accessible vehicle outside accessible parking, a mismatched
+reservation, an EV without charging, or a VIP outside premium parking. The
+Policy Constraints accordion lists the affected vehicle, assigned bay, and all
+recorded reasons.
+
+The lower-is-better operating penalty is displayed as:
+
+```text
+entrance wait × 0.4
++ exit wait × 0.6
++ hard violations × 100
++ preference misses × 8
++ abandoned vehicles × 35
++ reassignments × 6
++ congestion ticks × 0.5
++ current entrance and exit queue depth
+```
 
 ## Files and extension points
 
@@ -278,5 +305,5 @@ that placeholder as a grid.
   returns successfully; the operational renderer was inspected at desktop and
   narrow widths, and a route was visually frozen mid-aisle to verify its
   geometry.
-- The interview expansion passes TypeScript, lint, all 112 tests across 19
-  files, and the production build.
+- Current verification totals are recorded in
+  [CHANGELOG.md](./CHANGELOG.md) rather than duplicated here.

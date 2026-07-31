@@ -22,6 +22,8 @@ import {
   parkingRuntime,
   readyToLeaveVehicles,
 } from "../worlds/parking";
+import { financeRuntime } from "../worlds/finance";
+import { warehouseRuntime } from "../worlds/warehouse";
 
 const entities = { entities: [] } as EntitiesData;
 
@@ -81,6 +83,30 @@ const standardBrain: BrainSource = {
 };
 
 describe("parking — smart facility operations", () => {
+  it("keeps each world runtime behind its own module boundary", () => {
+    const simulation = sim(
+      {
+        spaces: [
+          {
+            id: "S1",
+            kind: "standard",
+            row: "north",
+            order: 0,
+            distanceToExit: 1,
+          },
+        ],
+        vehicles: [
+          { id: "car-1", arrivalTick: 0, duration: 2, size: "compact" },
+        ],
+      },
+      standardBrain,
+    );
+
+    expect(parkingRuntime(simulation.world)).not.toBeNull();
+    expect(financeRuntime(simulation.world)).toBeNull();
+    expect(warehouseRuntime(simulation.world)).toBeNull();
+  });
+
   it("authorizes departures and reuses finite capacity", () => {
     const result = run(
       sim(
@@ -181,6 +207,9 @@ describe("parking — smart facility operations", () => {
     expect(result.status).toBe("reached");
     expect(runtime.violations).toBe(1);
     expect(runtime.vehicles[0].violation).toBe(true);
+    expect(runtime.vehicles[0].violationReasons).toContain(
+      "ev-1 is electric but was not given charging.",
+    );
   });
 
   it("keeps real-time entry and exit movements in flight before freeing the bay", () => {

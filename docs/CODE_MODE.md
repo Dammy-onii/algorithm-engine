@@ -18,12 +18,13 @@ The Studio currently provides two alternative decision systems:
 
 | Decision system | Authored with | Used by Apply & Run | Used by Interview Submit |
 |---|---|---:|---:|
-| Visual policy | Rules, Conditions, States, Functions | Yes, when Code is empty | Yes |
-| Code controller | JavaScript in the Code tab | Yes, when Code is non-empty | No |
+| Visual policy | Rules, Conditions, States, Functions | Yes, when **Visual Policy** is selected | Yes |
+| Code controller | JavaScript in the Code tab | Yes, when **Code Controller** is selected | No |
 
-A non-empty Code tab replaces visual rule selection for the next local run.
-Rules and Code do not execute together and do not automatically translate into
-one another.
+The persisted **Active controller** selector decides which system handles the
+next local run. Opening the Code tab or keeping source in it does not silently
+change the selection. Rules and Code do not execute together and do not
+automatically translate into one another.
 
 The Code controller currently runs in the user's browser. Interview Submit sends
 the compiled visual policy to a server-owned hidden suite. Server execution of
@@ -39,8 +40,10 @@ The current editor is a controlled text area in
 
 - displays and updates `brain.controllerCode`;
 - saves that source with the rest of the visual brain in browser storage;
-- lists primitive action strings available to the selected challenge;
-- can insert a JavaScript example for Maze or Finance;
+- provides one search across primitive actions and observable facts;
+- groups large world vocabularies into shared observation, transaction/queue,
+  provider, vehicle/facility, warehouse, and general world-state accordions;
+- can insert a JavaScript example for every current world;
 - does not itself execute or validate the program.
 
 Calling it an editor does not make it a compiler. Syntax checking and execution
@@ -126,8 +129,8 @@ VisualBrain in React state
         ├── compileBrain(brain)
         │       └── goals, states, rules, functions, conditions, memory
         │
-        └── controllerCode non-empty?
-                ├── no  ─► no controller
+        └── controllerMode === "code"?
+                ├── no  ─► visual policy
                 └── yes ─► compileController(controllerCode)
                               └── AgentController instance
 
@@ -143,9 +146,9 @@ Simulation
 tick() repeatedly
 ```
 
-`StudioPage.onRun` currently compiles the visual brain even when Code mode is
-active. It then compiles Code when `brain.controllerCode.trim()` is non-empty and
-passes both values to `Simulation`.
+`StudioPage.onRun` compiles the visual brain for the shared runtime contract. It
+compiles Code only when `brain.controllerMode === "code"` and passes the
+selected decision source to `Simulation`.
 
 Inside `Simulation.tick()`:
 
@@ -157,8 +160,8 @@ else:
     evaluate Goal → State → Rules → Function
 ```
 
-Consequently, a non-empty Code tab is the active decision source even if the
-Rules tab is currently visible.
+Consequently, tab visibility and controller ownership are separate. The
+selector is always the source of truth.
 
 ## 4. The observation: how code sees the environment
 
@@ -377,6 +380,7 @@ Both are stored inside the same `VisualBrain`:
   functions: [...],
   states: [...],
   derived: [...],
+  controllerMode: "visual",
   controllerCode: "class Controller { ... }"
 }
 ```
@@ -386,12 +390,8 @@ They do not synchronize:
 - changing a Rule does not rewrite JavaScript;
 - changing JavaScript does not rewrite a Rule;
 - Rules remain saved while Code is active;
-- non-empty Code takes control on Apply & Run;
-- clearing Code and applying again returns control to Rules.
-
-This creates a current usability problem: a user can leave code in the Code tab,
-edit Rules, and see no change because the hidden non-empty code still replaces
-rule selection.
+- selecting **Code Controller** takes control on Apply & Run;
+- selecting **Visual Policy** returns control to Rules without deleting Code.
 
 ### Can synchronization be added?
 
@@ -416,14 +416,14 @@ General code cannot reliably be converted back into cards. Arbitrary code may
 contain loops, arrays, classes, helper functions, dynamic scoring, recursion, or
 data structures that the visual policy model cannot represent.
 
-The clearer product model is therefore an explicit mode selector:
+The product uses an explicit mode selector:
 
 ```text
 Visual Policy  |  Code Controller
 ```
 
-Switching Visual → Code may offer **Generate code from current policy**. That
-should create a snapshot, not promise permanent two-way synchronization.
+A future **Generate code from current policy** action can create a one-way
+snapshot, but must not promise permanent two-way synchronization.
 
 ## 9. Current Interview Submit behaviour
 
@@ -451,9 +451,10 @@ Server-owned hidden suite
 Results and diagnostics
 ```
 
-Interview Submit currently rejects a non-empty `controllerCode`. The API accepts
-only the compiled visual policy. It creates each hidden world on the server and
-runs the same `Simulation` without a Code controller.
+Interview Submit currently requires **Visual Policy** mode. Saved Code may
+remain in the editor, but it is not submitted. The API accepts only the compiled
+visual policy, creates each hidden world on the server, and runs the same
+`Simulation` without a Code controller.
 
 The restricted visual condition language is safe to evaluate on the application
 server because it is not arbitrary JavaScript. It supports known identifiers,

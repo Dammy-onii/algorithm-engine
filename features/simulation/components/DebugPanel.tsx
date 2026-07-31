@@ -110,9 +110,11 @@ function memoryValue(value: unknown): string {
 export function DebugPanel({
   step,
   domainFlags = [],
+  movementWorld = true,
 }: {
   step: SimStep;
   domainFlags?: readonly DomainFlagSpec[];
+  movementWorld?: boolean;
 }) {
   const [panelOpen, setPanelOpen] = useState(true);
   const { observation: obs, trace } = step;
@@ -167,9 +169,28 @@ export function DebugPanel({
               </span>
             }
           />
+          <div className="mt-2 rounded-md border border-zinc-200 bg-zinc-50 p-2.5 dark:border-zinc-700 dark:bg-zinc-800/70">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+              Why this action?
+            </p>
+            {trace.condition && (
+              <p className="mt-1 break-words font-mono text-[11px] text-zinc-800 dark:text-zinc-200">
+                WHEN {trace.condition}
+              </p>
+            )}
+            {trace.requestedAction &&
+              trace.requestedAction !== trace.action.type && (
+                <p className="mt-1 font-mono text-[10px] text-amber-700 dark:text-amber-300">
+                  Requested {trace.requestedAction} → executed {trace.action.type}
+                </p>
+              )}
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+              {trace.reason ?? "The trace contains no additional decision explanation."}
+            </p>
+          </div>
         </section>
 
-        <Accordion title="World observation">
+        {movementWorld && <Accordion title="World observation">
           <Row
             label="Position"
             value={`(${obs.position.x}, ${obs.position.y})`}
@@ -189,7 +210,7 @@ export function DebugPanel({
             label="Holding on goal"
             value={`${step.goalHold.current} / ${step.goalHold.required}`}
           />
-        </Accordion>
+        </Accordion>}
 
         {domainFacts.length > 0 && (
           <Accordion title="Domain facts" count={domainFacts.length}>

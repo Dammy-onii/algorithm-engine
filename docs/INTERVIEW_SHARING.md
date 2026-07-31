@@ -30,6 +30,9 @@ compiled visual policy to the challenge's existing hidden suite.
 Every Maze, Warehouse, Finance, and Parking world page contains an **Interview
 assignment** selector listing all published levels in that world. The
 interviewer selects a series and creates a compact `/i/[assignmentId]` link.
+The client verifies that every selected ID appears in the signed assignment
+response before showing the link, and **Select all** can assign the complete
+published world without silently dropping a problem.
 
 Finance and Parking currently mark one interview tutorial as required. That
 stage is selected permanently and automatically inserted if omitted from an API
@@ -68,7 +71,7 @@ assigned workspace.
 
 ## Short assignment IDs
 
-The short assignment ID is a compact stateless token. Version 2 contains a
+The short assignment ID is a compact stateless token. The current version 4 contains a
 format version, stable world code, and selected challenge numbers. Including
 the world is required because challenge numbers are unique within a world, not
 globally: Maze and Warehouse both publish a level numbered 6. A truncated HMAC
@@ -119,8 +122,8 @@ the application 404 page.
 - the complete hidden set referenced by each selected interview-grade stage's
   suite id;
 - streamed case progress after explicit Submit on those scored stages;
-- case metrics, diagnostics, aggregate score, and pass/fail where a hidden suite
-  exists;
+- case metrics, diagnostics, every guardrail's actual value and limit,
+  aggregate score, and pass/fail where a hidden suite exists;
 - a separate locally persisted policy for every problem and assignment.
 
 ## Current limits
@@ -161,3 +164,23 @@ never duplicate challenge or fixture definitions.
 - route/reference tests:
   `lib/interview/__tests__/interviewStages.test.tsx` and
   `lib/interview/__tests__/interviewAssignments.test.tsx`
+
+## Visible objectives versus hidden guardrails
+
+Apply & Run grades the authored visible world only. On an interview-grade stage,
+that successful local result is labelled **Visible case passed**, not “challenge
+complete.”
+
+Submit runs the exact same compiled visual policy against the server-owned
+scenarios. Each scenario reports its guardrails explicitly:
+
+- Finance: complete stream, success ratio, timeout limit, priority-failure
+  limit, overload limit, and penalty budget.
+- Parking: resolved stream, departure ratio, hard-violation limit, abandonment
+  limit, reassignment limit, congestion limit, and penalty budget.
+
+A hidden case passes only when every one of its guardrails passes. The assignment
+passes when every case passes and the average score meets the challenge's
+authored threshold. This prevents a high aggregate score from hiding a safety or
+service-level failure and explains why a visible solution that overfits one
+scenario can still fail generalization tests.

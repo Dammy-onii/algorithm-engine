@@ -66,6 +66,13 @@ Incoming queue → AI router → provider lanes
   across its 20 most recent outcomes, congestion-adjusted latency, active work,
   and remaining capacity; the lane used by the latest route is highlighted in
   blue.
+- **Provider details** are timestamped with the runtime tick and read from the
+  current provider snapshot rather than the authored JSON. The cards separate
+  configured reliability from observed outcomes, show base latency plus the
+  live congestion addition, active/concurrent capacity, free slots, utilization,
+  attempts, failures, measured run latency, health, and the schedule-adjusted
+  current fee. Before the first completed attempt, measured fields say
+  “Awaiting outcome” instead of presenting a configured target as live data.
 - **Live metrics** show queue depth, in-flight work, settled payments, the
   simulation-wide success rate, and throughput. Provider cards also distinguish
   the configured current reliability target from observed outcomes, and show
@@ -73,6 +80,12 @@ Incoming queue → AI router → provider lanes
 - **Outcome chips** distinguish waiting, in-flight, succeeded, failed, declined,
   and timed-out payments. A terminal queue with exceptions is never labelled
   “cleared successfully.”
+- **Latest activity** retains the recent settlement stream. Failed, declined,
+  and timed-out rows include their terminal reason rather than only a red label.
+- **Failures and penalty audit** lists every failed provider attempt—including
+  retryable attempts—with its tick, provider, reason, retry decision, and
+  penalty. It breaks the final score into provider fees, failed-attempt cost,
+  timeouts, priority misses, overload, and accumulated queue pressure.
 - The interview-grade total is explicitly labelled **penalty score — lower is
   better** and formatted to two decimals, so a large positive penalty cannot be
   mistaken for a good score.
@@ -119,6 +132,26 @@ edits. It owns:
   recorded as a failed payment with its penalty. `canRouteX` remains an
   observation for authoring the correct branch; it is not an engine guard. This
   distinction makes failed-routing interview challenges meaningful.
+- **Failure reasons**: every attempt records whether it failed because the
+  provider was offline, full, incompatible with the payment type, below the
+  amount requirement, unavailable during processing, or rejected by its
+  deterministic reliability draw. Declines, deadline expiry, and simulation
+  safety-limit expiry record separate terminal reasons.
+
+The queued interview score is auditable:
+
+```text
+processing fees
++ failed attempts × failure penalty
++ timed out × timeout penalty
++ priority failures × priority penalty
++ overload rejects × overload penalty
++ queue area × queue penalty per tick
+```
+
+The Finance Studio starts at 10 ticks per second and allows a maximum of 20.
+This playback speed changes only presentation time; the deterministic tick
+sequence and score do not change.
 
 `expectedCost = fee + (1 − successRate/100) × failurePenalty` — the number that
 turns "cheap but flaky" vs "dear but safe" into one comparable score.

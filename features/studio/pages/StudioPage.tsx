@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -37,6 +37,7 @@ import {
 import { findChallenge } from "@/content/challenges";
 import type { SimulationSession } from "@/features/simulation/types";
 import { createSimulationSession } from "@/features/simulation/session";
+import { simulationSpeedForWorld } from "@/features/simulation/speed";
 import { SimControls } from "@/features/simulation/components/SimControls";
 import {
   SimLegend,
@@ -53,6 +54,8 @@ import {
 } from "@/features/studio/components/InterviewProblemDrawer";
 import { ShareInterviewLink } from "@/features/studio/components/ShareInterviewLink";
 import { TaskChecklist } from "@/features/studio/components/TaskChecklist";
+import { PolicyAuditPanel } from "@/features/studio/components/PolicyAuditPanel";
+import { FirstRunCoach } from "@/features/studio/components/FirstRunCoach";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
 import {
   difficultyFor,
@@ -65,6 +68,7 @@ import {
   scaffoldBrainFor,
 } from "@/features/studio/persistence";
 import { interviewAssignmentProblemPath } from "@/lib/interview/assignmentRoutes";
+import { findWorld } from "@/lib/content/datasets";
 
 interface StudioPageProps {
   packId: string;
@@ -84,6 +88,9 @@ export function StudioPage({
   const pack = findPack(packId);
   const challenge = findChallenge(challengeId);
   const challenges = challengesInPack(packId);
+  const speedProfile = simulationSpeedForWorld(
+    findWorld(challenge.worldKey).source.world.kind,
+  );
   const brainStorageId = challenge.interviewEvaluation
     ? `interview-empty-v1-${interviewAssignment ? `${interviewAssignment.id}-` : ""}${challengeId}`
     : workspaceMode === "interview" && interviewAssignment
@@ -91,9 +98,7 @@ export function StudioPage({
     : challengeId;
 
   const [running, setRunning] = useState(false);
-  const [speed, setSpeed] = useState(
-    challenge.interviewEvaluation ? 20 : 1,
-  );
+  const [speed, setSpeed] = useState(speedProfile.initial);
   const [brain, setBrain] = useState<VisualBrain>(() =>
     scaffoldBrainFor(challengeId),
   );
@@ -107,6 +112,9 @@ export function StudioPage({
   const [justLearned, setJustLearned] = useState<Concept | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const [mobileWorkspace, setMobileWorkspace] = useState<"build" | "run">(
+    "build",
+  );
   const [problemListOpen, setProblemListOpen] = useState(false);
   const [problemSearch, setProblemSearch] = useState("");
   const [submissionReport, setSubmissionReport] =
@@ -136,24 +144,16 @@ export function StudioPage({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored) setBrain(stored);
     if (completed.size) setCompletedIds(completed);
-    try {
-      if (
-        localStorage.getItem("ae-challenge-walkthrough-v2") !== "complete"
-      ) {
-        setWalkthroughOpen(true);
-      }
-    } catch {
-      // Keep the deterministic default when storage is unavailable.
-    }
   }, [brainStorageId, challengeId]);
 
   const previewSession = useMemo(() => {
+    const previewChallenge = findChallenge(challengeId);
     const result = createSimulationSession(
-      challenge.worldKey,
-      challenge.scaffoldBrain as BrainSource,
+      previewChallenge.worldKey,
+      previewChallenge.scaffoldBrain as BrainSource,
     );
     return "session" in result ? result.session : null;
-  }, [challenge]);
+  }, [challengeId]);
 
   const finishWalkthrough = () => {
     setWalkthroughOpen(false);
@@ -186,9 +186,10 @@ export function StudioPage({
 
     let controller;
     try {
-      controller = brain.controllerCode?.trim()
-        ? compileController(brain.controllerCode)
-        : undefined;
+      controller =
+        brain.controllerMode === "code"
+          ? compileController(brain.controllerCode ?? "")
+          : undefined;
     } catch (runError) {
       setError(runError instanceof Error ? runError.message : String(runError));
       return;
@@ -214,6 +215,32 @@ export function StudioPage({
     setRunning(true);
   };
 
+  const finishVisibleRun = useCallback((finishedSession: SimulationSession) => {
+    const finishedChallenge = findChallenge(challengeId);
+    const metrics = metricsFromSim(finishedSession.sim, brain);
+    const results = evaluateObjectives(
+      finishedChallenge.objectives ?? [],
+      metrics,
+    );
+    setObjectiveResults(results);
+    if (challengePassed(results)) {
+      if (!finishedChallenge.interviewEvaluation) {
+        try {
+          localStorage.setItem(`ae-complete-${challengeId}`, "true");
+        } catch {
+          // Completion still applies to the current session.
+        }
+        if (!completedIds.has(challengeId)) {
+          setJustLearned(conceptForChallenge(challengeId) ?? null);
+        }
+        setCompletedIds((current) => new Set(current).add(challengeId));
+      }
+      setAttempts(0);
+    } else {
+      setAttempts((current) => current + 1);
+    }
+  }, [brain, challengeId, completedIds]);
+
   useEffect(() => {
     if (!running || !session) return;
     const interval = setInterval(() => {
@@ -222,41 +249,24 @@ export function StudioPage({
       if (!session.sim.isDone) return;
 
       setRunning(false);
-      const metrics = metricsFromSim(session.sim, brain);
-      const results = evaluateObjectives(challenge.objectives ?? [], metrics);
-      setObjectiveResults(results);
-      if (challengePassed(results)) {
-        if (!challenge.interviewEvaluation) {
-          try {
-            localStorage.setItem(`ae-complete-${challengeId}`, "true");
-          } catch {
-            // Completion still applies to the current session.
-          }
-          if (!completedIds.has(challengeId)) {
-            setJustLearned(conceptForChallenge(challengeId) ?? null);
-          }
-          setCompletedIds((current) => new Set(current).add(challengeId));
-        }
-        setAttempts(0);
-      } else {
-        setAttempts((current) => current + 1);
-      }
+      finishVisibleRun(session);
     }, 1000 / speed);
     return () => clearInterval(interval);
   }, [
     running,
     session,
     speed,
-    brain,
-    challenge,
-    challengeId,
-    completedIds,
+    finishVisibleRun,
   ]);
 
   const doStep = () => {
     if (!session) return;
     const next = session.sim.tick();
-    setSession({ sim: session.sim, step: next });
+    const steppedSession = { sim: session.sim, step: next };
+    setSession(steppedSession);
+    if (session.sim.isDone && !objectiveResults) {
+      finishVisibleRun(steppedSession);
+    }
   };
 
   const doReset = () => {
@@ -266,9 +276,9 @@ export function StudioPage({
 
   const onSubmitInterview = async () => {
     if (!challenge.interviewEvaluation) return;
-    if (brain.controllerCode?.trim()) {
+    if (brain.controllerMode === "code") {
       setSubmissionError(
-        "Code-mode controllers require an isolated execution worker. The current hidden evaluator accepts the sandbox-safe visual policy DSL.",
+        "Switch to Visual Policy before submitting. Code-mode controllers require an isolated execution worker; the current hidden evaluator accepts the sandbox-safe visual policy DSL.",
       );
       return;
     }
@@ -387,9 +397,21 @@ export function StudioPage({
   };
 
   const briefSteps = normalizeBrief(challenge).steps;
+  const requiredObjectives = (challenge.objectives ?? [])
+    .filter((objective) => !objective.bonus)
+    .map((objective) => ({
+      id: objective.id,
+      label: objective.label,
+      check: objective.check,
+      hint: undefined,
+    }));
+  // Task progress and ResultsPanel now use the exact same requirements. Authored
+  // learning steps remain in the problem brief as guidance.
+  const progressSteps =
+    requiredObjectives.length > 0 ? requiredObjectives : briefSteps;
   const stepResults: StepResult[] = session
-    ? evaluateSteps(briefSteps, liveContext(session.sim, brain))
-    : briefSteps.map((step) => ({
+    ? evaluateSteps(progressSteps, liveContext(session.sim, brain))
+    : progressSteps.map((step) => ({
         id: step.id,
         label: step.label,
         hint: step.hint,
@@ -402,10 +424,13 @@ export function StudioPage({
     activeIndex >= 0 ? challenges[activeIndex + 1] : undefined;
   const nextUnlocked =
     !!nextChallenge && isChallengeUnlocked(nextChallenge.id, completedIds);
+  const visiblePassed = objectiveResults
+    ? challengePassed(objectiveResults)
+    : session?.sim.status === "reached";
   const passed = objectiveResults
     ? challenge.interviewEvaluation
       ? submissionReport?.passed ?? false
-      : challengePassed(objectiveResults)
+      : visiblePassed
     : session?.sim.status === "reached";
   const stage = session ?? previewSession;
   const previousChallenge =
@@ -421,7 +446,7 @@ export function StudioPage({
 
   return (
     <main className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-zinc-100 p-2 text-zinc-900 dark:bg-[#0f0f0f] dark:text-zinc-100 xl:h-dvh xl:min-h-0 xl:overflow-hidden">
-      <header className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm dark:border-zinc-800 dark:bg-[#1b1b1b] dark:shadow-none">
+      <header className="sticky top-2 z-50 flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur dark:border-zinc-800 dark:bg-[#1b1b1b]/95 dark:shadow-none xl:static">
         <div className="flex shrink-0 items-center gap-2">
           {!isInterviewWorkspace && (
             <Link
@@ -535,6 +560,33 @@ export function StudioPage({
           <ThemeToggle />
         </div>
       </header>
+      <FirstRunCoach />
+      <div
+        className="sticky top-[4.5rem] z-40 mt-2 grid grid-cols-2 gap-1 rounded-lg border border-zinc-200 bg-white/95 p-1 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95 xl:hidden"
+        role="tablist"
+        aria-label="Challenge workspace"
+      >
+        {(["build", "run"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            aria-selected={mobileWorkspace === tab}
+            onClick={() => setMobileWorkspace(tab)}
+            className={[
+              "rounded-md px-3 py-2 text-xs font-semibold capitalize transition-colors",
+              mobileWorkspace === tab
+                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
+            ].join(" ")}
+          >
+            {tab}
+            {tab === "run" && running && (
+              <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            )}
+          </button>
+        ))}
+      </div>
 
       <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 xl:overflow-hidden">
         {justLearned && (
@@ -558,10 +610,15 @@ export function StudioPage({
         )}
 
         <div className="grid min-h-0 w-full max-w-full flex-1 grid-cols-1 gap-2 xl:grid-cols-[minmax(0,1.08fr)_minmax(27rem,0.92fr)] xl:grid-rows-[minmax(0,1fr)] xl:overflow-hidden">
-          <section className="flex min-h-[38rem] w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-[#1e1e1e] dark:shadow-none xl:h-full xl:min-h-0">
+          <section
+            className={[
+              "min-h-[38rem] w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-[#1e1e1e] dark:shadow-none xl:flex xl:h-full xl:min-h-0",
+              mobileWorkspace === "build" ? "flex" : "hidden",
+            ].join(" ")}
+          >
             <div className="flex h-13 shrink-0 items-center gap-5 border-b border-zinc-200 bg-zinc-50/80 px-4 dark:border-zinc-800 dark:bg-[#292929]">
               <span className="flex h-full items-center border-b-2 border-zinc-900 text-sm font-semibold text-zinc-900 dark:border-emerald-400 dark:text-zinc-100">
-                Description &amp; intelligence
+                Build the decision
               </span>
               <span className="text-sm text-zinc-400">Saved automatically</span>
             </div>
@@ -570,7 +627,6 @@ export function StudioPage({
                 challenge={challenge}
                 brain={brain}
                 onBrainChange={onBrainChange}
-                onRun={onRun}
                 runError={error}
                 objectiveResults={objectiveResults}
                 attempts={attempts}
@@ -583,11 +639,16 @@ export function StudioPage({
             </div>
           </section>
 
-          <section className="flex min-h-[36rem] w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-[#1e1e1e] dark:shadow-none xl:h-full xl:min-h-0">
+          <section
+            className={[
+              "min-h-[36rem] w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-[#1e1e1e] dark:shadow-none xl:flex xl:h-full xl:min-h-0",
+              mobileWorkspace === "run" ? "flex" : "hidden",
+            ].join(" ")}
+          >
             <div className="flex min-h-13 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-zinc-200 bg-zinc-50/80 px-4 py-2 dark:border-zinc-800 dark:bg-[#292929]">
               <div className="flex items-center gap-2">
                 <SimulationIcon />
-                <span className="text-sm font-semibold">Simulation</span>
+                <span className="text-sm font-semibold">Run the simulation</span>
               </div>
               <span className="rounded-md bg-zinc-200/70 px-2 py-1 font-mono text-[11px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                 {simulationStatusLabel(running, session?.sim.status)}
@@ -605,7 +666,7 @@ export function StudioPage({
                   onStep={doStep}
                   onReset={doReset}
                   onSpeedChange={setSpeed}
-                  maxSpeed={challenge.interviewEvaluation ? 60 : 3}
+                  maxSpeed={speedProfile.maximum}
                 />
                 <SimStage
                   world={session.sim.world}
@@ -613,7 +674,17 @@ export function StudioPage({
                   animationRate={speed}
                   footer={
                     <>
-                      <TaskChecklist steps={stepResults} started />
+                      {(challenge.objectives?.length ?? 0) > 0 ? (
+                        <PolicyAuditPanel
+                          world={session.sim.world}
+                          objectives={challenge.objectives ?? []}
+                          results={objectiveResults}
+                          liveSteps={stepResults}
+                          started
+                        />
+                      ) : (
+                        <TaskChecklist steps={stepResults} started />
+                      )}
                       {session.sim.isDone && (
                         <>
                           <ResultsPanel
@@ -626,9 +697,13 @@ export function StudioPage({
                             }
                             passed={
                               challenge.interviewEvaluation
-                                ? !!objectiveResults &&
-                                  challengePassed(objectiveResults)
+                                ? !!visiblePassed
                                 : !!passed
+                            }
+                            scope={
+                              challenge.interviewEvaluation
+                                ? "visible-case"
+                                : "challenge"
                             }
                             results={objectiveResults}
                             onNext={
@@ -664,7 +739,16 @@ export function StudioPage({
                   <>
                     <WorldRenderer world={stage.sim.world} />
                     <SimLegend world={stage.sim.world} />
-                    <TaskChecklist steps={stepResults} started={false} />
+                    {(challenge.objectives?.length ?? 0) > 0 ? (
+                      <PolicyAuditPanel
+                        world={stage.sim.world}
+                        objectives={challenge.objectives ?? []}
+                        results={null}
+                        liveSteps={stepResults}
+                      />
+                    ) : (
+                      <TaskChecklist steps={stepResults} started={false} />
+                    )}
                     <p className="text-xs text-zinc-500">
                       Press{" "}
                       <strong className="text-zinc-700 dark:text-zinc-300">

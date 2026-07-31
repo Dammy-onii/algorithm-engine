@@ -42,7 +42,11 @@ export function SimStage({
         <WorldLegend world={world} />
       </div>
       <div className="flex flex-col gap-4">
-        <DebugPanel step={step} domainFlags={world.module.domainFlags} />
+        <DebugPanel
+          step={step}
+          domainFlags={world.module.domainFlags}
+          movementWorld={world.module.tracksMovement !== false}
+        />
         {footer}
       </div>
     </div>

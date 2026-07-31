@@ -28,6 +28,20 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Native select popovers otherwise keep the operating-system light palette
+   even when the application is dark. This applies the active app theme to the
+   closed control and its browser-owned option list. */
+select {
+  color-scheme: light;
+}
+
+.dark select,
+.dark option {
+  color-scheme: dark;
+  background-color: rgb(39 39 42);
+  color: rgb(244 244 245);
+}
+
 /* Studio's authoring and simulation panes are separate work surfaces. Keeping
    their scrollbars visible makes that independent scrolling explicit. */
 .workspace-scrollbar {
@@ -194,17 +208,17 @@ body {
   34% {
     left: var(--parking-target-x);
     top: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
+    transform: translate(-50%, -50%) rotate(-90deg);
   }
   78% {
     left: 91%;
     top: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
+    transform: translate(-50%, -50%) rotate(-90deg);
   }
   100% {
     left: 108%;
     top: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
+    transform: translate(-50%, -50%) rotate(-90deg);
   }
 }
 

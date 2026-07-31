@@ -1,3 +1,10 @@
+export interface InterviewGuardrailResult {
+  label: string;
+  passed: boolean;
+  actual: string;
+  required: string;
+}
+
 export interface InterviewScenarioResult {
   id: string;
   label: string;
@@ -12,6 +19,7 @@ export interface InterviewScenarioResult {
   overloadRejects?: number;
   penaltyScore: number;
   metrics: Record<string, number | string>;
+  guardrails: InterviewGuardrailResult[];
   diagnostics: string[];
 }
 

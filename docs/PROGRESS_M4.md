@@ -17,7 +17,7 @@ stepper was retired by the full-width problem-workspace redesign._
 | 6 | Curriculum tests | `lib/curriculum/__tests__/concepts.test.ts` | ✅ |
 | 7 | Docs (MILESTONE4, PROGRESS_M4, CHALLENGE_SCHEMA, roadmap) | `docs/*` | ✅ |
 | 11 | Structured brief schema (brief/context/steps/taxonomy) + normalizer | `types.ts`, `challengeBrief.ts` | ✅ |
-| 12 | Progressive-disclosure problem brief | `ProblemBrief.tsx` | ✅ |
+| 12 | Complete problem statement with solution scroll cue | `ProblemBrief.tsx` | ✅ |
 | 13 | Live task checklist (ticks off during the run) | `TaskChecklist.tsx`, `objectives.ts` | ✅ |
 | 14 | Results screen (objectives + Next level) | `ResultsPanel.tsx`, `features/studio/pages/StudioPage.tsx` | ✅ |
 | 15 | Compact progress stepper | `ProgressStepper.tsx` | ✅ shipped in M4; retired from current Studio UI |
@@ -52,8 +52,9 @@ the same flow serves Maze, Warehouse, Finance, Parking, and future worlds. Full 
 in [MILESTONE4.md](./MILESTONE4.md); schema reference in
 [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md).
 
-- Brief is now progressive: headline + context always; prose behind "Learn more";
-  hints in a drawer. "Current intelligence" collapsed below the editor.
+- The complete statement is visible above the solution tools and ends with a
+  clear scroll cue; hints remain optional. "Current intelligence" is collapsed
+  below the editor.
 - Live task checklist ticks off during the run (`steps` or required objectives).
 - Results screen: objectives (required ✓ / bonus ★) + **Next level →**.
 - First-run onboarding banner. The compact stepper shipped in this pass but was

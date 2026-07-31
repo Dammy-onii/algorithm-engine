@@ -213,6 +213,19 @@ export interface FinanceRuntimeTx extends FinanceTransaction {
   completedAt?: number;
   completesAt?: number;
   lastProvider?: string;
+  /** Human-readable reason for the latest failed attempt. */
+  lastFailureReason?: string;
+  /** Human-readable reason for the final non-success outcome. */
+  terminalReason?: string;
+}
+
+export interface FinanceFailureEvent {
+  tick: number;
+  transactionId: string;
+  providerId?: string;
+  reason: string;
+  retryScheduled: boolean;
+  penalty: number;
 }
 
 export interface FinanceProviderTelemetry {
@@ -236,6 +249,7 @@ export interface FinanceRuntime {
   priorityFailures: number;
   overloadRejects: number;
   queueArea: number;
+  failureEvents: FinanceFailureEvent[];
   failurePenalty: number;
   timeoutPenalty: number;
   priorityFailurePenalty: number;
@@ -317,6 +331,7 @@ export function createFinanceRuntime(data: WorldData): FinanceRuntime | null {
     priorityFailures: 0,
     overloadRejects: 0,
     queueArea: 0,
+    failureEvents: [],
     failurePenalty: config.failurePenalty ?? 0,
     timeoutPenalty: config.timeoutPenalty ?? config.failurePenalty ?? 0,
     priorityFailurePenalty: config.priorityFailurePenalty ?? 0,
@@ -337,6 +352,7 @@ export function createFinanceRuntime(data: WorldData): FinanceRuntime | null {
 // ---------------------------------------------------------------------------
 
 export function financeRuntime(world: World): FinanceRuntime | null {
+  if (world.module.id !== "finance") return null;
   return (world.domain as FinanceRuntime | null) ?? null;
 }
 
@@ -427,10 +443,15 @@ export interface ProviderState {
   name: string;
   fee: number;
   successRate: number;
+  /** Schedule-adjusted latency before current in-flight congestion is added. */
+  baseLatency: number;
+  /** Additional latency caused by work currently using this provider. */
+  congestionLatency: number;
   latency: number;
   online: boolean;
   handled: number;
   capacity: number;
+  concurrentCapacity: number;
   active: number;
   capacityRemaining: number;
   congestion: number;
@@ -439,6 +460,8 @@ export interface ProviderState {
   completed: number;
   succeeded: number;
   failed: number;
+  /** Number of completed attempts represented by the rolling success rate. */
+  recentSampleSize: number;
   observedSuccessRate: number;
   averageLatency: number;
   healthScore: number;
@@ -473,8 +496,8 @@ export function providerStateAt(
     (t) => t.status === "processing" && t.routedTo === id,
   ).length;
   const congestion = concurrentCapacity > 0 ? active / concurrentCapacity : 1;
-  const effectiveLatency =
-    latency + active * (p.congestionLatencyPerItem ?? 0);
+  const congestionLatency = active * (p.congestionLatencyPerItem ?? 0);
+  const effectiveLatency = latency + congestionLatency;
   const telemetry = runtime.providerTelemetry[id] ?? {
     attempts: 0,
     completed: 0,
@@ -493,10 +516,13 @@ export function providerStateAt(
     name: p.name,
     fee,
     successRate,
+    baseLatency: latency,
+    congestionLatency,
     latency: effectiveLatency,
     online,
     handled,
     capacity: p.capacity ?? Infinity,
+    concurrentCapacity,
     active,
     capacityRemaining:
       runtime.processingMode === "queued"
@@ -513,6 +539,7 @@ export function providerStateAt(
     completed: telemetry.completed,
     succeeded: telemetry.succeeded,
     failed: telemetry.failed,
+    recentSampleSize: telemetry.recentOutcomes.length,
     observedSuccessRate,
     averageLatency:
       telemetry.completed > 0
@@ -572,15 +599,55 @@ export function totalCost(world: World): number {
 }
 
 export function financeScore(world: World): number {
+  return financePenaltyBreakdown(world).total;
+}
+
+export interface FinancePenaltyBreakdown {
+  processingFees: number;
+  failedAttemptCost: number;
+  timeoutPenalty: number;
+  priorityPenalty: number;
+  overloadPenalty: number;
+  queuePenalty: number;
+  total: number;
+}
+
+/** Auditable components of the lower-is-better finance score. */
+export function financePenaltyBreakdown(world: World): FinancePenaltyBreakdown {
   const runtime = financeRuntime(world);
-  if (!runtime) return 0;
-  return (
-    runtime.totalCost +
-    runtime.timedOut * runtime.timeoutPenalty +
-    runtime.priorityFailures * runtime.priorityFailurePenalty +
-    runtime.overloadRejects * runtime.overloadPenalty +
-    runtime.queueArea * runtime.queuePenaltyPerTick
-  );
+  if (!runtime) {
+    return {
+      processingFees: 0,
+      failedAttemptCost: 0,
+      timeoutPenalty: 0,
+      priorityPenalty: 0,
+      overloadPenalty: 0,
+      queuePenalty: 0,
+      total: 0,
+    };
+  }
+  const failedAttemptCost = runtime.failedAttempts * runtime.failurePenalty;
+  const timeoutPenalty = runtime.timedOut * runtime.timeoutPenalty;
+  const priorityPenalty =
+    runtime.priorityFailures * runtime.priorityFailurePenalty;
+  const overloadPenalty =
+    runtime.overloadRejects * runtime.overloadPenalty;
+  const queuePenalty = runtime.queueArea * runtime.queuePenaltyPerTick;
+  return {
+    processingFees: runtime.processingCost,
+    failedAttemptCost,
+    timeoutPenalty,
+    priorityPenalty,
+    overloadPenalty,
+    queuePenalty,
+    total:
+      runtime.processingCost +
+      failedAttemptCost +
+      timeoutPenalty +
+      priorityPenalty +
+      overloadPenalty +
+      queuePenalty,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -630,15 +697,29 @@ function canRetry(tx: FinanceRuntimeTx, world: World): boolean {
 function failAttempt(
   world: World,
   tx: FinanceRuntimeTx,
-  options: { overload?: boolean } = {},
+  options: { overload?: boolean; reason: string },
 ): void {
   const runtime = financeRuntime(world)!;
   tx.failedAttempts += 1;
+  tx.lastFailureReason = options.reason;
   runtime.failedAttempts += 1;
   runtime.totalCost += runtime.failurePenalty;
   if (options.overload) runtime.overloadRejects += 1;
 
-  if (runtime.processingMode === "queued" && canRetry(tx, world)) {
+  const retryScheduled =
+    runtime.processingMode === "queued" && canRetry(tx, world);
+  runtime.failureEvents.push({
+    tick: world.tick,
+    transactionId: tx.id,
+    providerId: tx.routedTo,
+    reason: options.reason,
+    retryScheduled,
+    penalty:
+      runtime.failurePenalty +
+      (options.overload ? runtime.overloadPenalty : 0),
+  });
+
+  if (retryScheduled) {
     tx.status = "waiting";
     tx.nextEligibleTick = world.tick + runtime.retryBackoffTicks;
     tx.completesAt = undefined;
@@ -647,7 +728,29 @@ function failAttempt(
 
   tx.status = "failed";
   tx.completedAt = world.tick;
+  tx.terminalReason = options.reason;
   if (isPriority(tx)) runtime.priorityFailures += 1;
+}
+
+function routeRejectionReason(
+  runtime: FinanceRuntime,
+  tx: FinanceRuntimeTx,
+  state: ProviderState | null,
+  providerId: string,
+): string | null {
+  if (!state) return `Provider ${providerId} does not exist.`;
+  if (!state.online) return `Provider ${providerId} was offline.`;
+  if (state.capacityRemaining <= 0) {
+    return `Provider ${providerId} had no remaining processing capacity.`;
+  }
+  const provider = runtime.providers.find((item) => item.id === providerId);
+  if (provider?.accepts && tx.type && !provider.accepts.includes(tx.type)) {
+    return `Provider ${providerId} does not support ${tx.type} payments.`;
+  }
+  if (provider?.maxAmount !== undefined && tx.amount > provider.maxAmount) {
+    return `The payment exceeded Provider ${providerId}'s maximum amount.`;
+  }
+  return null;
 }
 
 function route(world: World, slot: Slot): void {
@@ -667,10 +770,12 @@ function route(world: World, slot: Slot): void {
 
   // Routing to an unavailable provider (offline / over capacity / wrong type)
   // fails the payment — this is what the "check the provider first" lessons teach.
-  if (!canRoute(world, slot)) {
+  const rejectionReason = routeRejectionReason(runtime, tx, state, slot);
+  if (rejectionReason) {
     completeProviderAttempt(runtime, slot, false, 0);
     failAttempt(world, tx, {
       overload: !!state?.online && state.capacityRemaining <= 0,
+      reason: rejectionReason,
     });
     return;
   }
@@ -691,7 +796,9 @@ function route(world: World, slot: Slot): void {
     tx.completedAt = world.tick;
   } else {
     completeProviderAttempt(runtime, slot, false, state?.latency ?? 0);
-    failAttempt(world, tx);
+    failAttempt(world, tx, {
+      reason: `Provider ${slot} rejected the payment during reliability processing.`,
+    });
   }
 }
 
@@ -719,6 +826,7 @@ function applyFinanceAction(world: World, action: Action): boolean {
     if (tx) {
       tx.status = "declined";
       tx.completedAt = world.tick;
+      tx.terminalReason = "The policy explicitly declined this payment.";
       if (isPriority(tx)) runtime.priorityFailures += 1;
       runtime.lastDecision = {
         tick: world.tick,
@@ -742,6 +850,11 @@ function applyFinanceAction(world: World, action: Action): boolean {
         tx.waited += 1;
         if (runtime.expireAfter > 0 && tx.waited > runtime.expireAfter) {
           tx.status = "lost";
+          tx.completedAt = world.tick;
+          tx.terminalReason =
+            "The policy held the payment until its waiting limit expired.";
+          runtime.timedOut += 1;
+          if (isPriority(tx)) runtime.priorityFailures += 1;
         }
       }
     }
@@ -772,7 +885,11 @@ function advanceFinanceTick(world: World): void {
       runtime.tickDurationMs;
     if (!state?.online || randomPercent(runtime) >= state.successRate) {
       completeProviderAttempt(runtime, providerId, false, elapsedLatency);
-      failAttempt(world, tx);
+      failAttempt(world, tx, {
+        reason: !state?.online
+          ? `Provider ${providerId} went offline while processing the payment.`
+          : `Provider ${providerId} rejected the payment during reliability processing.`,
+      });
     } else {
       completeProviderAttempt(runtime, providerId, true, elapsedLatency);
       tx.status = "succeeded";
@@ -787,6 +904,7 @@ function advanceFinanceTick(world: World): void {
     tx.waited = Math.max(0, world.tick - (tx.arrivalTick ?? 0));
     const deadline = tx.deadlineTicks ?? runtime.expireAfter;
     if (deadline > 0 && tx.waited >= deadline) {
+      const timedOutWhileProcessing = tx.status === "processing";
       if (tx.status === "processing" && tx.routedTo) {
         completeProviderAttempt(
           runtime,
@@ -799,6 +917,10 @@ function advanceFinanceTick(world: World): void {
       tx.status = "lost";
       tx.completedAt = world.tick;
       tx.completesAt = undefined;
+      tx.terminalReason =
+        timedOutWhileProcessing
+          ? "The payment exceeded its deadline while processing."
+          : "The payment exceeded its deadline while waiting.";
       runtime.timedOut += 1;
       if (isPriority(tx)) runtime.priorityFailures += 1;
     }
@@ -989,9 +1111,15 @@ export const financeModule: WorldModule = {
     // Safety net: a brain that never routes must still terminate. Remaining
     // payments are marked lost and the run ends as "stuck" (objectives fail).
     if (world.tick >= (financeRuntime(world)?.maxTicks ?? Infinity)) {
-      for (const t of financeRuntime(world)!.transactions) {
+      const runtime = financeRuntime(world)!;
+      for (const t of runtime.transactions) {
         if (["scheduled", "waiting", "processing"].includes(t.status)) {
           t.status = "lost";
+          t.completedAt = world.tick;
+          t.terminalReason =
+            "The simulation safety limit was reached before the policy resolved this payment.";
+          runtime.timedOut += 1;
+          if (isPriority(t)) runtime.priorityFailures += 1;
         }
       }
       return "stuck";

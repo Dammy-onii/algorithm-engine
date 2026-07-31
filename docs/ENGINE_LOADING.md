@@ -163,7 +163,7 @@ Shipped modules (`lib/engine/worlds/`):
   [PARKING_SIMULATION.md](./PARKING_SIMULATION.md).
 - **`registry.ts`** — `resolveWorldModule(kind)` maps a `WorldData.kind` to its
   module (default `maze`); `allDomainFlags()` is the union of every module's flag
-  names, used by the loader to validate brains across worlds.
+  names, used for initial parsing and authoring metadata.
 
 **Adding a new world** (e.g. traffic) = write a `WorldModule`, register it, and
 add a renderer. No edits to `world.ts`, `observation.ts`, `condition.ts`, the
@@ -183,12 +183,16 @@ end-to-end without touching the `Observation` type or the evaluator.
 
 ### Condition vocabulary
 
-- **Runtime:** the evaluator only sees the flags the *active* world produced this
-  tick (base + `obs.domain`). A maze brain referencing `packageHere` would fail —
-  correctly — because the maze produces no such flag.
-- **Validation (load time):** the loader validates rule/goal/derived expressions
-  against `BUILTIN_FLAGS ∪ allDomainFlags() ∪ derivedConditions`, so a warehouse
-  brain validates even though the maze doesn't expose those flags.
+- **Initial parsing:** the loader recognizes
+  `BUILTIN_FLAGS ∪ allDomainFlags() ∪ derivedConditions`, allowing one compiler
+  to understand every registered module's vocabulary.
+- **Active-world validation:** `buildWorld` then checks every rule, goal gate,
+  and derived condition against only the base flags, the selected module's
+  `domainFlags`, and that brain's derived names. A Maze run that references
+  `onlineA` or a Finance run that references `packageHere` fails during Apply,
+  before the first tick.
+- **Runtime:** the evaluator sees only the flags the active world produced this
+  tick (base + `obs.domain`).
 
 ---
 
@@ -221,7 +225,7 @@ The registry now derives domain action and flag vocabularies from every module.
 `ActionType` is open rather than a warehouse-expanded union, Studio reads domain
 flag metadata from the registry, and the app dispatches Maze, Warehouse, Finance,
 and Parking renderers through `WorldRenderer`. `buildWorld` also rejects a
-function plan that uses a domain action unavailable in the active world.
+function plan or condition vocabulary unavailable in the active world.
 
 Current verification is recorded in [CHANGELOG.md](./CHANGELOG.md); module-level
 tests live beside the engine under `lib/engine/__tests__/`.

@@ -2,7 +2,7 @@
  * Authoring layer tests (Milestone 2).
  *
  * These prove the central M2 claim: the visual editor is only a *producer* of the
- * same five-layer JSON the engine has consumed since M1. If a VisualBrain compiles
+ * same six-layer JSON the engine consumes. If a VisualBrain compiles
  * to a BrainSource the engine accepts and runs, the authoring layer is correct and
  * the engine stays untouched.
  */
@@ -165,7 +165,7 @@ describe("compile / decompile round-trip", () => {
     expect(aboutFace.steps).toEqual(["pivot-right", "pivot-right"]);
   });
 
-  it("compileBrainToTexts emits valid JSON for all five layers", () => {
+  it("compileBrainToTexts emits valid JSON for all six layers", () => {
     const visual = decompileBrain(CHALLENGES[0].scaffoldBrain as BrainSource);
     const texts = compileBrainToTexts(visual);
     for (const layer of ["goals", "states", "rules", "functions", "memory"]) {

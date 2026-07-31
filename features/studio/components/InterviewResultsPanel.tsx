@@ -43,7 +43,9 @@ export function InterviewResultsPanel({
           <p className="mt-1 max-w-xl text-xs leading-relaxed text-zinc-500">
             The same compiled policy runs against unseen traffic, capacity,
             timing, compatibility, and failure scenarios.
-            Passing requires every case and an average score of {passingScore}.
+            Passing requires every guardrail in every case and an average score
+            of {passingScore}. A strong score cannot hide a safety or service-level
+            failure.
           </p>
         </div>
         <button
@@ -117,6 +119,30 @@ export function InterviewResultsPanel({
                 <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-zinc-500 sm:grid-cols-3">
                   {Object.entries(scenario.metrics).map(([label, value]) => (
                     <span key={label}>{label} {value}</span>
+                  ))}
+                </div>
+                <div className="mt-2 overflow-hidden rounded border border-zinc-200 dark:border-zinc-700">
+                  {scenario.guardrails.map((guardrail) => (
+                    <div
+                      key={guardrail.label}
+                      className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-b border-zinc-100 px-2 py-1.5 text-[10px] last:border-b-0 dark:border-zinc-800"
+                    >
+                      <span className="min-w-0 truncate text-zinc-600 dark:text-zinc-300">
+                        {guardrail.label}
+                      </span>
+                      <span className="font-mono text-zinc-500">
+                        {guardrail.actual} / {guardrail.required}
+                      </span>
+                      <span
+                        className={
+                          guardrail.passed
+                            ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                            : "font-semibold text-red-600 dark:text-red-400"
+                        }
+                      >
+                        {guardrail.passed ? "pass" : "fail"}
+                      </span>
+                    </div>
                   ))}
                 </div>
                 <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] text-zinc-500">

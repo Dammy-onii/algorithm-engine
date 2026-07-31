@@ -1,7 +1,7 @@
 /**
  * Brain Decompiler — BrainSource → VisualBrain.
  *
- * Converts the five-layer JSON brain format back into the structured visual
+ * Converts the six-layer JSON brain format back into the structured visual
  * model so existing brains (the three shipped with Milestone 1) can be loaded
  * into the editor as starting points or references.
  *
@@ -182,5 +182,6 @@ export function decompileBrain(src: BrainSource): VisualBrain {
     functions,
     derived,
     memory: src.memory as Record<string, unknown>,
+    controllerMode: "visual",
   };
 }

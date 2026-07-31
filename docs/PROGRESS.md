@@ -57,10 +57,13 @@ simulation solves both mazes live in the browser._
   function ids), compiled to flat action plans (cycle-checked) and run one action per
   tick as a committed behavior. Shipped `dash` + `about-face` bricks and a third
   "Dash Explorer" brain. Debug panel shows `dash (2/3)`. Covered by tests (8/8).
-- **Full five-layer brain editor** — the in-app editor now edits **all five layers**
-  (goals/states/rules/functions/memory), not just rules. Apply & Reset re-parses every
-  layer, rebuilds the whole brain, and surfaces per-layer parse **and** loader
-  validation errors. See [`features/lab/components/BrainEditor.tsx`](../features/lab/components/BrainEditor.tsx).
+- **Full six-layer controller editor** — the in-app editor now edits conditions,
+  goals, states, rules, functions, and memory. The explicit controller selector
+  determines whether Apply & Run uses those visual layers or the Code Controller;
+  simply opening the Code tab does not switch modes. Apply & Reset re-parses the
+  visual layers, rebuilds the controller, and surfaces per-layer parse and loader
+  validation errors. See [`RULES.md`](./RULES.md) and
+  [`CODE_MODE.md`](./CODE_MODE.md).
 - **Authoring guide** — [`RULES.md`](./RULES.md): fields, condition grammar, bricks,
   and a write-your-first-rule walkthrough.
 

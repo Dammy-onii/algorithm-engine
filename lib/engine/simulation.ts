@@ -90,6 +90,8 @@ export class Simulation {
     stateId: string;
     ruleId: string | null;
     functionId: string | null;
+    condition: string | null;
+    reason: string;
     plan: ActionType[];
     cursor: number;
   } | null = null;
@@ -168,6 +170,8 @@ export class Simulation {
           ruleId: null,
           functionId: "controller",
           action: { type: "wait" },
+          requestedAction: "wait",
+          reason: "The Code Controller has not run yet.",
         },
         memory: { ...this.world.agent.memory },
         goalHold: { current: this.world.ticksAtGoal, required: this.world.goalHoldTicks },
@@ -193,6 +197,8 @@ export class Simulation {
         ruleId: decision.ruleId,
         functionId: decision.functionId,
         action: { type: decision.plan[0] ?? "wait" },
+        condition: decision.condition ?? undefined,
+        reason: decision.reason,
         step: total > 1 ? { index: 0, total } : undefined,
       },
       memory: { ...this.world.agent.memory },
@@ -231,6 +237,7 @@ export class Simulation {
       )
         ? actionType
         : "wait";
+      const actionWasSafe = safeAction === actionType;
       this.world.apply({ type: safeAction });
       this.applyProgressAndLimits();
       const step: SimStep = {
@@ -243,6 +250,10 @@ export class Simulation {
           ruleId: null,
           functionId: "controller",
           action: { type: safeAction },
+          requestedAction: actionType,
+          reason: actionWasSafe
+            ? "The Code Controller returned this action and its world precondition passed."
+            : `The Code Controller returned '${actionType}', but its world precondition failed, so the engine executed 'wait'.`,
         },
         memory: { ...this.world.agent.memory },
         goalHold: { current: this.world.ticksAtGoal, required: this.world.goalHoldTicks },
@@ -276,6 +287,8 @@ export class Simulation {
         stateId: decision.stateId,
         ruleId: decision.ruleId,
         functionId: decision.functionId,
+        condition: decision.condition,
+        reason: decision.reason,
         plan: decision.plan,
         cursor: 0,
       };
@@ -303,6 +316,11 @@ export class Simulation {
         ruleId: brick.ruleId,
         functionId: brick.functionId,
         action: { type: actionType },
+        condition: brick.condition ?? undefined,
+        reason:
+          total > 1 && stepInfo.index > 0
+            ? `Continuing step ${stepInfo.index + 1} of the previously selected '${brick.functionId ?? "function"}' plan.`
+            : brick.reason,
         step: total > 1 ? stepInfo : undefined,
       },
       memory: { ...this.world.agent.memory },

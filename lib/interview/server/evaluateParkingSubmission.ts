@@ -124,6 +124,50 @@ export function evaluateParkingScenario(
     runtime.reassignments <= scenario.maxReassignments &&
     runtime.congestionTicks <= scenario.maxCongestionTicks &&
     penaltyScore <= scenario.scoreBudget;
+  const guardrails = [
+    {
+      label: "Resolve stream",
+      passed: completed === total,
+      actual: `${completed}/${total}`,
+      required: `${total}/${total}`,
+    },
+    {
+      label: "Departure ratio",
+      passed: departureRatio >= scenario.minimumDepartureRatio,
+      actual: `${(departureRatio * 100).toFixed(2)}%`,
+      required: `≥ ${(scenario.minimumDepartureRatio * 100).toFixed(2)}%`,
+    },
+    {
+      label: "Hard violations",
+      passed: runtime.hardViolations <= scenario.maxHardViolations,
+      actual: String(runtime.hardViolations),
+      required: `≤ ${scenario.maxHardViolations}`,
+    },
+    {
+      label: "Abandoned vehicles",
+      passed: runtime.abandoned <= scenario.maxAbandoned,
+      actual: String(runtime.abandoned),
+      required: `≤ ${scenario.maxAbandoned}`,
+    },
+    {
+      label: "Reassignments",
+      passed: runtime.reassignments <= scenario.maxReassignments,
+      actual: String(runtime.reassignments),
+      required: `≤ ${scenario.maxReassignments}`,
+    },
+    {
+      label: "Congestion ticks",
+      passed: runtime.congestionTicks <= scenario.maxCongestionTicks,
+      actual: String(runtime.congestionTicks),
+      required: `≤ ${scenario.maxCongestionTicks}`,
+    },
+    {
+      label: "Penalty budget",
+      passed: penaltyScore <= scenario.scoreBudget,
+      actual: penaltyScore.toFixed(2),
+      required: `≤ ${scenario.scoreBudget.toFixed(2)}`,
+    },
+  ];
 
   return {
     id: scenario.id,
@@ -143,6 +187,7 @@ export function evaluateParkingScenario(
       "congestion ticks": runtime.congestionTicks,
       penalty: Number(penaltyScore.toFixed(2)),
     },
+    guardrails,
     diagnostics,
   };
 }

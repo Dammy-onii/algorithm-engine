@@ -6,6 +6,9 @@ Start here. The docs are grouped by purpose.
 - [CHANGELOG.md](./CHANGELOG.md) — **current feature changes, verification, and
   known limits**. Read this first when resuming work.
 - [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) — what the platform is, in one page.
+- [UX_FIRST_GLANCE.md](./UX_FIRST_GLANCE.md) — proposed first-open information
+  architecture, progressive disclosure, debugging flow, and implementation
+  order for reducing learner confusion.
 - [summary.md](./summary.md) — the original long-form vision.
 - [ROADMAP.md](./ROADMAP.md) — all 8 milestones: what each proves + how to present it.
 - [MILESTONES.md](./MILESTONES.md) — milestone status overview.

@@ -3,7 +3,7 @@
  *
  * This is the bridge from the visual editor to the simulation engine.
  * The engine is completely unchanged: this function simply serialises
- * the visual model into the exact same five-layer JSON format the
+ * the visual model into the same six-layer JSON format the
  * engine has consumed since Milestone 1.
  *
  * Called by: the "Run" button in the Studio UI.

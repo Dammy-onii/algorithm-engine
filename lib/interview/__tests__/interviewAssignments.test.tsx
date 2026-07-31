@@ -59,6 +59,18 @@ describe("multi-problem interview assignments", () => {
     ).toEqual(["straight-line", "branching-maze"]);
   });
 
+  it("round-trips every selected problem without silently dropping one", () => {
+    for (const packId of ["maze", "warehouse", "finance", "parking"]) {
+      const selected = assignableChallengesInPack(packId).map(
+        (challenge) => challenge.id,
+      );
+      const id = createInterviewAssignmentId(selected);
+      expect(resolveInterviewAssignment(id)?.challengeIds).toEqual(
+        normalizeInterviewSelection(selected).map((challenge) => challenge.id),
+      );
+    }
+  });
+
   it("creates a compact signed id and rejects a modified id", () => {
     const id = createInterviewAssignmentId([
       "parking-interview-orchestrator",

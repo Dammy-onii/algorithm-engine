@@ -1,5 +1,10 @@
 # Build Progress — Milestone 2
 
+> **Historical tracker.** It records files that existed during Milestone 2,
+> including the later-removed Maze level 5. Current behavior is documented in
+> [CHANGELOG.md](./CHANGELOG.md), [RULES.md](./RULES.md), and
+> [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 Live, resumable tracker. If work is interrupted, start from the first ⬜ item.
 
 **Status legend:** ⬜ not started · 🟨 in progress · ✅ done · ⛔ blocked

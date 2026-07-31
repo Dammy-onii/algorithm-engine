@@ -132,7 +132,9 @@ export interface VisualBrain {
   /** User-defined named conditions (composable perception). */
   derived: VisualDerivedCondition[];
   memory: Record<string, unknown>;
-  /** Optional local Code-mode controller source. Omitted means visual rules run. */
+  /** Explicitly selects which authoring surface controls Apply & Run. */
+  controllerMode?: "visual" | "code";
+  /** Optional local Code-mode controller source. */
   controllerCode?: string;
 }
 

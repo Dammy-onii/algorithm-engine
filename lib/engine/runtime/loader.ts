@@ -260,6 +260,31 @@ export function buildWorld(
   validateWorldData(worldData);
   const worldModule = resolveWorldModule(worldData.kind);
   const allowedActions = new Set<ActionType>([...BASE_ACTIONS, ...worldModule.domainActions]);
+  const activeFlags = new Set([
+    ...BUILTIN_FLAGS,
+    ...worldModule.domainFlags.map((flag) => flag.id),
+    ...Object.keys(brain.derivedConditions),
+  ]);
+  const assertWorldExpression = (expression: string, label: string) => {
+    for (const identifier of referencedIdentifiers(expression)) {
+      if (!activeFlags.has(identifier)) {
+        fail(
+          `${label} references '${identifier}', which is unavailable in world '${worldModule.id}'`,
+        );
+      }
+    }
+  };
+  for (const [id, expression] of Object.entries(brain.derivedConditions)) {
+    assertWorldExpression(expression, `derived condition '${id}'`);
+  }
+  for (const rule of brain.rules) {
+    assertWorldExpression(rule.when, `rule '${rule.id}'`);
+  }
+  for (const goal of brain.goals) {
+    if (goal.activeWhen) {
+      assertWorldExpression(goal.activeWhen, `goal '${goal.id}'`);
+    }
+  }
   for (const [functionId, plan] of Object.entries(brain.functionPlans)) {
     for (const action of plan) {
       if (!allowedActions.has(action)) {

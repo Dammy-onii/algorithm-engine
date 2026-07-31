@@ -16,6 +16,7 @@ import {
   currentTx,
   deadlineRemainingFor,
   expectedCost,
+  financePenaltyBreakdown,
   financeScore,
   financeRuntime,
   inFlightTransactions,
@@ -82,6 +83,7 @@ export function FinanceRenderer({ world }: { world: World }) {
   ).at(-1);
   const hasExceptions = failed + declined + lost > 0;
   const decision = runtime.lastDecision;
+  const scoreBreakdown = financePenaltyBreakdown(world);
 
   // Live transaction lifecycle: upcoming arrivals, retry backoff, in-flight work
   // and the newest settlements. This is what makes the board read as a running
@@ -263,14 +265,21 @@ export function FinanceRenderer({ world }: { world: World }) {
             {feed.map((item) => (
               <li
                 key={item.id}
-                className="flex items-center justify-between gap-2 font-mono text-[10px] tabular-nums text-zinc-600 dark:text-zinc-300"
+                className="rounded px-1 py-0.5 font-mono text-[10px] tabular-nums text-zinc-600 odd:bg-zinc-50 dark:text-zinc-300 dark:odd:bg-zinc-800/50"
               >
-                <span className="truncate">
-                  t{item.completedAt ?? "-"} · {item.id} ·{" "}
-                  {NAIRA_AMOUNT.format(item.amount)}
-                  {item.routedTo ? ` → ${item.routedTo}` : ""}
-                </span>
-                <OutcomeTag status={item.status} />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate">
+                    t{item.completedAt ?? "-"} · {item.id} ·{" "}
+                    {NAIRA_AMOUNT.format(item.amount)}
+                    {item.routedTo ? ` → ${item.routedTo}` : ""}
+                  </span>
+                  <OutcomeTag status={item.status} />
+                </div>
+                {item.status !== "succeeded" && item.terminalReason && (
+                  <p className="mt-0.5 whitespace-normal text-[9px] leading-relaxed text-red-600 dark:text-red-300">
+                    {item.terminalReason}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
@@ -280,6 +289,63 @@ export function FinanceRenderer({ world }: { world: World }) {
           </p>
         )}
       </section>
+
+      <details className="group rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+          <span>Failures and penalty audit</span>
+          <span className="text-zinc-400 group-open:rotate-180">⌄</span>
+        </summary>
+        <div className="border-t border-zinc-200 p-3 dark:border-zinc-800">
+          <p className="text-[11px] leading-relaxed text-zinc-500">
+            The score is a lower-is-better operating cost. Every component below
+            is added to the final score.
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            <AuditMetric label="Provider fees" value={scoreBreakdown.processingFees} />
+            <AuditMetric label="Failed attempts" value={scoreBreakdown.failedAttemptCost} />
+            <AuditMetric label="Timeouts" value={scoreBreakdown.timeoutPenalty} />
+            <AuditMetric label="Priority misses" value={scoreBreakdown.priorityPenalty} />
+            <AuditMetric label="Overload" value={scoreBreakdown.overloadPenalty} />
+            <AuditMetric label="Queue pressure" value={scoreBreakdown.queuePenalty} />
+          </div>
+          <div className="mt-2 flex items-center justify-between rounded bg-zinc-100 px-2.5 py-2 text-xs dark:bg-zinc-800">
+            <span className="font-medium">Total penalty score</span>
+            <span className="font-mono font-semibold">{SCORE.format(scoreBreakdown.total)}</span>
+          </div>
+
+          {runtime.failureEvents.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                Failed attempts
+              </p>
+              <ul className="mt-1 max-h-40 space-y-1 overflow-y-auto pr-1">
+                {[...runtime.failureEvents].reverse().map((event, index) => (
+                  <li
+                    key={`${event.tick}-${event.transactionId}-${index}`}
+                    className="rounded border border-red-100 bg-red-50/60 px-2 py-1.5 text-[10px] text-red-800 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-200"
+                  >
+                    <span className="font-mono">
+                      t{event.tick} · {event.transactionId}
+                      {event.providerId ? ` → ${event.providerId}` : ""}
+                    </span>
+                    <span className="ml-1 font-semibold">
+                      {event.retryScheduled ? "retry scheduled" : "final failure"}
+                    </span>
+                    <span className="float-right font-mono font-semibold">
+                      +{SCORE.format(event.penalty)}
+                    </span>
+                    <p className="mt-0.5 leading-relaxed">{event.reason}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-3 text-[10px] text-zinc-400">
+              No provider attempt has failed in this run.
+            </p>
+          )}
+        </div>
+      </details>
 
       <section
         aria-label="Live payment metrics"
@@ -341,7 +407,24 @@ export function FinanceRenderer({ world }: { world: World }) {
       </div>
 
       {/* Providers */}
-      <div className="flex flex-col gap-2">
+      <section
+        aria-label="Live provider details"
+        className="flex flex-col gap-2"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
+              Provider details
+            </h3>
+            <p className="mt-0.5 text-[10px] text-zinc-500">
+              Operational values are recalculated from the runtime after every tick.
+            </p>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2 py-1 font-mono text-[9px] font-semibold uppercase tracking-wide text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 motion-safe:animate-pulse" />
+            Live snapshot · tick {world.tick}
+          </span>
+        </div>
         {states.map((s) => {
           const usable = canRoute(world, s.id);
           const exp = expectedCost(s, penalty);
@@ -378,18 +461,34 @@ export function FinanceRenderer({ world }: { world: World }) {
               </div>
               <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                 <ProviderMetric
-                  label="Live success"
-                  value={formatPercent(s.observedSuccessRate)}
-                  detail={`current target ${formatPercent(s.successRate)}`}
+                  label="Observed success"
+                  value={
+                    s.recentSampleSize > 0
+                      ? formatPercent(s.observedSuccessRate)
+                      : "Awaiting outcome"
+                  }
+                  detail={
+                    s.recentSampleSize > 0
+                      ? `${s.succeeded}/${s.recentSampleSize} recent attempts succeeded`
+                      : `configured target ${formatPercent(s.successRate)}`
+                  }
                 />
                 <ProviderMetric
                   label="Current latency"
                   value={formatMilliseconds(s.latency)}
-                  detail={`run average ${formatMilliseconds(s.averageLatency)}`}
+                  detail={
+                    s.congestionLatency > 0
+                      ? `${formatMilliseconds(s.baseLatency)} base + ${formatMilliseconds(s.congestionLatency)} load`
+                      : `${formatMilliseconds(s.baseLatency)} base · no congestion`
+                  }
                 />
                 <ProviderMetric
-                  label={runtime.processingMode === "queued" ? "Active" : "Routed"}
-                  value={runtime.processingMode === "queued" ? s.active : s.handled}
+                  label={runtime.processingMode === "queued" ? "Live capacity" : "Routed"}
+                  value={
+                    runtime.processingMode === "queued"
+                      ? `${s.active}/${s.concurrentCapacity}`
+                      : s.handled
+                  }
                   detail={
                     runtime.processingMode === "queued"
                       ? `${s.capacityRemaining} slots free`
@@ -403,7 +502,7 @@ export function FinanceRenderer({ world }: { world: World }) {
                       ? formatPercent(s.utilization)
                       : s.attempts
                   }
-                  detail={`${s.completed}/${s.attempts} attempts settled`}
+                  detail={`${s.completed}/${s.attempts} attempts settled · ${s.failed} failed`}
                 />
                 <ProviderMetric
                   label="Health"
@@ -411,9 +510,18 @@ export function FinanceRenderer({ world }: { world: World }) {
                   detail={s.online ? "provider online" : "provider offline"}
                 />
                 <ProviderMetric
-                  label="Expected cost"
-                  value={NAIRA_COST.format(exp)}
-                  detail={`fee ${NAIRA_COST.format(s.fee)}`}
+                  label="Current fee"
+                  value={NAIRA_COST.format(s.fee)}
+                  detail={`expected attempt cost ${NAIRA_COST.format(exp)}`}
+                />
+                <ProviderMetric
+                  label="Measured latency"
+                  value={
+                    s.completed > 0
+                      ? formatMilliseconds(s.averageLatency)
+                      : "Awaiting outcome"
+                  }
+                  detail={`${s.completed} completed attempt${s.completed === 1 ? "" : "s"}`}
                 />
               </div>
               {!usable && s.online && s.capacityRemaining > 0 && (
@@ -424,7 +532,7 @@ export function FinanceRenderer({ world }: { world: World }) {
             </div>
           );
         })}
-      </div>
+      </section>
 
       {/* Running tally */}
       <div className="flex flex-wrap items-center gap-2 border-t border-zinc-100 pt-2 text-xs tabular-nums dark:border-zinc-800">
@@ -613,6 +721,17 @@ function OutcomeTag({ status }: { status: string }) {
     <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${tone}`}>
       {label}
     </span>
+  );
+}
+
+function AuditMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded border border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-800">
+      <p className="text-[9px] uppercase tracking-wide text-zinc-400">{label}</p>
+      <p className="mt-0.5 font-mono text-[11px] font-semibold text-zinc-800 dark:text-zinc-200">
+        {SCORE.format(value)}
+      </p>
+    </div>
   );
 }
 

@@ -113,6 +113,7 @@ function metricsToContext(m: RunMetrics): EvalContext {
 export interface ObjectiveResult {
   id: string;
   label: string;
+  check: string;
   bonus: boolean;
   met: boolean;
   /** Set when the check expression itself is malformed. */
@@ -130,6 +131,7 @@ export function evaluateObjectives(
       return {
         id: o.id,
         label: o.label,
+        check: o.check,
         bonus: o.bonus ?? false,
         met: evaluateCondition(o.check, ctx),
       };
@@ -137,6 +139,7 @@ export function evaluateObjectives(
       return {
         id: o.id,
         label: o.label,
+        check: o.check,
         bonus: o.bonus ?? false,
         met: false,
         error: e instanceof Error ? e.message : String(e),

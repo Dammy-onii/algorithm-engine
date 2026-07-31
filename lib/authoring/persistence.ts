@@ -53,6 +53,9 @@ export function upgradePersistedBrain(
     functions: [...savedFunctions, ...newBuiltIns],
     derived: saved.derived ?? [],
     memory: saved.memory ?? {},
+    controllerMode:
+      saved.controllerMode ??
+      (saved.controllerCode?.trim() ? "code" : "visual"),
     controllerCode: saved.controllerCode,
   };
 }

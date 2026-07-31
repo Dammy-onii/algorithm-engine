@@ -105,6 +105,44 @@ export function evaluateFinanceScenario(
     runtime.priorityFailures <= scenario.maxPriorityFailures &&
     runtime.overloadRejects <= scenario.maxOverloadRejects &&
     penaltyScore <= scenario.scoreBudget;
+  const guardrails = [
+    {
+      label: "Complete stream",
+      passed: completed === total,
+      actual: `${completed}/${total}`,
+      required: `${total}/${total}`,
+    },
+    {
+      label: "Success ratio",
+      passed: successRatio >= scenario.minimumSuccessRatio,
+      actual: `${(successRatio * 100).toFixed(2)}%`,
+      required: `≥ ${(scenario.minimumSuccessRatio * 100).toFixed(2)}%`,
+    },
+    {
+      label: "Timeouts",
+      passed: runtime.timedOut <= scenario.maxTimeouts,
+      actual: String(runtime.timedOut),
+      required: `≤ ${scenario.maxTimeouts}`,
+    },
+    {
+      label: "Priority failures",
+      passed: runtime.priorityFailures <= scenario.maxPriorityFailures,
+      actual: String(runtime.priorityFailures),
+      required: `≤ ${scenario.maxPriorityFailures}`,
+    },
+    {
+      label: "Overload rejects",
+      passed: runtime.overloadRejects <= scenario.maxOverloadRejects,
+      actual: String(runtime.overloadRejects),
+      required: `≤ ${scenario.maxOverloadRejects}`,
+    },
+    {
+      label: "Penalty budget",
+      passed: penaltyScore <= scenario.scoreBudget,
+      actual: penaltyScore.toFixed(2),
+      required: `≤ ${scenario.scoreBudget.toFixed(2)}`,
+    },
+  ];
 
   return {
     id: scenario.id,
@@ -127,6 +165,7 @@ export function evaluateFinanceScenario(
       overload: runtime.overloadRejects,
       penalty: Number(penaltyScore.toFixed(2)),
     },
+    guardrails,
     diagnostics,
   };
 }

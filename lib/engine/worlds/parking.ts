@@ -222,6 +222,7 @@ export interface ParkingRuntimeVehicle extends ParkingVehicle {
   violation: boolean;
   hardViolation: boolean;
   preferenceViolation: boolean;
+  violationReasons: string[];
   reassignments: number;
 }
 
@@ -268,6 +269,7 @@ export function createParkingRuntime(data: WorldData): ParkingRuntime | null {
       violation: false,
       hardViolation: false,
       preferenceViolation: false,
+      violationReasons: [],
       reassignments: 0,
     })),
     violations: 0,
@@ -295,6 +297,7 @@ export function createParkingRuntime(data: WorldData): ParkingRuntime | null {
 }
 
 export function parkingRuntime(world: World): ParkingRuntime | null {
+  if (world.module.id !== "parking") return null;
   return (world.domain as ParkingRuntime | null) ?? null;
 }
 
@@ -423,23 +426,53 @@ function classifyAssignment(
   vehicle: ParkingRuntimeVehicle,
   space: ParkingSpace,
   tick: number,
-): { hard: boolean; preference: boolean } {
+): { hard: boolean; preference: boolean; reasons: string[] } {
   const reservationMatches =
     Boolean(vehicle.reservation) &&
     (space.reservedFor === vehicle.id || space.reservedFor === vehicle.reservation);
-  const hard =
-    isParkingSpaceClosed(space, tick) ||
-    (space.kind === "reserved" && !reservationMatches) ||
-    (space.kind === "accessible" && !vehicle.accessiblePermit) ||
-    (vehicle.accessiblePermit === true && space.kind !== "accessible") ||
-    (vehicle.size === "large" && space.kind !== "large") ||
-    (Boolean(vehicle.reservation) && !reservationMatches);
-  const preference =
+  const hardReasons: string[] = [];
+  if (isParkingSpaceClosed(space, tick)) {
+    hardReasons.push(`${space.id} was closed when the assignment was made.`);
+  }
+  if (space.kind === "reserved" && !reservationMatches) {
+    hardReasons.push(`${space.id} is reserved for another vehicle.`);
+  }
+  if (space.kind === "accessible" && !vehicle.accessiblePermit) {
+    hardReasons.push(`${vehicle.id} does not have an accessible permit.`);
+  }
+  if (vehicle.accessiblePermit === true && space.kind !== "accessible") {
+    hardReasons.push(`${vehicle.id} requires an accessible space.`);
+  }
+  if (vehicle.size === "large" && space.kind !== "large") {
+    hardReasons.push(`${vehicle.id} is too large for a ${space.kind} space.`);
+  }
+  if (Boolean(vehicle.reservation) && !reservationMatches) {
+    hardReasons.push(`${vehicle.id}'s reservation does not match ${space.id}.`);
+  }
+  const hard = hardReasons.length > 0;
+  const preferenceReasons: string[] = [];
+  if (!hard && vehicle.electric === true && space.kind !== "charging") {
+    preferenceReasons.push(`${vehicle.id} is electric but was not given charging.`);
+  }
+  if (!hard && vehicle.vip === true && space.kind !== "premium") {
+    preferenceReasons.push(`${vehicle.id} is VIP but was not given premium parking.`);
+  }
+  if (
     !hard &&
-    ((vehicle.electric === true && space.kind !== "charging") ||
-      (vehicle.vip === true && space.kind !== "premium") ||
-      expectedKind(vehicle) !== space.kind);
-  return { hard, preference };
+    expectedKind(vehicle) !== space.kind &&
+    preferenceReasons.length === 0
+  ) {
+    preferenceReasons.push(
+      `${vehicle.id} preferred ${expectedKind(vehicle)} but received ${space.kind}.`,
+    );
+  }
+  const preference =
+    !hard && preferenceReasons.length > 0;
+  return {
+    hard,
+    preference,
+    reasons: [...hardReasons, ...preferenceReasons],
+  };
 }
 
 function laneLoad(world: World): number {
@@ -489,6 +522,7 @@ function assignToKind(world: World, kind: ParkingSpaceKind): void {
   vehicle.hardViolation = assignment.hard;
   vehicle.preferenceViolation = assignment.preference;
   vehicle.violation = assignment.hard || assignment.preference;
+  vehicle.violationReasons = assignment.reasons;
   runtime.assignments += 1;
   runtime.totalWait += vehicle.waited;
   if (vehicle.violation) runtime.violations += 1;
@@ -661,20 +695,65 @@ export function resolvedParkingVehicles(world: World): ParkingRuntimeVehicle[] {
 }
 
 export function parkingScore(world: World): number {
+  return parkingPenaltyBreakdown(world).total;
+}
+
+export interface ParkingPenaltyBreakdown {
+  entranceWait: number;
+  exitWait: number;
+  hardViolations: number;
+  preferenceViolations: number;
+  abandonment: number;
+  reassignments: number;
+  congestion: number;
+  activeQueues: number;
+  total: number;
+}
+
+/** Auditable components of the lower-is-better parking score. */
+export function parkingPenaltyBreakdown(world: World): ParkingPenaltyBreakdown {
   const runtime = parkingRuntime(world);
-  if (!runtime) return 0;
-  const activeQueuePenalty =
+  if (!runtime) {
+    return {
+      entranceWait: 0,
+      exitWait: 0,
+      hardViolations: 0,
+      preferenceViolations: 0,
+      abandonment: 0,
+      reassignments: 0,
+      congestion: 0,
+      activeQueues: 0,
+      total: 0,
+    };
+  }
+  const activeQueues =
     waitingVehicles(world).length + readyToLeaveVehicles(world).length;
-  return (
-    runtime.totalWait * 0.4 +
-    runtime.totalExitWait * 0.6 +
-    runtime.hardViolations * 100 +
-    runtime.preferenceViolations * 8 +
-    runtime.abandoned * 35 +
-    runtime.reassignments * 6 +
-    runtime.congestionTicks * 0.5 +
-    activeQueuePenalty
-  );
+  const entranceWait = runtime.totalWait * 0.4;
+  const exitWait = runtime.totalExitWait * 0.6;
+  const hardViolations = runtime.hardViolations * 100;
+  const preferenceViolations = runtime.preferenceViolations * 8;
+  const abandonment = runtime.abandoned * 35;
+  const reassignments = runtime.reassignments * 6;
+  const congestion = runtime.congestionTicks * 0.5;
+  return {
+    entranceWait,
+    exitWait,
+    hardViolations,
+    preferenceViolations,
+    abandonment,
+    reassignments,
+    congestion,
+    activeQueues,
+    total:
+      entranceWait +
+      exitWait +
+      hardViolations +
+      preferenceViolations +
+      abandonment +
+      reassignments +
+      congestion +
+      activeQueues,
+  };
 }
 
 function parkingObserve(world: World): Record<string, number | boolean> {

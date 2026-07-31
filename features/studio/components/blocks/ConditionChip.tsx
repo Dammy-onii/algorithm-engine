@@ -10,34 +10,12 @@
  */
 
 import { ConditionAtom, ComparisonOp } from "@/lib/authoring/types";
-import { allDomainFlagSpecs } from "@/lib/engine/worlds/registry";
-
-const DOMAIN_FLAGS = allDomainFlagSpecs();
-
-export const BOOLEAN_FLAGS = [
-  "wallAhead", "wallLeft", "wallRight",
-  "goalVisible", "goalAhead", "atGoal",
-  "visitedAhead", "always", "never",
-] as const;
-
-export const NUMERIC_FLAGS = ["energy", "visitedCount", "tick"] as const;
-export const ALL_FLAGS = [...BOOLEAN_FLAGS, ...NUMERIC_FLAGS, ...DOMAIN_FLAGS.map((flag) => flag.id)] as const;
-
-export const FLAG_LABELS: Record<string, string> = {
-  wallAhead: "Wall Ahead",
-  wallLeft: "Wall Left",
-  wallRight: "Wall Right",
-  goalVisible: "Goal Visible",
-  goalAhead: "Goal Ahead",
-  atGoal: "At Goal",
-  visitedAhead: "Visited Ahead",
-  always: "Always",
-  never: "Never",
-  energy: "Energy",
-  visitedCount: "Visited Count",
-  tick: "Tick",
-  ...Object.fromEntries(DOMAIN_FLAGS.map((flag) => [flag.id, flag.label])),
-};
+import { ConditionFlagPicker } from "./ConditionFlagPicker";
+import {
+  ALL_FLAGS,
+  DOMAIN_FLAGS,
+  NUMERIC_FLAGS,
+} from "./conditionFlags";
 
 const COMPARISON_OPS: ComparisonOp[] = ["<", "<=", ">", ">=", "==", "!="];
 
@@ -70,11 +48,11 @@ export function ConditionChip({ atom, availableFlags, onChange, onRemove }: Prop
         </button>
       )}
 
-      {/* Flag selector */}
-      <select
+      {/* Searchable, grouped flag selector */}
+      <ConditionFlagPicker
         value={atom.flag}
-        onChange={(e) => {
-          const newFlag = e.target.value;
+        flags={flags}
+        onSelect={(newFlag) => {
           const willBeNumeric = [...NUMERIC_FLAGS, ...DOMAIN_FLAGS.filter((flag) => flag.type === "number").map((flag) => flag.id)].includes(newFlag);
           if (willBeNumeric && !atom.comparison) {
             onChange({ flag: newFlag, negated: false, comparison: { op: "<", value: 0 } });
@@ -84,12 +62,7 @@ export function ConditionChip({ atom, availableFlags, onChange, onRemove }: Prop
             onChange({ ...atom, flag: newFlag });
           }
         }}
-        className="border-0 bg-transparent font-medium text-zinc-800 focus:outline-none dark:text-zinc-100"
-      >
-        {flags.map((f) => (
-          <option key={f} value={f}>{FLAG_LABELS[f] ?? f}</option>
-        ))}
-      </select>
+      />
 
       {/* Comparison controls (numeric flags) */}
       {isNumeric && atom.comparison && (

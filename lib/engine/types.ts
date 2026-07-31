@@ -241,6 +241,12 @@ export interface DecisionTrace {
   ruleId: string | null;
   functionId: string | null;
   action: Action;
+  /** WHEN expression that selected the visual rule, when visual policy is active. */
+  condition?: string;
+  /** Plain-language explanation of why this action was returned. */
+  reason?: string;
+  /** Code controller output before an unsafe action is converted to wait. */
+  requestedAction?: ActionType;
   /** For a multi-step brick: which action of the plan this tick is running. */
   step?: { index: number; total: number };
 }

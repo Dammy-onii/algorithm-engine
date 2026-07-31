@@ -193,6 +193,7 @@ export function createWarehouseRuntime(data: WorldData): WarehouseRuntime | null
 // ---------------------------------------------------------------------------
 
 export function warehouseRuntime(world: World): WarehouseRuntime | null {
+  if (world.module.id !== "warehouse") return null;
   return (world.domain as WarehouseRuntime | null) ?? null;
 }
 

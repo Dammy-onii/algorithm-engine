@@ -33,6 +33,8 @@ export interface Decision {
   stateId: string;
   ruleId: string | null;
   functionId: string | null;
+  condition: string | null;
+  reason: string;
   /** Compiled plan of primitive actions to run, one per tick. */
   plan: ActionType[];
   /** State to switch into before running the plan, if the rule requested one. */
@@ -91,6 +93,9 @@ export function resolveAction(
       stateId: state.id,
       ruleId: null,
       functionId: null,
+      condition: null,
+      reason:
+        "No rule had both a true WHEN condition and an executable next action, so the policy waited.",
       plan: DEFAULT_PLAN,
       nextState: state.id,
     };
@@ -113,6 +118,9 @@ export function resolveAction(
     stateId: state.id,
     ruleId: rule.id,
     functionId: rule.do,
+    condition: rule.when,
+    reason:
+      "This was the first top-to-bottom rule whose WHEN condition was true and whose next action was executable.",
     plan,
     nextState,
   };

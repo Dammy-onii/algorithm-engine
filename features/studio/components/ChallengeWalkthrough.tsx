@@ -274,7 +274,7 @@ function walkthroughSteps(
       title: "Turn the write-up into an operational contract",
       summary:
         "Before adding rules, identify the required outcome, the hard constraints that must never be violated, and the quality metrics that distinguish a robust solution from one that merely terminates.",
-      location: "Left panel · Description & intelligence",
+      location: "Left panel · Build the decision",
       details: [
         "The brief states the immediate task. Expand Learn more for the scenario, context, and what the supplied scaffold already does.",
         "The task checklist translates the statement into observable milestones. Informational items guide design; checked items update from the live run.",
@@ -291,11 +291,11 @@ function walkthroughSteps(
       eyebrow: "Author",
       title: "Choose the right layer for each idea",
       summary: `The platform separates what the ${language.controller} observes, how it organizes behaviour, and which action it returns. Use the smallest set of layers that expresses your algorithm clearly.`,
-      location: "Left panel · Rules, Conditions, States, Functions, Memory, Code",
+      location: "Left panel · Policy, Code, and Reference",
       details: [
-        "Rules are the ordered decision flow: WHEN a condition is true, DO one function. Dragging a rule changes execution order; folders only organize cards.",
-        "Conditions name reusable boolean expressions. States represent persistent operating modes. Functions package reusable action sequences. Memory stores controller-owned values.",
-        "Code mode is an alternative local controller for Apply & Run. A non-empty Code controller replaces visual rule selection; visual rules and code do not currently synchronize.",
+        "Policy keeps Rules, Conditions, and Functions one click away. Advanced contains operating states and memory for problems that need persistent modes.",
+        "Conditions explains every available fact and lets you name reusable checks. Functions explains every available action and lets unlocked stages compose reusable action sequences.",
+        "Code is an alternative local controller; Reference contains the pass contract and compiled policy summary. Use the Active controller selector to choose what Apply & Run executes.",
       ],
       example: {
         label: "World vocabulary",
@@ -309,7 +309,7 @@ function walkthroughSteps(
       title: "Understand exactly what happens on one tick",
       summary:
         "The engine does not execute every matching action. It observes the current world, evaluates the ordered policy, validates the candidate action, and commits one decision before the world advances.",
-      location: "Rules tab and right panel · Decision pipeline",
+      location: "Policy → Rules and right panel · Decision pipeline",
       details: [
         "The world publishes a fresh observation. Conditions read only those current facts plus state and memory.",
         "Rules are checked from top to bottom. The first matching rule whose next action is valid wins; broader fallbacks belong below specific cases.",
@@ -326,7 +326,7 @@ function walkthroughSteps(
       title: "Use Apply & Run as your development loop",
       summary:
         "Apply & Run compiles the current intelligence and starts a fresh copy of the visible scenario. Use the controls to inspect timing-sensitive behaviour instead of waiting for the final animation.",
-      location: "Header or left-panel footer · Apply & Run; right-panel controls",
+      location: "Sticky header · Apply & Run; right-panel controls",
       details: [
         "Pause and Step isolate one decision. Compare the observation and returned action before advancing again.",
         "Speed changes presentation time, not simulation semantics. Reset creates a clean run while preserving your authored solution.",

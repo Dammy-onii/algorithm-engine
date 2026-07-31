@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * ProblemBrief — the problem statement, layered so it is never a wall of text.
+ * ProblemBrief — the complete problem statement shown before the solution UI.
  *
- * Always visible: a taxonomy badge, the one-line headline (what to do) and a
- * line of scenario context. Everything longer — the narrative, the intelligence
- * notes, what it teaches — lives behind "Read problem statement". Hints live in their own
- * drawer and escalate one at a time, nudged open after repeated failed runs.
+ * The authored narrative, scenario, learning context, and interview contract
+ * stay visible so the candidate does not have to discover the actual task
+ * behind progressive disclosure. Hints remain optional and reveal one at a
+ * time.
  *
  * Driven entirely by the normalized brief, so maze, warehouse and finance
  * challenges all render the same flow.
@@ -29,7 +29,6 @@ interface Props {
 export function ProblemBrief({ challenge, attempts }: Props) {
   const brief = normalizeBrief(challenge);
   const tax = taxonomyFor(challenge);
-  const [showDetail, setShowDetail] = useState(false);
   const [revealedHints, setRevealedHints] = useState(0);
 
   const nudge = attempts >= 2 && revealedHints === 0;
@@ -60,53 +59,39 @@ export function ProblemBrief({ challenge, attempts }: Props) {
         </p>
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-zinc-400">
-        Read the task, edit the policy, choose <strong>Apply &amp; Run</strong>, then
-        use the simulation and debug panel to improve it one decision at a time.
-      </p>
-
-      {/* Learn more — the prose, revealed on demand */}
-      {(brief.detail.length > 0 || brief.learn) && (
-        <div className="mt-3">
-          <button
-            onClick={() => setShowDetail((s) => !s)}
-            className="text-xs font-medium text-zinc-500 underline-offset-2 transition-colors hover:text-zinc-800 hover:underline dark:hover:text-zinc-200"
-            aria-expanded={showDetail}
-          >
-            {showDetail ? "Hide problem statement" : "Read problem statement"}
-          </button>
-          {showDetail && (
-            <div className="mt-3 flex flex-col gap-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-700">
+      {/* The complete authored statement remains visible. */}
+      {(brief.detail.length > 0 ||
+        brief.learn ||
+        challenge.interviewEvaluation) && (
+        <div className="mt-4 flex flex-col gap-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-700">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+            Problem statement
+          </p>
+          {brief.detail.flatMap(paragraphsFromText).map((para, i) => (
+            <p key={i} className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+              {para}
+            </p>
+          ))}
+          {brief.learn && (
+            <div className="border-t border-zinc-100 pt-3 dark:border-zinc-800">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                Problem statement
+                What this teaches
               </p>
-              {brief.detail.flatMap(paragraphsFromText).map((para, i) => (
-                <p key={i} className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                  {para}
-                </p>
-              ))}
-              {brief.learn && (
-                <div className="border-t border-zinc-100 pt-2 dark:border-zinc-800">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                    What this teaches
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                    {brief.learn}
-                  </p>
-                </div>
-              )}
-              {challenge.interviewEvaluation && (
-                <div className="mt-1 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-                    Hidden evaluation contract
-                  </p>
-                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-zinc-500">
-                    {challenge.interviewEvaluation.rubric.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                {brief.learn}
+              </p>
+            </div>
+          )}
+          {challenge.interviewEvaluation && (
+            <div className="mt-1 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                Evaluation contract
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                {challenge.interviewEvaluation.rubric.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
@@ -149,6 +134,11 @@ export function ProblemBrief({ challenge, attempts }: Props) {
           )}
         </div>
       )}
+
+      <div className="mt-4 flex items-center justify-center gap-2 rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400">
+        <span aria-hidden="true">↓</span>
+        <span>Scroll down to build and test your solution.</span>
+      </div>
     </div>
   );
 }

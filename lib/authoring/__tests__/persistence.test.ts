@@ -28,6 +28,18 @@ const scaffold: VisualBrain = {
 };
 
 describe("persisted brain upgrades", () => {
+  it("preserves legacy Code brains but defaults new visual brains explicitly", () => {
+    expect(
+      upgradePersistedBrain(
+        { ...scaffold, controllerCode: "return {};" },
+        scaffold,
+      ).controllerMode,
+    ).toBe("code");
+    expect(upgradePersistedBrain(scaffold, scaffold).controllerMode).toBe(
+      "visual",
+    );
+  });
+
   it("upgrades saved world actions to locked primitive functions", () => {
     const upgraded = upgradePersistedBrain(
       {

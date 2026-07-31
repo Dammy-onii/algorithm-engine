@@ -141,6 +141,19 @@ describe("simulation engine", () => {
     expect(() => new Simulation(source, invalid)).toThrow(/unavailable in world 'maze'/);
   });
 
+  it("rejects a condition flag from a different world before the first tick", () => {
+    const invalid = structuredClone(wallFollower);
+    invalid.rules.rules[0].when = "onlineA";
+    const source: WorldSource = {
+      world: maze as WorldData,
+      entities: entities as EntitiesData,
+    };
+
+    expect(() => new Simulation(source, invalid)).toThrow(
+      /onlineA.*unavailable in world 'maze'/,
+    );
+  });
+
   it("swapping to the naive brain changes the outcome (proves data-driven brains)", () => {
     const sim = run(maze as WorldData, naive);
     // The naive brain is expected to loop/stall rather than solve the snake.

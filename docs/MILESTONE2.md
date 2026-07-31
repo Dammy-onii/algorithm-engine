@@ -1,5 +1,11 @@
 # Milestone 2 — Intelligence Authoring System
 
+> **Historical design record.** This document preserves the original Milestone 2
+> plan, including the former five-layer terminology and the later-removed Maze
+> level 5. For the current six-layer editor and published challenge catalogue,
+> read [RULES.md](./RULES.md), [ARCHITECTURE.md](./ARCHITECTURE.md), and
+> [ROUTING_AND_STRUCTURE.md](./ROUTING_AND_STRUCTURE.md).
+
 ## What this milestone proves
 
 Milestone 1 proved the engine can execute instructions stored in files.

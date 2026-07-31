@@ -207,7 +207,7 @@ Completed locally:
 
 - `npx tsc --noEmit` passes after the feature reorganization.
 - `npm run lint` passes without warnings.
-- `npm test` passes: **18 files, 107 tests**.
+- `npm test` passes: **25 files, 150 tests**.
 - `npm run build` passes.
 - The static route pages compile under TypeScript with asynchronous dynamic params
   and server-side `notFound()` validation.

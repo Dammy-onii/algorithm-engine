@@ -111,6 +111,8 @@ describe("action validity — guarded ordered flow", () => {
     const sim = new Simulation(src(), brain);
     const step = sim.tick();
     expect(step.trace.ruleId).toBe("turn-first");
+    expect(step.trace.condition).toBe("always");
+    expect(step.trace.reason).toContain("first top-to-bottom rule");
     expect(sim.world.agent.direction).toBe("E");
   });
 

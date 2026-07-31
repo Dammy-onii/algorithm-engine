@@ -5,6 +5,94 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-07-31 — Explicit live Finance provider snapshots
+
+- Reworked the Finance provider-detail cards around a tick-stamped runtime
+  snapshot. Every displayed operational value is recomputed after each
+  simulation tick.
+- Separated configured success targets from observed success. A provider with
+  no completed attempt now displays **Awaiting outcome** instead of presenting
+  its authored target as measured telemetry.
+- Exposed base latency, congestion-added latency, active/concurrent capacity,
+  free slots, current utilization, settled/failed attempts, measured run
+  latency, current fee, and expected attempt cost in the provider details.
+- Added regression coverage for schedule-driven fee, reliability, latency,
+  availability, and capacity changes, plus congestion and rolling telemetry.
+- Added [UX_FIRST_GLANCE.md](./UX_FIRST_GLANCE.md), a staged proposal for
+  reducing first-open confusion without combining the independently scrolling
+  policy and simulation work surfaces.
+
+## 2026-07-31 — First-glance Studio hierarchy
+
+- Replaced the automatically opened full-screen Guide with a dismissible
+  three-step coach inside the real workspace. The full Guide remains available
+  from the header.
+- Reorganized authoring into **Policy / Code / Reference**. Policy preserves
+  dedicated Rules, Conditions, and Functions views; States and Memory remain
+  available under Advanced.
+- Removed the duplicate editor-bottom Apply & Run action and made the workspace
+  header sticky on smaller screens. Interview stages permanently explain the
+  visible-run versus protected-submit boundary.
+- Added responsive **Build / Run** workspace tabs so a long policy is never
+  stacked above a long simulation on small screens.
+- Replaced the rule card's unbounded native condition select with a searchable,
+  grouped, dark-mode-aware popover capped to a short scroll region. Raw
+  expression autocomplete now shows at most 12 suggestions before asking the
+  user to narrow the query.
+- Replaced Code mode's wall of fact chips with a searchable, grouped, bounded
+  Inputs and Outputs reference. Conditions and Functions retain their full
+  explanatory panels and composers.
+- Merged Task Progress and Policy Constraints into one live pass-contract
+  surface for authored objectives.
+- Added causal decision metadata to engine traces. Debug now explains the
+  selected WHEN branch, why it won, and when an unsafe Code Controller request
+  was converted to `wait`.
+- Hardened world-runtime access so shared UI cannot mistake Finance or
+  Warehouse state for Parking state.
+- Restored the complete problem statement directly above the solution tools,
+  removed its disclosure toggle, and added an explicit cue to scroll down and
+  solve. Removed the redundant Apply & Run / Submit explanation from the Run
+  panel and first-run coach.
+- Verified strict TypeScript, ESLint, **25 test files / 150 tests**, the
+  production Next.js build, and successful Finance, Maze, Parking, Warehouse,
+  and Lab route renders.
+
+## 2026-07-30 — Auditable policies and consistent interview grading
+
+- Made the active decision source explicit with a persisted **Visual Policy /
+  Code Controller** selector. Opening Code no longer inserts source or silently
+  takes control from visual rules.
+- Task Progress, visible policy constraints, and post-run Results now evaluate
+  the same required objective expressions. Manual **Step** also executes the
+  same completion, grading, persistence, and attempt logic as autoplay.
+- Interview stages now label local success as **Visible case passed**. Submit
+  reports every hidden case's actual value, required limit, and pass/fail for
+  each guardrail; the overall result still requires every case plus the authored
+  average-score threshold.
+- Finance records a reason for every failed provider attempt and every terminal
+  decline/timeout. The renderer retains **Latest activity** and adds a
+  collapsible failure log plus an auditable score breakdown for provider fees,
+  failed attempts, timeouts, priority misses, overload, and queue pressure.
+- Parking records human-readable reasons on every hard or preference allocation
+  violation. Policy diagnostics expose the violating vehicle and bay plus a
+  complete parking-penalty breakdown.
+- Finance playback now starts at **10 ticks/s** with a maximum of **20**.
+  Parking starts at **5 ticks/s** with a maximum of **15**. Studio and Lab share
+  the same profiles.
+- Corrected the outgoing car orientation so exit-route sprites drive forward.
+- Interview link creation verifies that every selected problem round-trips
+  through the signed token and shows the verified assigned count. Added a
+  Select all action and full-pack round-trip regression coverage.
+- Active-world validation now rejects conditions and derived facts belonging to
+  a different world before the first tick. Code references are resolved from
+  the challenge's actual world kind rather than assuming the pack ID is the
+  module ID.
+- Non-grid worlds no longer show irrelevant position/wall observations in the
+  shared debug panel. Removed the unpublished Maze level-5 challenge file.
+- Replaced the stock Create Next App README and refreshed current documentation.
+- Verified **25 test files / 147 tests**, ESLint, strict TypeScript, and the
+  production Next.js build.
+
 ## 2026-07-28 — Global interview-link reset
 
 - Cleared every previously issued signed interview assignment by advancing the
@@ -49,16 +137,15 @@ world document.
   Switch** and **24 Autonomous Parking Operations**, proving both stages remain
   solvable with visual rules alone.
 
-## 2026-07-28 — Active-rule highlight, Code-mode reference, starter boilerplate
+## 2026-07-28 — Active-rule highlight and Code-mode reference
 
 - Studio now **highlights the rule card firing on the current tick** (soft amber)
   live during a run, so the decision flow is visible as it advances.
 - Code tab gained a self-documenting reference: what you can read
   (`observation.*` base senses plus this world's `observation.domain.*` facts with
   labels) and the exact action strings you may return.
-- Code tab opens with an editable **starter skeleton** (class + `decide` stub with
-  a safe default return) per world, rather than a blank editor. It fills only when
-  empty; clearing it returns to the visual rules.
+- Code tab provides an insertable **starter skeleton** (class + `decide` stub
+  with a safe default return) per world.
 - A `THEN` per-rule sequencing directive was prototyped and then reverted;
   sequencing remains multi-step bricks composed in the Functions tab.
 

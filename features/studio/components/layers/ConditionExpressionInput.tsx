@@ -23,6 +23,7 @@ interface Props {
 
 const INPUT =
   "w-full rounded border border-zinc-200 bg-zinc-50 px-2 py-1 font-mono text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500";
+const MAX_VISIBLE_SUGGESTIONS = 12;
 
 export function ConditionExpressionInput({
   value,
@@ -36,13 +37,13 @@ export function ConditionExpressionInput({
   const [caret, setCaret] = useState(value.length);
   const [highlighted, setHighlighted] = useState(0);
   const query = activeIdentifierRange(value, caret).query.toLowerCase();
-  const filtered = useMemo(
+  const allMatches = useMemo(
     () =>
       suggestions
-        .filter((suggestion) => suggestion.toLowerCase().includes(query))
-        .slice(0, 50),
+        .filter((suggestion) => suggestion.toLowerCase().includes(query)),
     [query, suggestions],
   );
+  const filtered = allMatches.slice(0, MAX_VISIBLE_SUGGESTIONS);
 
   const updateCaret = () => {
     const nextCaret = inputRef.current?.selectionStart ?? value.length;
@@ -143,6 +144,11 @@ export function ConditionExpressionInput({
               {suggestion}
             </button>
           ))}
+          {allMatches.length > filtered.length && (
+            <p className="border-t border-zinc-100 px-2 py-1.5 text-[9px] text-zinc-400 dark:border-zinc-800">
+              Showing {filtered.length} of {allMatches.length}. Type more to narrow the list.
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -39,6 +39,7 @@ export function InterviewAssignmentBuilder({
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [assignedIds, setAssignedIds] = useState<string[]>([]);
 
   const toggleChallenge = (challenge: ChallengeData) => {
     if (isInterviewTutorial(challenge)) return;
@@ -49,6 +50,7 @@ export function InterviewAssignmentBuilder({
       return next;
     });
     setShareUrl(null);
+    setAssignedIds([]);
     setCopied(false);
     setError(null);
   };
@@ -69,9 +71,19 @@ export function InterviewAssignmentBuilder({
       if (!response.ok || !result.path) {
         throw new Error(result.error ?? "Could not create the interview link.");
       }
+      const returnedIds = result.challengeIds ?? [];
+      const missingIds = Array.from(selectedIds).filter(
+        (id) => !returnedIds.includes(id),
+      );
+      if (missingIds.length > 0) {
+        throw new Error(
+          `The assignment omitted ${missingIds.length} selected problem${missingIds.length === 1 ? "" : "s"}. Please create the link again.`,
+        );
+      }
 
       const url = `${window.location.origin}${result.path}`;
       setShareUrl(url);
+      setAssignedIds(returnedIds);
       setCopied(await copyText(url));
     } catch (creationError) {
       setError(
@@ -157,6 +169,17 @@ export function InterviewAssignmentBuilder({
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
+          onClick={() => {
+            setSelectedIds(new Set(orderedChallenges.map((item) => item.id)));
+            setShareUrl(null);
+            setAssignedIds([]);
+          }}
+          className="shrink-0 rounded-lg border border-emerald-300 bg-white px-3 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-zinc-900 dark:text-emerald-300 dark:hover:bg-zinc-800"
+        >
+          Select all
+        </button>
+        <button
+          type="button"
           onClick={createLink}
           disabled={creating || selectedIds.size === 0}
           className="shrink-0 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:bg-emerald-500/25"
@@ -183,6 +206,13 @@ export function InterviewAssignmentBuilder({
           </div>
         )}
       </div>
+
+      {shareUrl && assignedIds.length > 0 && (
+        <p className="mt-3 text-xs leading-relaxed text-emerald-800 dark:text-emerald-300">
+          Link verified: all {assignedIds.length} assigned problems are included
+          in the order shown above.
+        </p>
+      )}
 
       {error && (
         <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">

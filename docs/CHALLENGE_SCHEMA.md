@@ -1,7 +1,7 @@
 # Challenge Schema — the world-agnostic learner flow
 
 Every challenge across Maze, Warehouse, Finance, and Parking renders the
-**same** learner experience: a short brief, a live task checklist, escalating
+**same** learner experience: a complete problem statement, a live task checklist, escalating
 hints, and a results screen. That consistency comes from one typed schema plus a
 normalizer, so a new simulation type gets the whole flow for free by filling in
 data. This doc is the reference for that schema.
@@ -25,7 +25,7 @@ taxonomy.
 | `context` | `tagline` | One line of scenario framing, always visible. |
 | `steps[]` | required `objectives[]` | The **live task checklist**. |
 | `taxonomy` | `pack` / `stage` / `difficulty` | Catalogue placement + the `Tier · Grade` badge. |
-| `narrative`, `intelligenceExplanation` | — | Prose behind **Read problem statement**. |
+| `narrative`, `intelligenceExplanation` | — | Full problem-statement prose shown above the solution tools. |
 | `hints[]` | `[hint]` | Escalating hint drawer. |
 | `interviewEvaluation` | — | Public contract for an optional server-owned hidden suite. |
 
@@ -33,6 +33,8 @@ Long-form `narrative` and `intelligenceExplanation` text may contain blank lines
 (`\n\n`). The shared brief splits those breaks into separate paragraphs and labels
 the result as **Problem statement** and **How the starting brain behaves**. This
 keeps every world readable without giving each simulation its own page layout.
+The complete statement remains visible; a closing scroll cue directs the user
+to the policy and code tools below it. Hints remain optional.
 
 An interview challenge may declare:
 

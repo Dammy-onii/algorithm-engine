@@ -16,9 +16,18 @@ interface Props {
   /** Present when a next challenge is available and unlocked. */
   onNext?: () => void;
   onRetry: () => void;
+  /** Interview stages pass only the visible case here; Submit owns the suite. */
+  scope?: "challenge" | "visible-case";
 }
 
-export function ResultsPanel({ status, passed, results, onNext, onRetry }: Props) {
+export function ResultsPanel({
+  status,
+  passed,
+  results,
+  onNext,
+  onRetry,
+  scope = "challenge",
+}: Props) {
   const required = (results ?? []).filter((r) => !r.bonus);
   const bonus = (results ?? []).filter((r) => r.bonus);
   const bonusMet = bonus.filter((r) => r.met).length;
@@ -34,7 +43,17 @@ export function ResultsPanel({ status, passed, results, onNext, onRetry }: Props
     >
       <div className="flex items-baseline justify-between gap-2">
         <div className="text-sm font-semibold">
-          {passed ? "Challenge complete" : status === "stuck" ? "Stuck" : status === "out-of-energy" ? "Out of energy" : "Not passed yet"}
+          {passed
+            ? scope === "visible-case"
+              ? "Visible case passed"
+              : "Challenge complete"
+            : status === "stuck"
+              ? "Stuck"
+              : status === "out-of-energy"
+                ? "Out of energy"
+                : scope === "visible-case"
+                  ? "Visible case not passed"
+                  : "Not passed yet"}
         </div>
         {bonus.length > 0 && (
           <div
@@ -66,23 +85,49 @@ export function ResultsPanel({ status, passed, results, onNext, onRetry }: Props
               >
                 {r.met ? (r.bonus ? "★" : "✓") : r.bonus ? "☆" : "○"}
               </span>
-              <span
-                className={
-                  passed
-                    ? "text-zinc-200 dark:text-zinc-700"
-                    : "text-zinc-600 dark:text-zinc-400"
-                }
-              >
-                {r.label}
+              <span className="min-w-0">
+                <span
+                  className={
+                    passed
+                      ? "text-zinc-200 dark:text-zinc-700"
+                      : "text-zinc-600 dark:text-zinc-400"
+                  }
+                >
+                  {r.label}
                 {r.bonus && (
                   <span className="ml-1 text-[10px] uppercase tracking-wide opacity-70">
                     bonus
                   </span>
                 )}
+                </span>
+                {!r.met && (
+                  <code
+                    className={[
+                      "mt-0.5 block break-words text-[10px] leading-relaxed",
+                      passed
+                        ? "text-zinc-400 dark:text-zinc-500"
+                        : "text-zinc-400",
+                    ].join(" ")}
+                  >
+                    Required condition: {r.check}
+                  </code>
+                )}
               </span>
             </li>
           ))}
         </ul>
+      )}
+
+      {scope === "visible-case" && passed && (
+        <p
+          className={[
+            "mt-3 text-xs leading-relaxed",
+            passed ? "text-zinc-300 dark:text-zinc-600" : "text-zinc-500",
+          ].join(" ")}
+        >
+          This confirms the visible scenario only. Submit runs the same policy
+          against every interview scenario and reports each failed guardrail.
+        </p>
       )}
 
       <div className="mt-4 flex items-center gap-2">

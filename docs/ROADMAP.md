@@ -54,8 +54,8 @@ See [`MILESTONES.md`](./MILESTONES.md) for the full spec and success criteria.
 
 **Proves:** someone who has never seen JSON can author working intelligence.
 
-A visual Studio produces the exact same five-layer brain the engine already consumes.
-Challenge system, plain-English "Current Intelligence" summary, five layer editors,
+A visual Studio produces the same six-layer policy the engine consumes.
+Challenge system, plain-English "Current Intelligence" summary, six policy-layer editors,
 JSON preview (proving the visual model compiles to real engine input), localStorage
 persistence. The engine stayed untouched — the editor is only a *producer* of brains.
 

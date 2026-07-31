@@ -7,6 +7,7 @@ import {
   BRAINS,
   WORLDS,
   findBrain,
+  findWorld,
 } from "@/lib/content/datasets";
 import {
   BRAIN_LAYERS,
@@ -19,6 +20,7 @@ import { SimControls } from "@/features/simulation/components/SimControls";
 import { SimStage } from "@/features/simulation/components/SimStage";
 import { createSimulationSession } from "@/features/simulation/session";
 import type { SimulationSession } from "@/features/simulation/types";
+import { simulationSpeedForWorld } from "@/features/simulation/speed";
 
 const selectClass =
   "rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900";
@@ -104,6 +106,9 @@ export function LabPageView() {
 
   const onWorldChange = (key: string) => {
     setWorldKey(key);
+    setSpeed(
+      simulationSpeedForWorld(findWorld(key).source.world.kind).initial,
+    );
     rebuild(key, texts);
   };
 
@@ -159,6 +164,10 @@ export function LabPageView() {
           onStep={doStep}
           onReset={() => rebuild(worldKey, texts)}
           onSpeedChange={setSpeed}
+          maxSpeed={
+            simulationSpeedForWorld(findWorld(worldKey).source.world.kind)
+              .maximum
+          }
           leading={
             <>
               <label className="flex items-center gap-2 text-sm">
