@@ -34,6 +34,9 @@ world document.
   Next 16.2's Turbopack development worker concatenated a source-map directive
   into its bootstrap. Demo development now uses the same browser evaluator
   directly and yields between scenarios; production retains the Web Worker.
+- Removed the implementation/security notice from the candidate-facing Code
+  Controller editor. The execution distinction remains documented for project
+  maintainers.
 
 ## 2026-07-31 — Explicit live Finance provider snapshots
 

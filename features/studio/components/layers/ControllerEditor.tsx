@@ -95,11 +95,6 @@ export function ControllerEditor({
           Insert {titleCase(domain)} starter
         </button>
       )}
-      <p className="rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-200">
-        Demo mode: Submit solution requests the interview scenarios, then runs
-        this Code Controller in your browser. The result is useful for the demo
-        but is not a protected or tamper-proof interview score.
-      </p>
     </div>
   );
 }
