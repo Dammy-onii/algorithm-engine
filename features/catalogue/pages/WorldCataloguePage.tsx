@@ -8,23 +8,36 @@ export function WorldCataloguePage() {
   const packs = listPacks();
 
   return (
-    <PageLayout title="Algorithm Engine" className=" w-full max-w-none">
-      <section className="mx-auto flex w-full max-w-none flex-col gap-8 px-20 py-10">
-        <div className="w-full">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-            Algorithm Engine
+    <PageLayout title="CTRL" className=" w-full max-w-none">
+      <section className="mx-auto flex w-full max-w-none flex-col gap-12 px-20 py-10">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
+            Technical assessments built around real work
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Choose a simulation world
+          <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-50">
+            See how candidates would keep operations moving.
           </h1>
-          <p className="mt-3 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Each world teaches a different kind of algorithm. Choose the
-            environment in which you want to build an agent.
+          <p className="mt-5 text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+            CTRL is a technical assessment platform where applicants solve realistic
+            scenarios based on your company&apos;s work. See how they think, what they
+            prioritise, and how their solution performs before you commit to another
+            interview.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {packs.map((world) => (
+        <div className="flex flex-col gap-5">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Assessment scenarios
+            </h2>
+            <p className="mt-2 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
+              Each scenario is a live operational problem. Open one to design the
+              decision logic and watch how it performs.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {packs.map((world) => (
             <Link
               key={world.id}
               href={`/${world.id}`}
@@ -43,7 +56,8 @@ export function WorldCataloguePage() {
                 {world.action} →
               </span>
             </Link>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </PageLayout>

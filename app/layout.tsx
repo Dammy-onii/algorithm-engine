@@ -12,15 +12,39 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Production social previews need an absolute base URL. Set NEXT_PUBLIC_SITE_URL
+// to the deployed origin; Vercel and local dev are inferred as sensible fallbacks.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.URL || // Netlify's primary site URL at build time
+  "https://ctrl-stud.netlify.app";
+
+const TITLE = "CTRL — Technical assessments built around real work";
+const DESCRIPTION =
+  "CTRL is a technical assessment platform where applicants solve realistic scenarios based on your company's work. See how they think, what they prioritise, and how their solution performs before you commit to another interview.";
+
 export const metadata: Metadata = {
-  title: "Algorithm Engine — Milestone 1",
-  description:
-    "A generic simulation engine that runs an autonomous agent inside a world via observe → decide → act → update → render.",
+  metadataBase: new URL(siteUrl),
+  title: TITLE,
+  description: DESCRIPTION,
+  applicationName: "CTRL",
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    siteName: "CTRL",
+    type: "website",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
-// Runs before paint: applies the saved theme (or the OS setting) so there is no
-// flash of the wrong theme on load. Kept tiny and dependency-free on purpose.
-const themeScript = `(function(){try{var t=localStorage.getItem('ae-theme');var m=window.matchMedia('(prefers-color-scheme: dark)').matches;var dark=t==='dark'||((!t||t==='system')&&m);document.documentElement.classList.toggle('dark',dark);}catch(e){}})();`;
+// Runs before paint: applies the saved theme so there is no flash of the wrong
+// theme on load. The app defaults to light; dark only when the user chose it.
+const themeScript = `(function(){try{var t=localStorage.getItem('ae-theme');document.documentElement.classList.toggle('dark',t==='dark');}catch(e){}})();`;
 
 export default function RootLayout({
   children,

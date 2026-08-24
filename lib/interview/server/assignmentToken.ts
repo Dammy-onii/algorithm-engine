@@ -17,8 +17,7 @@ const TOKEN_VERSION = 4;
 const SIGNATURE_BYTES = 6;
 const MAX_ASSIGNMENT_PROBLEMS = 20;
 const PACK_CODES = ["maze", "warehouse", "finance", "parking", "supermarket"] as const;
-const DEVELOPMENT_SECRET =
-  "algorithm-engine-development-interview-link-v1";
+const DEVELOPMENT_SECRET = "ctrl-development-interview-link-v1";
 
 function assignmentSecret(): string {
   return process.env.INTERVIEW_LINK_SECRET || DEVELOPMENT_SECRET;

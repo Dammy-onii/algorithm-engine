@@ -1,0 +1,11 @@
+# Netlify build configuration.
+#
+# Only build-time environment is set here; the build command and publish
+# directory stay auto-detected by Netlify's Next.js runtime.
+#
+# NEXT_PUBLIC_SITE_URL is the absolute origin used for social-share metadata
+# (OpenGraph / Twitter cards) so shared links preview correctly. Update this if
+# the site moves to a custom domain. Secrets (e.g. INTERVIEW_LINK_SECRET) must
+# NOT live here — set those in the Netlify dashboard so they stay private.
+[build.environment]
+  NEXT_PUBLIC_SITE_URL = "https://ctrl-stud.netlify.app"

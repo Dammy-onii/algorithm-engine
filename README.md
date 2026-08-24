@@ -1,8 +1,10 @@
-# Algorithm Engine
+# CTRL
 
-Algorithm Engine is a generic decision-system simulation platform. Learners and
-interview candidates author an agent as ordered visual policies or a JavaScript
-controller, then run it inside Maze, Warehouse, Finance, and Parking worlds.
+CTRL is a technical assessment platform where applicants solve realistic scenarios
+based on your company's work. Candidates author an agent as ordered visual policies
+or a JavaScript controller, then run it inside the Maze, Finance, and Parking worlds
+— so you can see how they think, what they prioritise, and how their solution
+performs before committing to another interview.
 
 The shared runtime follows one lifecycle:
 

@@ -7,7 +7,7 @@
   "stage": "practice",
   "worldKey": "challenge-straight",
   "tagline": "Program your robot's very first movement rule.",
-  "narrative": "Welcome to Algorithm Engine!\n\nA robot stands at the entrance of a straight corridor, facing toward the exit. Although it has motors to step forward and wait, its brain has zero rules—so it just stands still.\n\nYour task is to teach it two basic decisions: move forward when the path ahead is clear, and stop once it reaches the exit goal.",
+  "narrative": "Welcome to CTRL!\n\nA robot stands at the entrance of a straight corridor, facing toward the exit. Although it has motors to step forward and wait, its brain has zero rules—so it just stands still.\n\nYour task is to teach it two basic decisions: move forward when the path ahead is clear, and stop once it reaches the exit goal.",
   "objective": "Reach the corridor exit and remain on it for 3 consecutive ticks.",
   "learningObjective": "Understand how rules link a condition (WHEN) to an action (DO), and how rules are evaluated top-to-bottom.",
   "intelligenceExplanation": "The robot relies on you to make decisions. Every tick, the engine reads sensory inputs, finds the first matching rule, and performs its action.\n\nTo complete this level, add a rule to step forward when the path is clear, and place a rule to hold at the top so it stops upon reaching the exit.",
