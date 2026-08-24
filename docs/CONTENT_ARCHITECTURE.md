@@ -81,11 +81,10 @@ content/
   warehouse/
     manifest.json
     worlds/
-      first-delivery.json
-      package-sorting.json
+      first-orders.json
       …
     challenges/
-      practice-1-first-delivery.json
+      tutorial-1-first-orders.json
       …
     brains/
       warehouse-sample.json
@@ -158,8 +157,7 @@ content/
   "scoring": "warehouse",           // metric set id (or inline scoring config)
   "difficulties": ["practice", "easy", "medium", "hard"],
   "challenges": [
-    "challenges/practice-1-first-delivery.json",
-    "challenges/practice-2-package-sorting.json"
+    "challenges/tutorial-1-first-orders.json"
   ]
 }
 ```
@@ -170,23 +168,23 @@ content/
 ```json
 {
   "schema": 1,
-  "id": "warehouse-first-delivery",
+  "id": "warehouse-first-orders",
   "pack": "warehouse",
   "stage": "practice",
   "difficulty": 1,
   "number": 1,
-  "name": "First Delivery",
-  "world": "worlds/first-delivery.json",     // ref, not inlined
+  "name": "First Orders",
+  "world": "worlds/first-orders.json",       // ref, not inlined
   "starterBrain": "brains/warehouse-sample.json",
   "narrative": "…",
   "objective": "…",
-  "tutorial": "tutorials/first-delivery.md",
-  "availableBricks": ["step", "pivot-left", "pivot-right", "pick-up", "deliver"],
-  "availableConditions": ["packageHere", "deliveryHere", "carryingPackage", "always"],
-  "functionsUnlocked": true,
+  "tutorial": "tutorials/first-orders.md",
+  "availableBricks": ["pick-small", "deliver", "hold"],
+  "availableConditions": ["robotIsPicker", "robotFull", "smallTaskAvailable", "robotCarrying", "always"],
+  "functionsUnlocked": false,
   "statesUnlocked": false,
-  "objectives": [ { "id": "deliver-all", "label": "Deliver every package", "check": "reached" } ],
-  "scenarios": ["scenarios/first-delivery/a.json", "…"]   // optional
+  "objectives": [ { "id": "complete-all", "label": "Complete every order", "check": "reached && allOrdersDone" } ],
+  "scenarios": ["scenarios/first-orders/a.json", "…"]   // optional
 }
 ```
 
@@ -338,7 +336,7 @@ suite green, and only the last two change *where* content lives.
 - **Tier 3 — complete.** `WorldModule` owns domain schema validation, action and
   flag metadata, runtime, observation, and status. `World`, the loader and shared
   types contain no warehouse behavior; `features/simulation/` dispatches Maze,
-  Warehouse, Finance, and Parking presentations through a renderer registry.
+  Warehouse, Supermarket, Finance, and Parking presentations through a renderer registry.
   Current verification totals are recorded in
   [CHANGELOG.md](./CHANGELOG.md). See
   [ENGINE_LOADING.md](./ENGINE_LOADING.md) for the current detail.

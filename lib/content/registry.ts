@@ -38,14 +38,6 @@ export const PACKS: PackInfo[] = [
     action: "Explore maze levels",
   },
   {
-    id: "warehouse",
-    eyebrow: "Automation curriculum",
-    title: "Warehouse",
-    description:
-      "Design an autonomous worker that picks, sorts, delivers, plans capacity, and manages energy.",
-    action: "Explore warehouse stages",
-  },
-  {
     id: "finance",
     eyebrow: "Payments curriculum",
     title: "Finance",

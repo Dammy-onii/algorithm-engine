@@ -5,6 +5,102 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-08-03 — Supermarket shelf-restocking world
+
+- Added *Mini Market Opening Run*, an Easy / Grade 3 test stage for the CC0
+  Kenney Mini Market 1.0 pack. Eleven coherent isometric previews are curated
+  under `assets/supermarket/kenney-mini-market/` with a manifest and preserved
+  license; no WebGL dependency is introduced.
+- Added a `kenney-mini-market` presentation variant over a real `16 × 14`
+  collision grid. The bakery-first reference policy passes with zero lost sales;
+  an empty-first policy fails the early bakery deadline in regression coverage.
+- Added *Closing Rush*, an Easy / Grade 2 supermarket level with a larger
+  `18 × 16` store, category-specific restocking conditions/actions, an early
+  chilled-demand deadline, and explicit zero-lost-sale/zero-route-failure
+  objectives. A generic empty-first policy is covered as a failing case.
+- Added a separate illustrated supermarket floor that uses the curated Modern
+  Convenience Store assets. Equipment art is contained inside authoritative
+  two-cell fixture footprints; it cannot overlap open aisles or change the
+  collision grid. Level 1 retains its strict architectural presentation.
+- Added chilled, produce, snacks, drinks, and bakery dispatch actions plus live
+  department-needs facts and category completion accounting.
+- Added the `supermarket` WorldModule as a separate retail domain rather than a
+  renamed Warehouse level. Customer demand changes shelf inventory while the
+  shared engine continues to run one observation, decision, and action per tick.
+- Added *First Restock*, a guided tutorial with one B1 restocking bot, five
+  departments, category-specific backroom stock, reorder points, timed demand,
+  travel/service delays, and lost-sales accounting.
+- Supplied a working, editable three-rule policy that restores empty shelves
+  before low shelves and waits safely while B1 is busy.
+- Replaced the renderer-owned placeholder map with a shared `18 × 14` physical
+  contract. The engine and strict plan-view renderer now use the same blocked
+  fixture cells, shelf service points, stockroom doorway, aisles, checkout bank,
+  and entrance. The shared Studio layout remains unchanged.
+- Curated 18 Modern Convenience Store sprites and one CC0 Kenney bot into
+  `assets/supermarket/`, with semantic filenames, a source manifest, and both
+  source licenses.
+- Added `/supermarket` catalogue and challenge routes, a Supermarket Code
+  Controller starter, grouped fact reference, curriculum concept, playback
+  profile, compact interview-link pack code, and complete simulation docs.
+- Added regression coverage proving the reference policy completes with no lost
+  sales and a wait-only policy records real failures.
+- Added breadth-first routing over the real floor. Every job now executes the
+  full standby → stockroom → shelf → standby lifecycle with distinct travel,
+  loading, unloading, and returning phases. Remaining route cells are visible;
+  fixtures can never be crossed; safe detours and sealed-route failures are
+  covered by tests.
+- Reworked the floor from oversized, overlapping perspective art into compact
+  plan symbols: enclosed rear receiving, perimeter refrigeration, three
+  gondola runs, two longitudinal aisles, cross-aisles, a produce island, three
+  aligned checkout lanes, and a separate entrance. Stock information is
+  attached to fixture ends rather than floating across circulation space.
+- Verified the architectural and illustrated Supermarket challenges at desktop
+  and responsive sizes. **26 test files / 157 tests**, strict TypeScript, and
+  ESLint pass after the third-level addition.
+
+## 2026-08-03 — Warehouse First Orders operations pass
+
+- Replaced the warehouse's placeholder cells and emoji/badge visuals with a
+  compact sprite-backed factory floor: receiving, four storage racks, a main
+  picking aisle, packing/shipping, and one top-down picker robot.
+- Curated only the relevant source art into `assets/warehouse/`, preserving both
+  licenses and adding a machine-readable asset manifest plus selection notes.
+  Unrelated asset-dump material is not imported by the application.
+- Added a responsive live flow header and workboard showing inbound order state,
+  current policy target, robot motion, packing progress, order arrival countdown,
+  order completion, and penalty.
+- Added accessible read-only inspection for robots, shelves, packing, and orders.
+  These interactions explain runtime state without becoming a second manual
+  control path around Visual Policy or Code Controller.
+- Fixed tick-zero orders being actionable in the engine while still appearing
+  `scheduled` in the renderer. Initial orders now start `open`; later orders
+  retain the scheduled-to-open lifecycle.
+- Staggered the tutorial's three inbound orders across ticks 0, 4, and 8 so the
+  queue visibly changes while keeping the first level focused on dispatch rather
+  than deadlines.
+- Added `smallItemsPicked`, `largeItemsPicked`, and `frozenItemsPicked` domain
+  metrics. First Orders now verifies that all six of its small item-units were
+  handled, instead of carrying a redundant no-deadline objective.
+- Rewrote the level narrative, intelligence explanation, hints, and live task
+  wording around the actual central-dispatch lifecycle.
+- Replaced ambiguous logistics terminology in the learner-facing Warehouse
+  surfaces with direct language: process orders, complete orders, and deliver
+  to packing.
+  The exposed fact is now `ordersCompleted`, so the old wording does not remain
+  in the Rules or Code reference either.
+- Preloaded the verified five-rule, one-picker solution into First Orders.
+  `scaffoldVersion: 3` intentionally replaces older empty or multi-robot browser
+  drafts, while keeping all rules editable after the first load.
+- Preserved the shared Studio page proportions used by every simulation. The
+  compact factory arrangement is contained entirely inside the Warehouse
+  renderer and does not change the platform layout.
+- Updated the warehouse, architecture, engine-loading, schema, product, roadmap,
+  and milestone documentation to remove the superseded grid/package-station
+  model.
+- Verified **25 test files / 148 tests**, strict TypeScript, clean ESLint, the
+  optimized Next.js production build, and a live `200` response from
+  `/warehouse/warehouse-first-orders` under the Next development server.
+
 ## 2026-07-31 — Demo-mode Code submission
 
 - Renamed the interview action from **Submit policy** to **Submit solution** so
@@ -25,7 +121,7 @@ world document.
   and pass contract.
 - Added the no-store `POST /api/interview/demo-suite` endpoint and regression
   coverage for submit-time suite delivery and Code-driven Finance evaluation.
-- Verified strict TypeScript, clean ESLint, **26 test files / 155 tests**, the
+- Verified strict TypeScript, clean ESLint, **26 test files / 157 tests**, the
   production Next.js build, the emitted Turbopack worker entry, and a live
   production response for the eight-case Peak Hour demo suite.
 - Standardized the action label as **Submit Solution**, including repeat

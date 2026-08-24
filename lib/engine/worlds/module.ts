@@ -33,8 +33,9 @@ export interface WorldModule {
   /**
    * Whether newly-visited tiles are this world's progress signal. The engine's
    * generic "no new tile for N ticks ⇒ stuck" heuristic only makes sense for
-   * movement-based worlds (maze, warehouse). Non-grid worlds (finance) set this
-   * false and own their own termination via `resolveStatus`. Defaults to true.
+   * movement-based worlds such as Maze. Operational worlds such as Warehouse,
+   * Supermarket, Finance, and Parking set this false and own termination through
+   * `resolveStatus`. Defaults to true.
    */
   readonly tracksMovement?: boolean;
 

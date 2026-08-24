@@ -4,7 +4,6 @@ import {
   FINANCE_CONTROLLER_STARTER,
   MAZE_CONTROLLER_STARTER,
   PARKING_CONTROLLER_STARTER,
-  WAREHOUSE_CONTROLLER_STARTER,
 } from "@/lib/authoring/controllerCompiler";
 import {
   ControllerReference,
@@ -24,7 +23,6 @@ interface Props {
 
 const TEMPLATES: Record<string, string> = {
   maze: MAZE_CONTROLLER_STARTER,
-  warehouse: WAREHOUSE_CONTROLLER_STARTER,
   finance: FINANCE_CONTROLLER_STARTER,
   parking: PARKING_CONTROLLER_STARTER,
 };

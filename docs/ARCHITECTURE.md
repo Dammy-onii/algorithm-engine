@@ -34,7 +34,7 @@ There are four distinct concerns. They should not be conflated:
 |---|---|---|
 | **Authored content** | Grid layouts, sample brains, challenge text/scaffolds | `content/` |
 | **Engine** | The tick lifecycle, safe rule evaluation, base grid movement | `lib/engine/` |
-| **World module** | Behaviour unique to one domain: warehouse packages or maze completion | `lib/engine/worlds/` |
+| **World module** | Behaviour unique to one domain: shelf restocking, payment routing, or maze completion | `lib/engine/worlds/` |
 | **Routes** | URL validation and route parameters | `app/` |
 | **Feature UI** | Persistence, editor interactions, rendering and workspaces | `features/`, `shared/` |
 
@@ -175,14 +175,14 @@ VisualBrain ──► compileBrain() ──► BrainSource
 ```
 
 `lib/engine/runtime/loader.ts` is deliberately strict. It rejects malformed
-grids, out-of-bounds start/goal tiles, bad warehouse zone/package/station data,
+grids, out-of-bounds start/goal tiles, bad warehouse robot/shelf/order data,
 unknown functions, duplicate function IDs, recursive function plans, invalid
 conditions, bad state references, and circular derived conditions before a run
 starts. This makes authoring errors appear on **Apply & Run**, not half-way through
 a tick loop.
 
 `lib/content/datasets.ts` is the bundled demonstration registry. It maps stable keys
-such as `warehouse-energy-management` to imported JSON and shared entity data.
+such as `warehouse-first-orders` to imported JSON and shared entity data.
 Challenges reference those stable keys rather than importing world files directly.
 
 ---
@@ -264,25 +264,38 @@ one domain rule is completion: the agent must occupy the goal for
 
 `lib/engine/worlds/warehouse.ts` owns warehouse-only behaviour:
 
-- Creates mutable runtime packages with `waiting`, `carried`, or `delivered`
-  status.
-- Exposes one package at each replenishing station and replaces it after pickup
-  while stock remains.
-- Implements `pickUp`, `deliver`, and `charge`.
-- Enforces cargo capacity and type-compatible delivery zones.
-- Reports completion only once every package has been delivered.
-- Produces flags such as `packageHere`, `carryingRed`, `packagesRemaining`,
-  `chargingHere`, and station stock counters.
+- Expands arriving orders into one claimable pick task per requested item-unit.
+- Maintains one or more typed robots behind a round-robin current-robot
+  dispatcher. The shipped *First Orders* level instantiates only one `picker`;
+  `forklift` and `coldchain` remain module capabilities for later content.
+- Implements typed `pickSmall`, `pickLarge`, and `pickFrozen` assignments plus
+  `deliver` and optional `charge`.
+- Advances every robot's abstract shelf/packing travel while the generic engine
+  still requests only one policy decision per tick.
+- Enforces robot type, idle state, and cargo capacity through action
+  preconditions; resolves order completion and deadlines in module state.
+- Produces robot, task, order, typed-pick, packing, deadline, and score facts in
+  `Observation.domain`.
 
 Those flags are returned in `Observation.domain`. The common evaluator spreads that
-bag into its context, so a warehouse rule can write `packageHere && !carryingPackage`
-without the evaluator gaining warehouse-specific code.
+bag into its context, so a warehouse rule can write
+`robotIsPicker && smallTaskAvailable` without the evaluator gaining
+warehouse-specific code.
 
-### Finance and Parking modules
+### Supermarket, Finance, and Parking modules
 
-Both modules set `tracksMovement: false` and use the common tick lifecycle
-without displaying the shared grid envelope:
+These modules set `tracksMovement: false` and use the common tick lifecycle.
+For Supermarket this means the domain owns its route progress rather than the
+generic maze visited-cell heuristic; it still displays and pathfinds over its
+authored floor grid:
 
+- `supermarket.ts` owns the shared floor/fixture contract, breadth-first routes,
+  phased stockroom → shelf → standby travel, shelf stock, scheduled demand,
+  backroom inventory, lost sales, category-specific dispatch, and completion
+  after the demand period ends with healthy shelves. Layout presentation is an
+  authored choice: the geometry-first tutorial and illustrated Closing Rush
+  both retain the same collision/path contract. The Kenney Mini Market test
+  stage exercises a third presentation variant without adding engine branches.
 - `finance.ts` owns payment queues, provider health, routing outcomes, costs,
   failures, and completion after the queue settles.
 - `parking.ts` owns scheduled arrivals, typed parking capacity, assignments,
@@ -290,7 +303,8 @@ without displaying the shared grid envelope:
   waiting time, utilization, and completion after every vehicle has left.
 
 Their renderers consume public module queries. Neither the generic `World` nor
-the decision pipeline contains Finance- or Parking-specific branches.
+the decision pipeline contains Supermarket-, Finance-, or Parking-specific
+branches.
 
 ### Registry of shipped modules
 
@@ -299,6 +313,7 @@ the decision pipeline contains Finance- or Parking-specific branches.
 ```text
 "maze"      → mazeModule
 "warehouse" → warehouseModule
+"supermarket" → supermarketModule
 "finance"   → financeModule
 "parking"   → parkingModule
 missing kind → mazeModule
@@ -334,7 +349,11 @@ condition controls therefore do not maintain a warehouse-specific flag list.
 
 The application dispatches boards and legends through
 `features/simulation/components/renderers/WorldRenderer.tsx`: `MazeRenderer` is maze-only and
-`WarehouseRenderer` owns package, zone, station, and charger rendering;
+`WarehouseRenderer` owns the interactive order-flow board, compact sprite-backed
+factory floor, robot travel, shelf/packing inspection, and order workboard;
+`SupermarketRenderer` renders the module's exact plan grid, blocked fixture
+footprints, remaining route, live shelf health, backroom inventory, scheduled
+demand, and cell-by-cell restocking-bot motion;
 `FinanceRenderer` owns the transfer flow; and `ParkingRenderer` owns the
 operational lot. The debug panel is generic and shows whatever facts the active
 module observed.

@@ -15,26 +15,26 @@ import {
 } from "@/lib/interview/server/assignmentToken";
 
 describe("multi-problem interview assignments", () => {
-  it("always includes the tutorial first and sorts by ascending difficulty", () => {
+  it("sorts a selection by ascending difficulty with no forced tutorial", () => {
     const finance = normalizeInterviewSelection([
       "finance-production-orchestrator",
       "finance-peak-hour-switch",
     ]);
 
+    // No challenge is auto-included; the two picked problems just sort by
+    // ascending difficulty.
     expect(finance.map((challenge) => challenge.id)).toEqual([
-      "finance-interview-routing",
       "finance-peak-hour-switch",
       "finance-production-orchestrator",
     ]);
-    expect(finance[0].interviewEvaluation?.tutorial).toBe(true);
 
     expect(
       assignableChallengesInPack("parking").map((challenge) => challenge.id),
     ).toEqual([
-      "parking-interview-controller",
       "parking-first-shift",
       "parking-match-vehicle",
       "parking-priority-access",
+      "parking-interview-controller",
       "parking-interview-operations",
       "parking-interview-orchestrator",
     ]);
@@ -60,7 +60,7 @@ describe("multi-problem interview assignments", () => {
   });
 
   it("round-trips every selected problem without silently dropping one", () => {
-    for (const packId of ["maze", "warehouse", "finance", "parking"]) {
+    for (const packId of ["maze", "finance", "parking"]) {
       const selected = assignableChallengesInPack(packId).map(
         (challenge) => challenge.id,
       );
@@ -79,15 +79,17 @@ describe("multi-problem interview assignments", () => {
 
     expect(id.length).toBeLessThan(24);
     expect(resolveInterviewAssignment(id)?.challengeIds).toEqual([
-      "parking-interview-controller",
       "parking-interview-operations",
       "parking-interview-orchestrator",
     ]);
 
-    const replacement = id.endsWith("A") ? "B" : "A";
-    expect(resolveInterviewAssignment(`${id.slice(0, -1)}${replacement}`)).toBe(
-      undefined,
-    );
+    // Tamper a character inside the signature bytes. The very last base64url
+    // character only carries discarded low bits, so flip one further in where
+    // every bit maps to a real byte, guaranteeing the signature check fails.
+    const flipIndex = id.length - 4;
+    const replacement = id[flipIndex] === "A" ? "B" : "A";
+    const tampered = id.slice(0, flipIndex) + replacement + id.slice(flipIndex + 1);
+    expect(resolveInterviewAssignment(tampered)).toBe(undefined);
   });
 
   it("rejects every assignment link from the cleared v1–v3 generations", () => {
@@ -102,17 +104,15 @@ describe("multi-problem interview assignments", () => {
     expect(Buffer.from(current, "base64url").readUInt8(0)).toBe(4);
   });
 
-  it("keeps same-number levels distinct by encoding their world", () => {
+  it("keeps levels from different worlds distinct by encoding their world", () => {
     const mazeId = createInterviewAssignmentId(["branching-maze"]);
-    const warehouseId = createInterviewAssignmentId([
-      "warehouse-first-delivery",
-    ]);
+    const financeId = createInterviewAssignmentId(["finance-basic-route"]);
 
     expect(resolveInterviewAssignment(mazeId)?.challengeIds).toEqual([
       "branching-maze",
     ]);
-    expect(resolveInterviewAssignment(warehouseId)?.challengeIds).toEqual([
-      "warehouse-first-delivery",
+    expect(resolveInterviewAssignment(financeId)?.challengeIds).toEqual([
+      "finance-basic-route",
     ]);
   });
 
@@ -138,7 +138,6 @@ describe("multi-problem interview assignments", () => {
     expect(response.status).toBe(200);
     expect(body.path).toBe(`/i/${body.assignmentId}`);
     expect(body.challengeIds).toEqual([
-      "finance-interview-routing",
       "finance-peak-hour-switch",
       "finance-production-orchestrator",
     ]);
@@ -180,7 +179,6 @@ describe("multi-problem interview assignments", () => {
       assignment: {
         id: assignmentId,
         challengeIds: [
-          "parking-interview-controller",
           "parking-interview-operations",
           "parking-interview-orchestrator",
         ],
@@ -189,7 +187,6 @@ describe("multi-problem interview assignments", () => {
     });
     expect(page.props.challenges.map((challenge: { id: string }) => challenge.id))
       .toEqual([
-        "parking-interview-controller",
         "parking-interview-operations",
         "parking-interview-orchestrator",
       ]);
@@ -214,9 +211,8 @@ describe("multi-problem interview assignments", () => {
       workspaceMode: "interview",
       interviewAssignment: {
         id: assignmentId,
-        currentIndex: 1,
+        currentIndex: 0,
         challengeIds: [
-          "parking-interview-controller",
           "parking-interview-operations",
           "parking-interview-orchestrator",
         ],

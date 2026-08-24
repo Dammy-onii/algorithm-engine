@@ -14,7 +14,7 @@ The full eight-milestone plan (with how-to and presentation notes) now lives in
 | **3** | **Intelligence Composition** | Users build abstractions — derived conditions, objectives, a personal library | **In progress 🟨** (library pending) |
 | **4** | **Learning & Progression** | The curriculum teaches; complexity grows naturally | **In progress 🟨** (core + learner flow shipped; skill-tree/adaptive pending) |
 | 5 | Hybrid Authoring | Same intelligence authorable as blocks **or** code | Planned |
-| 6 | Multiple Worlds | Prove the engine is domain-agnostic (a different problem, not a harder maze) | **In progress 🟨** (Warehouse Modes 1–4 + **non-grid Finance/Payment Routing** shipped; warehouse non-grid Stage 2 pending) |
+| 6 | Multiple Worlds | Prove the engine is domain-agnostic (a different problem, not a harder maze) | **In progress 🟨** (Warehouse, Supermarket, Finance, and Parking operations shipped; deeper tracks pending) |
 | 7 | Real-Time Collaboration | Multiple users co-author one agent | Planned |
 | 8 | Competition | Teams compare intelligence live, with scoring + spectating | Planned |
 

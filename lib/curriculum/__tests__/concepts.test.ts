@@ -55,8 +55,6 @@ describe("progression gating", () => {
     const done = new Set<string>();
     const order = [
       "straight-line", "one-corner", "dead-end", "snake-corridor", "branching-maze",
-      "warehouse-first-delivery", "warehouse-package-sorting",
-      "warehouse-continuous-operations", "warehouse-energy-management",
       "finance-basic-route", "finance-skip-offline", "finance-reliability-intro",
       "finance-route-selection", "finance-cost-and-reliability", "finance-provider-health",
       "finance-interview-routing", "finance-peak-hour-switch",

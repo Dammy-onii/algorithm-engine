@@ -33,8 +33,11 @@ Start here. The docs are grouped by purpose.
 - [MILESTONE2.md](./MILESTONE2.md) — Intelligence Authoring System.
 - [MILESTONE3.md](./MILESTONE3.md) — Intelligence Composition (derived conditions, objectives).
 - [MILESTONE4.md](./MILESTONE4.md) — Learning & Progression (curriculum).
-- [WAREHOUSE_AUTOMATION.md](./WAREHOUSE_AUTOMATION.md) — the warehouse world design.
-- [WAREHOUSE_MODES_2_4.md](./WAREHOUSE_MODES_2_4.md) — warehouse stages 2–4.
+- [WAREHOUSE_SIMULATION.md](./WAREHOUSE_SIMULATION.md) — the warehouse world design:
+  one-picker order processing on a compact factory floor, plus the staged
+  constraints reserved for later levels.
+- [SUPERMARKET_SIMULATION.md](./SUPERMARKET_SIMULATION.md) — live supermarket
+  shelf restocking, customer demand, bot travel, scoring, and curated assets.
 - [FINANCE_SIMULATION.md](./FINANCE_SIMULATION.md) — the finance (payment routing)
   world: a non-grid world on the same engine and its complete curriculum.
 - [FINANCE_INTERVIEW_TRACK.md](./FINANCE_INTERVIEW_TRACK.md) — the three
@@ -54,7 +57,7 @@ Start here. The docs are grouped by purpose.
 ## Progress trackers (resumable checklists)
 - [task.md](./task.md) · [PROGRESS.md](./PROGRESS.md) ·
   [PROGRESS_M2.md](./PROGRESS_M2.md) · [PROGRESS_M3.md](./PROGRESS_M3.md) ·
-  [PROGRESS_M4.md](./PROGRESS_M4.md) · [PROGRESS_WAREHOUSE.md](./PROGRESS_WAREHOUSE.md)
+  [PROGRESS_M4.md](./PROGRESS_M4.md)
 
 > These milestone/progress files are historical implementation records. They may
 > retain the terminology used at the time (including legacy rule priorities).

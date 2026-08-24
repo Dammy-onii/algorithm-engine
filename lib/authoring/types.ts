@@ -195,9 +195,9 @@ export interface TaskStep {
  * fall back to the legacy `pack` / `stage` / `difficulty` fields.
  */
 export interface ChallengeTaxonomy {
-  /** e.g. "Maze", "Warehouse", "Finance". */
+  /** e.g. "Maze", "Warehouse", "Supermarket", "Finance". */
   domain?: string;
-  /** e.g. "Navigation", "Fulfilment", "Payment Routing". */
+  /** e.g. "Navigation", "Order Processing", "Payment Routing". */
   simulation?: string;
   tier?: "tutorial" | "easy" | "medium" | "hard";
   /** Position on the complexity ladder within a tier (1, 5, 10, 20, …). */
@@ -283,6 +283,8 @@ export interface ChallengeData {
   /** Catalogue placement (domain/simulation/tier/grade). Falls back to legacy fields. */
   taxonomy?: ChallengeTaxonomy;
   /** The starting brain (partially built or empty). Stored as raw BrainSource JSON. */
+  /** Increment to intentionally give existing learners a revised scaffold. */
+  scaffoldVersion?: number;
   scaffoldBrain: {
     goals: { goals: { id: string; priority: number; description?: string }[] };
     states: { initial: string; states: { id: string; description?: string }[] };

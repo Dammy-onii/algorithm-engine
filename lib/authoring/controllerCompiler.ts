@@ -112,16 +112,6 @@ export const MAZE_CONTROLLER_STARTER = `class Robot {
 
 return new Robot();`;
 
-export const WAREHOUSE_CONTROLLER_STARTER = `class WarehouseRobot {
-  decide(observation) {
-    const facts = observation.domain; // e.g. facts.packageHere, facts.deliveryHere
-    // Your logic here.
-    return "wait";
-  }
-}
-
-return new WarehouseRobot();`;
-
 export const FINANCE_CONTROLLER_STARTER = `class PaymentRouter {
   decide(observation) {
     const facts = observation.domain; // e.g. facts.onlineA, facts.feeA

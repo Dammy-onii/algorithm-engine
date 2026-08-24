@@ -1,11 +1,9 @@
 "use client";
 
 import { MazeRenderer } from "@/features/simulation/components/MazeRenderer";
-import { WarehouseRenderer } from "./WarehouseRenderer";
 import { FinanceRenderer } from "./FinanceRenderer";
 import { ParkingRenderer } from "./ParkingRenderer";
 import { World } from "@/lib/engine/world/world";
-import { warehouseRuntime } from "@/lib/engine/worlds/warehouse";
 
 interface RendererProps {
   world: World;
@@ -14,7 +12,6 @@ interface RendererProps {
 
 const RENDERERS: Record<string, (props: RendererProps) => React.ReactNode> = {
   maze: MazeRenderer,
-  warehouse: WarehouseRenderer,
   finance: FinanceRenderer,
   parking: ParkingRenderer,
 };
@@ -29,22 +26,15 @@ export function WorldRenderer({
 }
 
 export function WorldLegend({ world }: { world?: World }) {
-  // The finance board is self-describing (it renders its own provider + tally
-  // panel), so it needs no separate tile legend.
-  if (world?.module.id === "finance" || world?.module.id === "parking") return null;
-  const warehouse = world?.module.id === "warehouse";
-  const hasCharger = warehouse && world ? (warehouseRuntime(world)?.chargingStations.length ?? 0) > 0 : false;
+  // Operational boards are self-describing (each renders
+  // its own operational panel), so they need no separate tile legend.
+  const id = world?.module.id;
+  if (id === "finance" || id === "parking") return null;
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
-      <Legend color="bg-zinc-700" label={warehouse ? "shelf" : "wall"} />
+      <Legend color="bg-zinc-700" label="wall" />
       <Legend color="bg-zinc-300" label="visited" />
-      {warehouse ? (
-        <>
-          <Legend color="border border-zinc-900 bg-white" label="package" />
-          <Legend color="bg-zinc-900" label="delivery" />
-          {hasCharger && <Legend color="border border-zinc-900 bg-zinc-200" label="charger" />}
-        </>
-      ) : <Legend color="bg-white ring-2 ring-inset ring-zinc-900" label="goal" />}
+      <Legend color="bg-white ring-2 ring-inset ring-zinc-900" label="goal" />
       <Legend color="bg-zinc-100 ring-1 ring-inset ring-zinc-400" label="start" />
       <span className="flex items-center gap-1"><span className="font-semibold text-zinc-900 dark:text-zinc-100">▶</span> robot</span>
     </div>

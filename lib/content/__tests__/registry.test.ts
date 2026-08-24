@@ -33,7 +33,8 @@ describe("content registry", () => {
   it("lists the known packs", () => {
     const ids = listPacks().map((p) => p.id);
     expect(ids).toContain("maze");
-    expect(ids).toContain("warehouse");
+    expect(ids).toContain("finance");
+    expect(ids).toContain("parking");
   });
 
   it("every challenge declares a pack that exists in the catalog", () => {
@@ -52,9 +53,9 @@ describe("content registry", () => {
   });
 
   it("resolves the pack for a challenge and the first challenge of a pack", () => {
-    const first = firstChallengeInPack("warehouse");
+    const first = firstChallengeInPack("finance");
     expect(first).toBeDefined();
-    expect(packForChallenge(first!.id)).toBe("warehouse");
+    expect(packForChallenge(first!.id)).toBe("finance");
     expect(getChallenge(first!.id)?.id).toBe(first!.id);
     expect(getChallenge("not-a-real-challenge")).toBeUndefined();
   });

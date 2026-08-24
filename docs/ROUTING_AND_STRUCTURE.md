@@ -18,7 +18,7 @@ dedicated feature page component; there is no `view` enum or shared stateful she
 | `/api/interview/submit` | Validate the interview challenge and resolve its hidden suite | Streamed case results and final score |
 
 Examples: `/maze`, `/warehouse`, and
-`/warehouse/warehouse-first-delivery`.
+`/warehouse/warehouse-first-orders`.
 
 ### Route implementation
 
@@ -54,7 +54,7 @@ Invalid URLs call `notFound()`:
 - unknown or non-interview stage: `/interview/not-an-interview`;
 - malformed or modified assignment: `/i/not-a-valid-assignment`;
 - valid challenge in the wrong pack:
-  `/maze/warehouse-first-delivery`.
+  `/maze/warehouse-first-orders`.
 
 Route validation uses `findPack()` and `getChallenge()`. `getChallenge()` is strict
 and returns `undefined` for an unknown ID. The legacy challenge-index helper
@@ -104,7 +104,7 @@ content/
   worlds/                  immutable authored scenarios
   brains/
     default/ naive/ dash/
-    warehouse/ finance/ parking/
+    warehouse/ supermarket/ finance/ parking/
   challenges/
     maze/                  Maze challenge descriptors
     warehouse/             Warehouse challenge descriptors
@@ -217,7 +217,7 @@ Completed locally:
   `/[pack]` include neither Studio nor Lab page clients; `/lab` references only
   `LabPage`, while `/[pack]/[challenge]` references `StudioPage`.
 - Live production smoke checks return 200 for `/`, `/maze`,
-  `/maze/branching-maze`, `/warehouse`, `/finance`, `/parking`, and `/lab`.
+  `/maze/branching-maze`, `/warehouse`, `/supermarket`, `/finance`, `/parking`, and `/lab`.
   The removed `/maze/open-arena` route correctly returns 404.
 
 Manual browser smoke-test checklist for an environment where the dev server can
@@ -227,8 +227,8 @@ listen:
    Examples as its only section heading, concise difficulty labels, and the
    Status/Skills/Difficulty/Subdomains filter sidebar. Use Back to return to the
    picker.
-2. Open `/warehouse`, select First Delivery: URL becomes
-   `/warehouse/warehouse-first-delivery`.
+2. Open `/warehouse`, select First Orders: URL becomes
+   `/warehouse/warehouse-first-orders`.
 3. Paste that deep URL into a fresh tab: warehouse Studio opens with the persisted
    brain for that challenge.
 4. Use Back/Forward between two challenge URLs: the correct challenge and saved

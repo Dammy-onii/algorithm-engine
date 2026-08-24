@@ -147,10 +147,20 @@ Shipped modules (`lib/engine/worlds/`):
 - **`maze.ts`** — no domain runtime, no domain actions. Its only behaviour is
   completion: *settle on the goal* for `goalHoldTicks` consecutive ticks
   (tracked as `world.ticksAtGoal`). `observe()` returns `{}`.
-- **`warehouse.ts`** — the mutable warehouse runtime (packages, delivery zones,
-  stations, charging), the `pickUp` / `deliver` / `charge` actions, station
-  replenishment, completion (*every package delivered*), and the warehouse
-  observation bag (`packageHere`, `packagesRemaining`, `carryingRed`, …).
+- **`warehouse.ts`** — a **non-grid central-dispatch world**
+  (`tracksMovement: false`): typed robots (one picker in the shipped tutorial),
+  per-unit order tasks, shelves, abstract travel, packing, optional charging
+  and deadlines; the
+  `pickSmall` / `pickLarge` / `pickFrozen` / `deliver` / `charge` actions; and
+  the live robot/order observation bag. See
+  [WAREHOUSE_SIMULATION.md](./WAREHOUSE_SIMULATION.md).
+- **`supermarket.ts`** — a **grid-backed retail-operations world** whose domain
+  owns movement (`tracksMovement: false`): one shared `18 × 14` floor contract,
+  blocked fixture footprints, breadth-first bot routing, five shelf categories,
+  scheduled demand, backroom stock, phased restocking jobs, lost sales,
+  shelf-health metrics, the `restockEmpty` / `restockLow` / `restockAny`
+  fallbacks, and five department-specific restock actions. See
+  [SUPERMARKET_SIMULATION.md](./SUPERMARKET_SIMULATION.md).
 - **`finance.ts`** — a **non-grid** world (`tracksMovement: false`): a transaction
   queue + provider health as the runtime, `routeTo{A,B,C}` / `hold` / `decline`
   actions with seeded (reproducible) outcomes, completion (*queue drained*), and
@@ -189,7 +199,7 @@ end-to-end without touching the `Observation` type or the evaluator.
 - **Active-world validation:** `buildWorld` then checks every rule, goal gate,
   and derived condition against only the base flags, the selected module's
   `domainFlags`, and that brain's derived names. A Maze run that references
-  `onlineA` or a Finance run that references `packageHere` fails during Apply,
+  `onlineA` or a Finance run that references `robotIsPicker` fails during Apply,
   before the first tick.
 - **Runtime:** the evaluator sees only the flags the active world produced this
   tick (base + `obs.domain`).
@@ -212,8 +222,8 @@ behind the `WorldModule` seam. Warehouse references in the engine core, before �
 What moved:
 
 - **`world.ts` → `worlds/warehouse.ts`:** the warehouse runtime types, schema
-  validation, `pickUp`/`deliver`/`charge`, station replenishment, completion,
-  query helpers (`packageAt`, `packagesRemaining`, …), and the observation bag.
+  validation, typed pick/deliver/charge actions, order/task lifecycle,
+  abstract robot travel, completion, public fleet queries, and the observation bag.
   Renderers and tests import those public module queries directly.
 - **`world.ts` completion logic → modules:** the maze settle-on-goal and warehouse
   all-delivered checks became `module.resolveStatus`.
@@ -223,8 +233,8 @@ What moved:
 
 The registry now derives domain action and flag vocabularies from every module.
 `ActionType` is open rather than a warehouse-expanded union, Studio reads domain
-flag metadata from the registry, and the app dispatches Maze, Warehouse, Finance,
-and Parking renderers through `WorldRenderer`. `buildWorld` also rejects a
+flag metadata from the registry, and the app dispatches Maze, Warehouse,
+Supermarket, Finance, and Parking renderers through `WorldRenderer`. `buildWorld` also rejects a
 function plan or condition vocabulary unavailable in the active world.
 
 Current verification is recorded in [CHANGELOG.md](./CHANGELOG.md); module-level

@@ -384,15 +384,6 @@ function worldLanguage(packId: string): WorldLanguage {
       ruleExample: "WHEN <a sensed route condition>\nDO <one navigation function>",
     };
   }
-  if (packId === "warehouse") {
-    return {
-      controller: "warehouse worker",
-      environment: "warehouse operation",
-      facts: "packageHere, carryingPackage, deliveryHere, energy",
-      actions: "move, pick up, deliver, charge, hold",
-      ruleExample: "WHEN <an operational condition>\nDO <one warehouse function>",
-    };
-  }
   if (packId === "finance") {
     return {
       controller: "payment router",

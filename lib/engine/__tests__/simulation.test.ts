@@ -134,8 +134,9 @@ describe("simulation engine", () => {
 
   it("rejects a domain action when the active world module does not expose it", () => {
     const invalid = structuredClone(wallFollower);
-    invalid.functions.functions.push({ id: "pick-up", action: "pickUp" });
-    invalid.rules.rules[0].do = "pick-up";
+    // parkStandard is a real parking-module action, but not exposed by the maze.
+    invalid.functions.functions.push({ id: "park-standard", action: "parkStandard" });
+    invalid.rules.rules[0].do = "park-standard";
     const source: WorldSource = { world: maze as WorldData, entities: entities as EntitiesData };
 
     expect(() => new Simulation(source, invalid)).toThrow(/unavailable in world 'maze'/);

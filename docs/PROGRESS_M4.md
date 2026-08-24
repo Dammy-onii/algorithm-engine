@@ -48,7 +48,7 @@ stepper was retired by the full-width problem-workspace redesign._
 
 Addresses the "problem statement is overwhelming; give a proper task-completion
 flow" feedback — and does it through a **world-agnostic** structured schema so
-the same flow serves Maze, Warehouse, Finance, Parking, and future worlds. Full write-up
+the same flow serves Maze, Warehouse, Supermarket, Finance, Parking, and future worlds. Full write-up
 in [MILESTONE4.md](./MILESTONE4.md); schema reference in
 [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md).
 

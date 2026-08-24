@@ -40,7 +40,6 @@
     "suiteId": "smart-parking-controller-v1",
     "scenarioCount": 6,
     "passingScore": 70,
-    "tutorial": true,
     "rubric": ["Safety and state consistency: 30%", "Completion, patience, and fairness: 30%", "Queue, congestion, and exit throughput: 25%", "Generalization across hidden layouts and events: 15%"]
   },
   "scaffoldBrain": {

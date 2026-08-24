@@ -192,7 +192,7 @@ runtime, and the same "one visible action per tick" holds throughout.
 ## Decision still open
 
 The scope of §2/§4 depends on one product question: **is the platform for reactive
-decision agents in operational worlds (maze, warehouse, finance, parking), or must
+decision agents in operational worlds (maze, warehouse, supermarket, finance, parking), or must
 it also visualise classic algorithms (sorting, DFS, recursion)?** The reactive
 answer makes §6 the priority and the `conditional` node a nice-to-have; the
 "classic algorithms" answer makes the full frame-stack interpreter worth

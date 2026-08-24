@@ -27,7 +27,7 @@ requires one). The interview workspace offers the same control as **Copy
 link**. A recipient can author and run the visible stage, then use **Submit
 solution** with the active Visual Policy or Code Controller.
 
-Every Maze, Warehouse, Finance, and Parking world page contains an **Interview
+Every Maze, Warehouse, Supermarket, Finance, and Parking world page contains an **Interview
 assignment** selector listing all published levels in that world. The
 interviewer selects a series and creates a compact `/i/[assignmentId]` link.
 The client verifies that every selected ID appears in the signed assignment

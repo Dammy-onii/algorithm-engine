@@ -1,6 +1,6 @@
 # Challenge Schema — the world-agnostic learner flow
 
-Every challenge across Maze, Warehouse, Finance, and Parking renders the
+Every challenge across Maze, Warehouse, Supermarket, Finance, and Parking renders the
 **same** learner experience: a complete problem statement, a live task checklist, escalating
 hints, and a results screen. That consistency comes from one typed schema plus a
 normalizer, so a new simulation type gets the whole flow for free by filling in
@@ -70,7 +70,7 @@ problem statement.
 objectives, evaluated every tick against `liveContext(sim, brain)` — run-quality
 metrics (`reached`, `ticks`, `rules`, …) merged over the current observation
 (base flags **plus the active WorldModule's domain bag**). That is why a warehouse
-step can say `carryingPackage || deliveredCount >= 1` and a maze step `reached`:
+step can say `smallItemsPicked >= 1 || itemsDelivered >= 1` and a maze step `reached`:
 the vocabulary is whatever the world exposes. A step with no `check` is
 informational; a malformed `check` reads as *not done* rather than throwing.
 
@@ -79,7 +79,7 @@ informational; a malformed `check` reads as *not done* rather than throwing.
 ```ts
 interface ChallengeTaxonomy {
   domain?: string;      // "Maze" | "Warehouse" | "Finance"
-  simulation?: string;  // "Navigation" | "Fulfilment" | "Payment Routing"
+  simulation?: string;  // "Navigation" | "Order Processing" | "Payment Routing"
   tier?: "tutorial" | "easy" | "medium" | "hard";
   grade?: number;       // complexity ladder within a tier: 1, 5, 10, 20…
 }
@@ -93,21 +93,21 @@ values from the legacy `pack`/`stage`/`difficulty` when `taxonomy` is absent.
 
 ---
 
-## Worked example (warehouse first delivery)
+## Worked example (warehouse first orders)
 
 ```jsonc
 {
-  "taxonomy": { "domain": "Warehouse", "simulation": "Fulfilment", "tier": "tutorial", "grade": 1 },
-  "brief":   "Teach the robot to pick up the waiting order and drop it at Outbound A.",
-  "context": "One order, one outbound dock. The robot already drives the aisle.",
+  "taxonomy": { "domain": "Warehouse", "simulation": "Order Processing", "tier": "tutorial", "grade": 1 },
+  "brief":   "Send the picker to waiting rack tasks, then deliver its cargo to packing.",
+  "context": "One picker works between receiving, four storage racks, and packing.",
   "steps": [
-    { "id": "pick",    "label": "Load the waiting package",    "check": "carryingPackage || deliveredCount >= 1" },
-    { "id": "deliver", "label": "Deliver it to Outbound A",     "check": "deliveredCount >= 1" }
+    { "id": "pick",    "label": "Collect the first item-unit", "check": "smallItemsPicked >= 1" },
+    { "id": "deliver", "label": "Deliver cargo to packing",   "check": "itemsDelivered >= 1" }
   ]
 }
 ```
 
-See [content/challenges/warehouse/06-warehouse-first-delivery.json](../content/challenges/warehouse/06-warehouse-first-delivery.json).
+See [content/challenges/warehouse/06-warehouse-first-orders.json](../content/challenges/warehouse/06-warehouse-first-orders.json).
 
 ## Published-content consistency contract
 

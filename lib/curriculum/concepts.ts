@@ -62,36 +62,6 @@ export const CONCEPTS: Concept[] = [
     prerequisites: ["functions"],
   },
   {
-    id: "warehouse-interaction",
-    name: "Warehouse interaction",
-    teaches: "Turn a sensed package or delivery zone into a Pick Up or Deliver action.",
-    taughtBy: "warehouse-first-delivery",
-    // This is the first practice level in a separate world track, so it remains
-    // available from the beginning rather than being gated by the maze path.
-    prerequisites: [],
-  },
-  {
-    id: "warehouse-sorting",
-    name: "Package sorting",
-    teaches: "Use package and delivery-zone types to route cargo correctly.",
-    taughtBy: "warehouse-package-sorting",
-    prerequisites: ["warehouse-interaction"],
-  },
-  {
-    id: "warehouse-operations",
-    name: "Continuous operations",
-    teaches: "Balance a finite cargo capacity against replenishing work stations.",
-    taughtBy: "warehouse-continuous-operations",
-    prerequisites: ["warehouse-sorting"],
-  },
-  {
-    id: "warehouse-energy",
-    name: "Energy management",
-    teaches: "Plan charging around ongoing delivery work.",
-    taughtBy: "warehouse-energy-management",
-    prerequisites: ["warehouse-operations"],
-  },
-  {
     id: "payment-routing",
     name: "Payment routing",
     teaches: "Route each payment through the cheapest available provider.",

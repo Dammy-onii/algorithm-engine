@@ -310,14 +310,16 @@ export function StudioPage({
   const pack = findPack(packId);
   const challenge = findChallenge(challengeId);
   const challenges = challengesInPack(packId);
-  const speedProfile = simulationSpeedForWorld(
-    findWorld(challenge.worldKey).source.world.kind,
-  );
+  const worldKind = findWorld(challenge.worldKey).source.world.kind ?? "maze";
+  const speedProfile = simulationSpeedForWorld(worldKind);
+  const normalBrainStorageId = challenge.scaffoldVersion
+    ? `${challengeId}-scaffold-v${challenge.scaffoldVersion}`
+    : challengeId;
   const brainStorageId = challenge.interviewEvaluation
     ? `interview-empty-v1-${interviewAssignment ? `${interviewAssignment.id}-` : ""}${challengeId}`
     : workspaceMode === "interview" && interviewAssignment
       ? `interview-assignment-v1-${interviewAssignment.id}-${challengeId}`
-    : challengeId;
+    : normalBrainStorageId;
 
   const [running, setRunning] = useState(false);
   const [speed, setSpeed] = useState(speedProfile.initial);

@@ -226,9 +226,11 @@ observation flags:
 |--------|--------------|
 | `moveForward` | `!wallAhead` |
 | `turnLeft` / `turnRight` / `wait` | always possible |
-| `pickUp` | `packageHere && capacityRemaining > 0` |
-| `deliver` | `deliveryHere && carryingPackage` |
-| `charge` | `chargingHere` |
+| `pickSmall` | `robotIdle && robotIsPicker && smallTaskAvailable && robotCapacityRemaining > 0` |
+| `pickLarge` | `robotIdle && robotIsForklift && largeTaskAvailable && robotCapacityRemaining > 0` |
+| `pickFrozen` | `robotIdle && robotIsColdchain && frozenTaskAvailable && robotCapacityRemaining > 0` |
+| `deliver` | `robotIdle && robotCarrying > 0` |
+| `charge` | `robotIdle && chargerFree` |
 
 Base guards live in the engine; each world module may contribute its own via
 `WorldModule.actionPreconditions`. When selecting a rule, the engine skips any

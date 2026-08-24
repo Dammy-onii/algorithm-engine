@@ -79,7 +79,7 @@ The problem statement used to render as one wall of text (narrative + objective 
 intelligence notes + learning objective + hints, all at once) and the only
 feedback was a terse pass/fail after a run. This pass makes the *flow* legible —
 and, critically, does so through a **structured, world-agnostic schema** so every
-simulation type (currently Maze, Warehouse, Finance, and Parking) renders the
+simulation type (currently Maze, Warehouse, Supermarket, Finance, and Parking) renders the
 same experience. See [CHALLENGE_SCHEMA.md](./CHALLENGE_SCHEMA.md) for the schema.
 
 Shipped:

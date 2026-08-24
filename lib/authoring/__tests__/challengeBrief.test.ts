@@ -6,7 +6,7 @@ import { ChallengeData } from "../types";
 
 const base: ChallengeData = {
   id: "demo",
-  pack: "warehouse",
+  pack: "parking",
   number: 6,
   name: "Demo",
   difficulty: 1,
@@ -83,7 +83,7 @@ describe("taxonomyFor", () => {
 
   it("infers a placement from legacy pack/stage/difficulty", () => {
     const t = taxonomyFor(base);
-    expect(t.domain).toBe("Warehouse");
+    expect(t.domain).toBe("Parking");
     expect(t.tier).toBe("Tutorial"); // "practice" → Tutorial
     expect(t.badge).toBe("Tutorial · Grade 1");
   });

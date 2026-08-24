@@ -15,10 +15,6 @@ import mazeProper from "@/content/worlds/maze-proper.json";
 import challengeStraight from "@/content/worlds/challenge-straight.json";
 import challengeCorner from "@/content/worlds/challenge-corner.json";
 import challengeArena from "@/content/worlds/challenge-arena.json";
-import warehouseFirstDelivery from "@/content/worlds/warehouse-first-delivery.json";
-import warehousePackageSorting from "@/content/worlds/warehouse-package-sorting.json";
-import warehouseContinuousOperations from "@/content/worlds/warehouse-continuous-operations.json";
-import warehouseEnergyManagement from "@/content/worlds/warehouse-energy-management.json";
 import financeBasicRoute from "@/content/worlds/finance-basic-route.json";
 import financeSkipOffline from "@/content/worlds/finance-skip-offline.json";
 import financeReliabilityIntro from "@/content/worlds/finance-reliability-intro.json";
@@ -53,12 +49,6 @@ import dStates from "@/content/brains/dash/states.json";
 import dRules from "@/content/brains/dash/rules.json";
 import dFunctions from "@/content/brains/dash/functions.json";
 import dMemory from "@/content/brains/dash/memory.json";
-
-import wGoals from "@/content/brains/warehouse/goals.json";
-import wStates from "@/content/brains/warehouse/states.json";
-import wRules from "@/content/brains/warehouse/rules.json";
-import wFunctions from "@/content/brains/warehouse/functions.json";
-import wMemory from "@/content/brains/warehouse/memory.json";
 
 import fGoals from "@/content/brains/finance/goals.json";
 import fStates from "@/content/brains/finance/states.json";
@@ -116,26 +106,6 @@ export const WORLDS: WorldOption[] = [
     key: "challenge-arena",
     label: "Open Arena (9×9)",
     source: { world: challengeArena as WorldData, entities: sharedEntities },
-  },
-  {
-    key: "warehouse-first-delivery",
-    label: "Warehouse Practice — First Delivery",
-    source: { world: warehouseFirstDelivery as WorldData, entities: sharedEntities },
-  },
-  {
-    key: "warehouse-package-sorting",
-    label: "Warehouse Practice — Package Sorting (11×5)",
-    source: { world: warehousePackageSorting as WorldData, entities: sharedEntities },
-  },
-  {
-    key: "warehouse-continuous-operations",
-    label: "Warehouse Easy — Continuous Operations (11×5)",
-    source: { world: warehouseContinuousOperations as WorldData, entities: sharedEntities },
-  },
-  {
-    key: "warehouse-energy-management",
-    label: "Warehouse Medium — Energy Management (11×5)",
-    source: { world: warehouseEnergyManagement as WorldData, entities: sharedEntities },
   },
   {
     key: "finance-basic-route",
@@ -240,17 +210,6 @@ export const BRAINS: BrainOption[] = [
       rules: nRules,
       functions: nFunctions,
       memory: nMemory,
-    } as BrainSource,
-  },
-  {
-    key: "warehouse-practice",
-    label: "Warehouse Operator (delivers order)",
-    source: {
-      goals: wGoals,
-      states: wStates,
-      rules: wRules,
-      functions: wFunctions,
-      memory: wMemory,
     } as BrainSource,
   },
   {

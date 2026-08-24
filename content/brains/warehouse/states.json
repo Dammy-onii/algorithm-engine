@@ -1,9 +1,0 @@
-{
-  "initial": "operate",
-  "states": [
-    {
-      "id": "operate",
-      "description": "Follow the practice route while handling package interactions."
-    }
-  ]
-}

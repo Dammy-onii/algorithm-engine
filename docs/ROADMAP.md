@@ -27,7 +27,7 @@ the existing foundation, and how it can be presented in a way that is distinctly
 | 3 | Intelligence Composition | Users can build *abstractions*, not just configure an agent | 🟨 In progress (library pending) |
 | 4 | Learning & Progression | The platform can *teach* — complexity grows naturally | 🟨 In progress (core shipped) |
 | 5 | Hybrid Authoring | The same intelligence is authorable as blocks **or** code | ⬜ Planned |
-| 6 | Multiple Worlds | The engine is genuinely domain-agnostic | 🟨 Warehouse Modes 1–4 shipped; non-grid Stage 2 and broader milestone in progress |
+| 6 | Multiple Worlds | The engine is genuinely domain-agnostic | 🟨 Warehouse, Supermarket, Finance, and Parking operations shipped; deeper tracks pending |
 | 7 | Real-Time Collaboration | Multiple people can co-author one agent | ⬜ Planned |
 | 8 | Competition | Teams compare intelligence live, with scoring + spectating | ⬜ Planned |
 
@@ -203,13 +203,31 @@ warehouse automation, traffic routing, package delivery, robot-vacuum coverage, 
 search-and-rescue. The bar: the same decision architecture (goals → states → rules →
 functions → conditions → memory) works **without engine modification**.
 
-**Current vertical slice:** Warehouse Modes 1–4 are shipped at explicit project
-priority, ahead of the previously planned M5 sequencing. They use Stage 1 realistic
-grid aisle layouts, a `warehouse` world module, external package/delivery/station
-data, and warehouse capabilities (`pickUp`, `deliver`, `charge`). This proves the
-behavioural module boundary, but it does not yet satisfy the full M6 bar of a
-non-grid spatial world interface, dynamic warehouse systems, or multi-robot work.
-See [WAREHOUSE_AUTOMATION.md](./WAREHOUSE_AUTOMATION.md).
+**Current vertical slice:** the `warehouse` world module ships one-picker order
+processing with abstract travel and a compact top-down factory renderer. One
+tick evaluates R1; the authored policy collects waiting rack work and delivers
+its cargo to packing. The module retains typed task/robot capabilities for later
+stages, but *First Orders* deliberately exposes only one picker and one task
+category. This proves the behavioural module boundary with a non-maze operations
+world on the same engine. See [WAREHOUSE_SIMULATION.md](./WAREHOUSE_SIMULATION.md).
+
+The `supermarket` track adds a separate retail-operations module:
+scheduled demand reduces five department stocks while a policy starts phased
+restocking jobs. Its `18 × 14` plan, blocked fixtures, and breadth-first routes
+are shared by engine and renderer, so visible travel is operational state rather
+than decorative animation. It reuses the same engine lifecycle without
+borrowing Warehouse order/task semantics. See
+[SUPERMARKET_SIMULATION.md](./SUPERMARKET_SIMULATION.md).
+
+The second level, *Closing Rush*, adds department-specific dispatch and an
+asset-led `18 × 16` view. It proves the curated convenience-store art can be
+contained inside authoritative fixture footprints without allowing decoration
+to redefine navigation.
+
+The Grade 3 *Mini Market Opening Run* tests the CC0 Kenney Mini Market pack in a
+smaller `16 × 14` store. Its bakery-first deadline distinguishes a correct
+policy from a generic empty-first policy, while the renderer compares a
+coherent low-poly isometric asset language without introducing WebGL.
 
 - Generalize `world.ts` from a maze grid to a world *interface* (tiles, entities,
   legal actions, observation builder) that a maze is one implementation of.

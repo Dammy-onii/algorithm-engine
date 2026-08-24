@@ -23,7 +23,6 @@ import {
   readyToLeaveVehicles,
 } from "../worlds/parking";
 import { financeRuntime } from "../worlds/finance";
-import { warehouseRuntime } from "../worlds/warehouse";
 
 const entities = { entities: [] } as EntitiesData;
 
@@ -104,7 +103,6 @@ describe("parking — smart facility operations", () => {
 
     expect(parkingRuntime(simulation.world)).not.toBeNull();
     expect(financeRuntime(simulation.world)).toBeNull();
-    expect(warehouseRuntime(simulation.world)).toBeNull();
   });
 
   it("authorizes departures and reuses finite capacity", () => {

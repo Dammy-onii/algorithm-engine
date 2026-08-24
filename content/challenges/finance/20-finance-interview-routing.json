@@ -71,7 +71,6 @@
     "suiteId": "intelligent-routing-v1",
     "scenarioCount": 6,
     "passingScore": 70,
-    "tutorial": true,
     "rubric": [
       "Correctness and completion: 30%",
       "Reliability, timeout, and priority protection: 35%",

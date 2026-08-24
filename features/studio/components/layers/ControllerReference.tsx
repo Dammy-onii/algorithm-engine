@@ -55,15 +55,6 @@ const FACILITY_PREFIXES = [
   "occupied",
   "congestion",
 ];
-const WAREHOUSE_PREFIXES = [
-  "package",
-  "delivery",
-  "carrying",
-  "charger",
-  "battery",
-  "capacity",
-  "order",
-];
 
 function startsWithAny(value: string, prefixes: string[]): boolean {
   return prefixes.some((prefix) => value.startsWith(prefix));
@@ -75,7 +66,6 @@ export function controllerFactGroup(id: string): string {
   if (startsWithAny(id, QUEUE_PREFIXES)) return "Queue and outcomes";
   if (startsWithAny(id, VEHICLE_PREFIXES)) return "Current vehicle";
   if (startsWithAny(id, FACILITY_PREFIXES)) return "Facility";
-  if (startsWithAny(id, WAREHOUSE_PREFIXES)) return "Warehouse operation";
   return "World state";
 }
 
