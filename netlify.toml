@@ -1,11 +1,17 @@
 # Netlify build configuration.
 #
-# Only build-time environment is set here; the build command and publish
-# directory stay auto-detected by Netlify's Next.js runtime.
+# This is a Next.js app built by @netlify/plugin-nextjs, so the publish directory
+# is `.next` — NOT `dist`. (`dist` was the old Vite landing site's output; a stale
+# `dist` publish setting in the Netlify UI is what caused
+# "publish directory was not found at .../dist".) Pinning it here overrides the UI.
 #
 # NEXT_PUBLIC_SITE_URL is the absolute origin used for social-share metadata
 # (OpenGraph / Twitter cards) so shared links preview correctly. Update this if
 # the site moves to a custom domain. Secrets (e.g. INTERVIEW_LINK_SECRET) must
 # NOT live here — set those in the Netlify dashboard so they stay private.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
 [build.environment]
   NEXT_PUBLIC_SITE_URL = "https://ctrl-stud.netlify.app"

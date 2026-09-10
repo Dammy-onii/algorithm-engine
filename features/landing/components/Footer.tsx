@@ -3,8 +3,8 @@ import type { NavLink } from "./Nav";
 
 const DEFAULT_LINKS: NavLink[] = [
   { label: "For individuals", href: "/" },
-  { label: "For education", href: "/education" },
   { label: "For companies", href: "/companies" },
+  { label: "For education", href: "/education" },
   { label: "Open app", href: "/app" },
 ];
 

@@ -22,11 +22,11 @@ export function Nav() {
           <Link href="/" className="text-sm text-ink-60 transition hover:text-ink">
             For individuals
           </Link>
-          <Link href="/education" className="text-sm text-ink-60 transition hover:text-ink">
-            For education
-          </Link>
           <Link href="/companies" className="text-sm text-ink-60 transition hover:text-ink">
             For companies
+          </Link>
+          <Link href="/education" className="text-sm text-ink-60 transition hover:text-ink">
+            For education
           </Link>
         </nav>
 
