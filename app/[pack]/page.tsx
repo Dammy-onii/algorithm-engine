@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { ChallengeDirectoryPage } from "@/features/catalogue/pages/ChallengeDirectoryPage";
+import { ChallengeDirectoryPage } from "@/features/engine/catalogue/pages/ChallengeDirectoryPage";
 import {
   challengesInPack,
   findPack,

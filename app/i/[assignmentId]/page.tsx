@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
-import { InterviewAssignmentDirectoryPage } from "@/features/interview/pages/InterviewAssignmentDirectoryPage";
+import { InterviewAssignmentDirectoryPage } from "@/features/engine/interview/pages/InterviewAssignmentDirectoryPage";
 import { findPack, getChallenge } from "@/lib/content/registry";
 import { interviewAssignmentProblemPath } from "@/lib/interview/assignmentRoutes";
 import { resolveInterviewAssignment } from "@/lib/interview/server/assignmentToken";

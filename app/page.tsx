@@ -1,6 +1,6 @@
-import { WorldCataloguePage } from "@/features/catalogue/pages/WorldCataloguePage";
+import { LandingPage } from "@/features/landing/pages/LandingPage";
 
-/** The world-picker route. */
+/** Public marketing landing. The product catalogue moved to `/app`. */
 export default function HomePage() {
-  return <WorldCataloguePage />;
+  return <LandingPage />;
 }

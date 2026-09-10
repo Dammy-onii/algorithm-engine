@@ -5,6 +5,53 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-09-10 — Education page; login hidden; app open to all
+
+- Added `/education` — a pitch for schools, bootcamps, universities, and cohort
+  programs. Frames CTRL as a way to teach programming *and* computational thinking:
+  learn by watching logic run, start with blocks and grow into code, and learn the
+  agent/decision-logic mental model behind modern AI. Includes the live demo, a
+  concept ladder, "what your program gets", audience cards, and an education
+  early-access form (`WaitlistForm` now takes custom placeholders/source). Nav adds
+  "For education".
+- Login is hidden for now (to be implemented later): the "Log in" nav button is
+  replaced with "Open app", and all `/login` CTAs across the site now point into the
+  app. The `/login` route and its code remain but are unlinked. `/app` is open to
+  everyone — no login required.
+
+## 2026-09-10 — Site pages merged into the app; one CTRL project
+
+- Merged the standalone landing site into this app as `features/landing/`. The
+  marketing pages and the product now share one design system defined in
+  `app/globals.css` (Inter / JetBrains Mono / Instrument Serif; ink/paper/line
+  neutrals; signal-indigo accent; softened card radii), so the whole site reads
+  as one CTRL. Light is the default; dark mode is preserved.
+- New information architecture: `/` is an engine-first landing addressing both
+  audiences (individuals who solve problems and companies who hire), `/companies`
+  is the detailed hiring pitch and offerings, and the product catalogue moved from
+  `/` to `/app`. All existing challenge/interview routes are unchanged.
+- Regrouped the product feature folders under `features/engine/*`
+  (`catalogue`, `studio`, `simulation`, `lab`, `interview`, `application`).
+- Added smooth in-page scrolling with reduced-motion respect and sticky-nav
+  scroll offsets.
+- Reworked the main landing to be engine-first and clearer for both audiences: a
+  dedicated individuals section, real sample problems openable without an account,
+  and a company teaser pointing to `/companies`. Simplified the nav to a shared
+  wordmark (always returns to `/`), `For individuals`, `For companies`, and `Log in`.
+- Added `/login` — individual sign-in/sign-up (accounts pending an auth backend;
+  the path currently sends people into the open app) and a company tab that
+  captures early access. Sample problems appear here and on the home page,
+  openable without signing in. The login page is a full-height two-column layout:
+  sign-in on the left, openable sample problems on the right.
+- The home (`/`) is the individuals page: a clear hero (parallel to the companies
+  one), how-it-works, "how it works for you", openable sample problems, and a
+  pointer to `/companies`. Nav "For individuals" links to `/`. Company sign-in on
+  `/login` is marked "coming soon" (early access).
+- The `/app` catalogue is now the individual product surface: dropped the CTRL
+  marketing definition, and the interview-assignment builder is hidden on the
+  challenge directory (kept behind `SHOW_INTERVIEW_BUILDER` for later). "All
+  worlds" links to `/app`.
+
 ## 2026-08-03 — Supermarket shelf-restocking world
 
 - Added *Mini Market Opening Run*, an Easy / Grade 3 test stage for the CC0

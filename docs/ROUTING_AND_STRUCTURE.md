@@ -7,7 +7,11 @@ dedicated feature page component; there is no `view` enum or shared stateful she
 
 | URL | Server-route responsibility | Client view |
 |---|---|---|
-| `/` | none | World/pack picker |
+| `/` | none | Home = the individuals page — practise real problems |
+| `/education` | none | Pitch for schools, bootcamps, and programs — teach coding and thinking |
+| `/companies` | none | Detailed hiring pitch and what CTRL offers companies |
+| `/login` | reads `?company=1` to preselect the company tab | Individual + company sign-in. **Hidden for now** — the route exists but nothing links to it; login will be implemented later. |
+| `/app` | none | The product: pick a problem to solve. Open to everyone — no login required. |
 | `/[pack]` | Validate the pack | Filterable challenge-row directory with per-row difficulty |
 | `/[pack]/[challenge]` | Validate pack, challenge, and membership | Shareable Studio challenge |
 | `/interview/[challengeId]` | Legacy predictable link | Revoked; always returns 404 |
@@ -24,7 +28,11 @@ Examples: `/maze`, `/warehouse`, and
 
 ```text
 app/
-  page.tsx                        <WorldCataloguePage />
+  page.tsx                        <LandingPage />   (marketing home)
+  companies/page.tsx              <CompaniesPage /> (hiring pitch)
+  education/page.tsx              <EducationPage /> (schools, bootcamps, programs)
+  login/page.tsx                  <LoginPage /> (hidden for now; not linked)
+  app/page.tsx                    <WorldCataloguePage /> (product entry)
   [pack]/page.tsx                 validates pack, renders <ChallengeDirectoryPage />
   [pack]/[challenge]/page.tsx     validates membership, renders <StudioPage />
   interview/[challengeId]/page.tsx validates interview stage, renders <StudioPage />
@@ -35,15 +43,25 @@ app/
   api/interview/submit/route.ts   hidden Finance/Parking evaluation
 
 features/
-  application/components/         shared PageLayout and application header
-  catalogue/pages/                Home and challenge-directory page UI
-  studio/pages/                   Studio page UI and Studio-only client state
-  lab/pages/                      Lab page UI and Lab-only client state
-  simulation/                     shared controls, stage, debug UI and renderers
+  landing/                        marketing pages, sections, and the live demo
+    pages/                        LandingPage (/) and CompaniesPage (/companies)
+    components/                   hero, sections, waitlist, shared Nav/Footer
+    lib/                          the self-contained demo engine (sim.ts)
+  engine/
+    application/components/       shared PageLayout and application header
+    catalogue/pages/              /app catalogue and challenge-directory page UI
+    studio/pages/                 Studio page UI and Studio-only client state
+    lab/pages/                    Lab page UI and Lab-only client state
+    simulation/                   shared controls, stage, debug UI and renderers
 
 shared/
   components/                     product-wide UI with no feature ownership
 ```
+
+> The marketing landing was merged in from a separate Vite project. It shares the
+> product's design system (fonts, palette, radii in `app/globals.css`), so the
+> whole site reads as one CTRL. The `/` home is engine-first and dual-audience;
+> `/companies` is the company-focused detail; `/app` is the product.
 
 The dynamic route pages are server components. In this version of Next's App
 Router, their `params` prop is a promise, so pages await it before validation.
@@ -93,11 +111,13 @@ The application is organized by ownership rather than by file type:
 app/                       route files, root layout and global CSS only
 assets/                    source assets imported by components
 features/
-  application/             shared page frame and application chrome
-  catalogue/               discovery page UI, components and difficulty mapping
-  lab/                     Lab page UI, JSON editor and workspace
-  simulation/              cross-mode simulation presentation
-  studio/                  Studio page UI, persistence and authoring components
+  landing/                 marketing home (/) and companies (/companies) pages
+  engine/
+    application/           shared page frame and application chrome
+    catalogue/             discovery page UI, components and difficulty mapping
+    lab/                   Lab page UI, JSON editor and workspace
+    simulation/            cross-mode simulation presentation
+    studio/                Studio page UI, persistence and authoring components
 shared/
   components/              reusable cross-feature UI
 content/
@@ -133,11 +153,12 @@ file extensions.
 
 | Area | Public responsibility | Important reusable pieces |
 |---|---|---|
-| `features/application/` | Provides shared page chrome without route state | `PageLayout` |
-| `features/catalogue/` | Owns `/` and `/[pack]` page UI | `WorldCataloguePage`, `ChallengeDirectoryPage`, `difficultyFor()` |
-| `features/lab/` | Owns `/lab` UI and Lab-only state | `LabPageView`, `BrainEditor` |
-| `features/simulation/` | Presents and constructs simulations for Studio and Lab | `createSimulationSession`, `SimControls`, `SimStage`, renderers |
-| `features/studio/` | Owns challenge-page UI, persistence and authoring state | `StudioPage`, `AuthoringPanel`, progression/results components and editor layers |
+| `features/landing/` | Owns the marketing `/` and `/companies` pages | `LandingPage`, `CompaniesPage`, `Nav`, `Footer`, `WaitlistForm` |
+| `features/engine/application/` | Provides shared page chrome without route state | `PageLayout` |
+| `features/engine/catalogue/` | Owns `/app` and `/[pack]` page UI | `WorldCataloguePage`, `ChallengeDirectoryPage`, `difficultyFor()` |
+| `features/engine/lab/` | Owns `/lab` UI and Lab-only state | `LabPageView`, `BrainEditor` |
+| `features/engine/simulation/` | Presents and constructs simulations for Studio and Lab | `createSimulationSession`, `SimControls`, `SimStage`, renderers |
+| `features/engine/studio/` | Owns challenge-page UI, persistence and authoring state | `StudioPage`, `AuthoringPanel`, progression/results components and editor layers |
 | `shared/components/` | Product-wide UI with no domain owner | `ThemeToggle` |
 
 The intended dependency direction is:

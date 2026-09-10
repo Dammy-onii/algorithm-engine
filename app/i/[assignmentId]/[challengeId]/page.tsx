@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { StudioPage } from "@/features/studio/pages/StudioPage";
+import { StudioPage } from "@/features/engine/studio/pages/StudioPage";
 import { getChallenge } from "@/lib/content/registry";
 import { resolveInterviewAssignment } from "@/lib/interview/server/assignmentToken";
 

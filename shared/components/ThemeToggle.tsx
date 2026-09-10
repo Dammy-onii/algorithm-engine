@@ -39,7 +39,7 @@ export function ThemeToggle() {
       onClick={() => apply(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+      className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-60 transition hover:bg-line-soft hover:text-ink dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
     >
       {/* Render nothing until mounted so SSR and client agree. */}
       {theme === null ? (

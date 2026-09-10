@@ -2,35 +2,111 @@
 
 /* Class-based dark mode: `dark:` utilities apply under a `.dark` ancestor rather
    than following the OS. The inline script in layout.tsx sets that class before
-   paint (from a saved preference, else the system setting) to avoid a flash. */
+   paint (from a saved preference) to avoid a flash. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   Shared design system — one palette and type scale for marketing and app.
+   Brand colours (ink/paper/volt/signal/line) are fixed; background/foreground
+   flip with the theme so the app's dark mode keeps working.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-ink: #0a0a0b;
+  --color-ink-60: #56565c;
+  --color-ink-40: #8a8a92;
+  --color-paper: #fbfbf9;
+  --color-line: #e6e5e1;
+  --color-line-soft: #efeeea;
+  --color-volt: #c8ff3d;
+  --color-signal: #4f46e5;
+  --radius-card: 20px;
+
+  /* Soften card/panel radii toward the landing's rounded-card (20px). Only the
+     lg/xl/2xl steps used by containers are nudged; rounded-md (buttons, inputs,
+     chips) stays tight so controls don't turn into ovals. */
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* Remap Tailwind's neutral (zinc) scale to the landing's warm ink/paper/line
+     ramp. Every `zinc-*` utility across the app (light and dark) instantly
+     adopts the landing palette without touching component classes. */
+  --color-zinc-50: #fbfbf9;
+  --color-zinc-100: #efeeea;
+  --color-zinc-200: #e6e5e1;
+  --color-zinc-300: #d9d8d3;
+  --color-zinc-400: #8a8a92;
+  --color-zinc-500: #6f6f75;
+  --color-zinc-600: #56565c;
+  --color-zinc-700: #3a3a40;
+  --color-zinc-800: #232327;
+  --color-zinc-900: #0f0f13;
+  --color-zinc-950: #0a0a0b;
+
+  /* Remap emerald (the app's old accent) to the landing's signal indigo, so
+     every accent — eyebrows, active states, primary actions — matches. */
+  --color-emerald-50: #eef2ff;
+  --color-emerald-100: #e0e7ff;
+  --color-emerald-200: #c7d2fe;
+  --color-emerald-300: #a5b4fc;
+  --color-emerald-400: #818cf8;
+  --color-emerald-500: #6366f1;
+  --color-emerald-600: #4f46e5;
+  --color-emerald-700: #4338ca;
+  --color-emerald-800: #3730a3;
+  --color-emerald-900: #312e81;
+  --color-emerald-950: #1e1b4b;
+}
+
 :root {
-  --background: #f0f3f5;
-  --foreground: #171717;
+  --background: #fbfbf9;
+  --foreground: #0a0a0b;
+  color-scheme: light;
 }
 
 .dark {
-  --background: #0a0a0a;
+  --background: #0d0d12;
   --foreground: #ededed;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+  --font-serif: var(--font-instrument);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Native select popovers otherwise keep the operating-system light palette
-   even when the application is dark. This applies the active app theme to the
-   closed control and its browser-owned option list. */
+html {
+  scroll-behavior: smooth;
+}
+
+/* The landing nav is sticky (~64px); keep anchored sections clear of it. */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+::selection {
+  background: var(--color-volt);
+  color: var(--color-ink);
+}
+
+/* Native select popovers otherwise keep the OS light palette even when dark. */
 select {
   color-scheme: light;
 }
@@ -42,8 +118,7 @@ select {
   color: rgb(244 244 245);
 }
 
-/* Studio's authoring and simulation panes are separate work surfaces. Keeping
-   their scrollbars visible makes that independent scrolling explicit. */
+/* Studio's authoring and simulation panes scroll independently. */
 .workspace-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgb(161 161 170) transparent;
@@ -78,8 +153,7 @@ select {
   background-clip: padding-box;
 }
 
-/* Finance flow adapts to the width of its renderer, not the browser viewport.
-   This matters because Studio places it inside a narrow simulation sidebar. */
+/* Finance flow adapts to the width of its renderer, not the browser viewport. */
 .finance-flow-container {
   container-type: inline-size;
 }
@@ -258,13 +332,81 @@ select {
   filter: drop-shadow(0 0 0.25rem rgb(253 224 71 / 0.8));
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .parking-car-arrive,
-  .parking-occupant-arriving {
-    animation: none;
-  }
+/* ---------------------------------------------------------------------------
+   Marketing surfaces — the grainy mesh hero, blueprint grid, and animations
+   ported from the landing page. Used by features/marketing/*.
+   --------------------------------------------------------------------------- */
+.mesh {
+  background-color: #0d0d14;
+  background-image:
+    radial-gradient(72% 58% at 50% 40%, rgba(9, 9, 14, 0.55) 0%, rgba(9, 9, 14, 0.25) 45%, rgba(9, 9, 14, 0) 78%),
+    radial-gradient(128% 128% at 50% 45%, rgba(9, 9, 14, 0) 42%, rgba(9, 9, 14, 0.55) 82%, rgba(9, 9, 14, 0.85) 100%),
+    radial-gradient(76% 96% at 2% 2%, rgba(189, 147, 249, 0.82) 0%, rgba(189, 147, 249, 0.3) 40%, rgba(189, 147, 249, 0) 75%),
+    radial-gradient(74% 94% at 98% 1%, rgba(125, 207, 255, 0.74) 0%, rgba(125, 207, 255, 0.27) 42%, rgba(125, 207, 255, 0) 76%),
+    radial-gradient(60% 78% at 98% 99%, rgba(122, 220, 132, 0.6) 0%, rgba(122, 220, 132, 0.2) 40%, rgba(122, 220, 132, 0) 73%),
+    radial-gradient(58% 76% at 2% 100%, rgba(255, 92, 96, 0.62) 0%, rgba(255, 92, 96, 0.21) 40%, rgba(255, 92, 96, 0) 73%);
+  background-blend-mode: normal, normal, screen, screen, screen, screen;
+}
 
-  .parking-route-car {
-    display: none;
+.grain::before,
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.grain::after {
+  opacity: 0.5;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.grain::before {
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.28' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='340' height='340' filter='url(%23m)'/%3E%3C/svg%3E");
+}
+
+.blueprint {
+  background-image:
+    linear-gradient(to right, var(--color-line-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line-soft) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 34s linear infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.animate-rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(200, 255, 61, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(200, 255, 61, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(200, 255, 61, 0); }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-rise,
+  .animate-pulse-ring {
+    animation: none !important;
   }
 }

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import InterviewAssignmentPage from "@/app/i/[assignmentId]/page";
 import InterviewAssignmentChallengePage from "@/app/i/[assignmentId]/[challengeId]/page";
 import { POST as createAssignment } from "@/app/api/interview/assignments/route";
-import { InterviewAssignmentDirectoryPage } from "@/features/interview/pages/InterviewAssignmentDirectoryPage";
-import { StudioPage } from "@/features/studio/pages/StudioPage";
+import { InterviewAssignmentDirectoryPage } from "@/features/engine/interview/pages/InterviewAssignmentDirectoryPage";
+import { StudioPage } from "@/features/engine/studio/pages/StudioPage";
 import {
   assignableChallengesInPack,
   normalizeInterviewSelection,
