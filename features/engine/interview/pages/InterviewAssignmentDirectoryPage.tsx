@@ -9,6 +9,7 @@ import type { ChallengeData } from "@/lib/authoring/types";
 import type { PackInfo } from "@/lib/content/registry";
 import type { InterviewAssignment } from "@/lib/interview/assignment";
 import { interviewAssignmentProblemPath } from "@/lib/interview/assignmentRoutes";
+import { TrackInterviewOpened } from "@/shared/analytics/TrackInterviewOpened";
 
 const DIFFICULTY_LABEL: Record<DifficultyBand, string> = {
   example: "Example",
@@ -48,6 +49,7 @@ export function InterviewAssignmentDirectoryPage({
       }`}
       className="w-full"
     >
+      <TrackInterviewOpened assignmentId={assignment.id} world={pack.id} />
       <section className="mx-auto flex w-full flex-col gap-8 px-4 pb-12 sm:px-8 lg:px-20">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-400">

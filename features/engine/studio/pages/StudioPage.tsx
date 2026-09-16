@@ -73,6 +73,7 @@ import {
 } from "@/features/engine/studio/persistence";
 import { interviewAssignmentProblemPath } from "@/lib/interview/assignmentRoutes";
 import { findWorld } from "@/lib/content/datasets";
+import { testTracking, type TestContext } from "@/shared/analytics/track";
 
 interface StudioPageProps {
   packId: string;
@@ -362,6 +363,19 @@ export function StudioPage({
         )
       : undefined;
 
+  // Analytics context for the current problem — tags every test event with the
+  // world, difficulty, mode, and (for shared links) the assignment id.
+  const testContext = useMemo<TestContext>(
+    () => ({
+      world: packId,
+      challenge: challengeId,
+      difficulty: difficultyFor(challenge),
+      mode: isInterviewWorkspace ? "interview" : "practice",
+      assignmentId: interviewAssignment?.id,
+    }),
+    [packId, challengeId, challenge, isInterviewWorkspace, interviewAssignment?.id],
+  );
+
   useEffect(() => {
     const stored = readStoredBrain(challengeId, brainStorageId);
     const completed = readCompletedChallenges();
@@ -369,6 +383,11 @@ export function StudioPage({
     if (stored) setBrain(stored);
     if (completed.size) setCompletedIds(completed);
   }, [brainStorageId, challengeId]);
+
+  // Record that this problem was opened (once per problem).
+  useEffect(() => {
+    testTracking.problemOpened(testContext);
+  }, [testContext]);
 
   const previewSession = useMemo(() => {
     const previewChallenge = findChallenge(challengeId);
@@ -437,6 +456,7 @@ export function StudioPage({
     setJustLearned(null);
     setSession(result.session);
     setRunning(true);
+    testTracking.runStarted(testContext);
   };
 
   const finishVisibleRun = useCallback((finishedSession: SimulationSession) => {
@@ -447,7 +467,9 @@ export function StudioPage({
       metrics,
     );
     setObjectiveResults(results);
-    if (challengePassed(results)) {
+    const didPass = challengePassed(results);
+    testTracking.runFinished(testContext, didPass);
+    if (didPass) {
       if (!finishedChallenge.interviewEvaluation) {
         try {
           localStorage.setItem(`ae-complete-${challengeId}`, "true");
@@ -458,12 +480,14 @@ export function StudioPage({
           setJustLearned(conceptForChallenge(challengeId) ?? null);
         }
         setCompletedIds((current) => new Set(current).add(challengeId));
+        // Non-interview problems are completed the moment the visible run passes.
+        testTracking.problemCompleted(testContext);
       }
       setAttempts(0);
     } else {
       setAttempts((current) => current + 1);
     }
-  }, [brain, challengeId, completedIds]);
+  }, [brain, challengeId, completedIds, testContext]);
 
   useEffect(() => {
     if (!running || !session) return;
@@ -551,6 +575,7 @@ export function StudioPage({
         );
       }
 
+      testTracking.interviewSubmitted(testContext, finalReport.passed);
       if (finalReport.passed) {
         try {
           localStorage.setItem(`ae-complete-${challengeId}`, "true");
@@ -561,6 +586,7 @@ export function StudioPage({
           setJustLearned(conceptForChallenge(challengeId) ?? null);
         }
         setCompletedIds((current) => new Set(current).add(challengeId));
+        testTracking.problemCompleted(testContext);
       }
     } catch (submitError) {
       setSubmissionError(
