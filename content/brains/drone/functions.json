@@ -1,0 +1,9 @@
+{
+  "functions": [
+    { "id": "fly-to-search", "action": "flyToSearch", "description": "Fly one cell toward the nearest ground the sensor has not covered yet." },
+    { "id": "fly-to-target", "action": "flyToTarget", "description": "Fly one cell toward the detected vehicle." },
+    { "id": "report-find", "action": "report", "description": "Radio in the vehicle's location while directly above it." },
+    { "id": "recharge", "action": "recharge", "description": "Take on battery while sitting on the pad." },
+    { "id": "hover", "action": "wait", "description": "Hold position for one tick." }
+  ]
+}

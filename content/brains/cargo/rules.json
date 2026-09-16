@@ -1,0 +1,18 @@
+{
+  "rules": [
+    { "id": "select-load", "state": "selecting", "when": "anyFits", "do": "run-knapsack", "setState": "routing", "description": "Choose the best-value set of remaining crates that fits the carry limit." },
+    { "id": "nothing-to-take", "state": "selecting", "when": "always", "do": "fly-to-depot", "setState": "returning", "description": "Nothing fits any more — head home." },
+    { "id": "order-route", "state": "routing", "when": "hasPlan", "do": "plan-route", "setState": "collecting", "description": "Order the chosen crates into the shortest tour home." },
+    { "id": "no-plan", "state": "routing", "when": "always", "do": "clear-plan", "setState": "selecting", "description": "The selection came back empty — start over." },
+    { "id": "grab-it", "state": "collecting", "when": "canPickHere", "do": "grab", "description": "Pick up the crate on this cell." },
+    { "id": "next-stop", "state": "collecting", "when": "planRouted", "do": "fly-to-plan-target", "description": "Fly one cell toward the next crate on the route." },
+    { "id": "route-done", "state": "collecting", "when": "always", "do": "fly-to-depot", "setState": "returning", "description": "Route finished — carry the load home." },
+    { "id": "unload-all", "state": "returning", "when": "atDepot && carriedCount > 0", "do": "unload", "description": "Bank everything aboard at the depot." },
+    { "id": "top-up", "state": "returning", "when": "atDepot && battery < 120", "do": "charge", "setState": "charging", "description": "Recharge before setting out again." },
+    { "id": "next-trip", "state": "returning", "when": "atDepot && anyFits", "do": "clear-plan", "setState": "selecting", "description": "Crates still out there — clear the stale plan and select again." },
+    { "id": "keep-going-home", "state": "returning", "when": "always", "do": "fly-to-depot", "description": "Keep flying toward the depot." },
+    { "id": "idle", "state": "returning", "when": "always", "do": "hover", "description": "Mission over — hold position." },
+    { "id": "keep-charging", "state": "charging", "when": "atDepot && battery < 120", "do": "charge", "description": "Keep charging until the threshold is cleared." },
+    { "id": "set-off", "state": "charging", "when": "always", "do": "clear-plan", "setState": "selecting", "description": "Charged — plan the next trip." }
+  ]
+}

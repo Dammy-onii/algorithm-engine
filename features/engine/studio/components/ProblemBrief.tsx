@@ -17,6 +17,7 @@ import { ChallengeData } from "@/lib/authoring/types";
 import {
   normalizeBrief,
   paragraphsFromText,
+  tableFromParagraph,
   taxonomyFor,
 } from "@/lib/authoring/challengeBrief";
 
@@ -68,9 +69,7 @@ export function ProblemBrief({ challenge, attempts }: Props) {
             Problem statement
           </p>
           {brief.detail.flatMap(paragraphsFromText).map((para, i) => (
-            <p key={i} className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-              {para}
-            </p>
+            <Passage key={i} text={para} />
           ))}
           {brief.learn && (
             <div className="border-t border-zinc-100 pt-3 dark:border-zinc-800">
@@ -139,6 +138,52 @@ export function ProblemBrief({ challenge, attempts }: Props) {
         <span aria-hidden="true">↓</span>
         <span>Scroll down to build and test your solution.</span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * One brief paragraph: a data table when it is written as a pipe table, plain
+ * prose otherwise.
+ */
+function Passage({ text }: { text: string }) {
+  const table = tableFromParagraph(text);
+  if (!table) {
+    return (
+      <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">{text}</p>
+    );
+  }
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[20rem] border-collapse text-sm">
+        <thead>
+          <tr className="border-b border-zinc-200 dark:border-zinc-800">
+            {table.head.map((cell, i) => (
+              <th
+                key={i}
+                scope="col"
+                className="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+              >
+                {cell}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, r) => (
+            <tr key={r} className="border-b border-zinc-100 last:border-0 dark:border-zinc-900">
+              {row.map((cell, c) => (
+                <td
+                  key={c}
+                  className={`px-2 py-1.5 text-zinc-600 dark:text-zinc-400 ${c === 0 ? "font-medium text-zinc-800 dark:text-zinc-200" : "font-mono"}`}
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

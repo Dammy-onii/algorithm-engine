@@ -85,7 +85,7 @@ const AUDIENCE = [
 /** The education pitch at `/education` — for schools, bootcamps, and programs. */
 export function EducationPage() {
   return (
-    <>
+    <div className="site-light min-h-screen">
       <Nav />
       <main>
         <EducationHero />
@@ -236,6 +236,6 @@ export function EducationPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

@@ -42,7 +42,10 @@ Top level:
 
 ```
 app/                  Next.js App Router segments, layout and global CSS
-features/             Product UI grouped by application capability
+features/landing/     Public site pages (home = individuals, companies, education,
+                      login [hidden for now], 404) — shares the app design system
+features/engine/      Product UI by capability (catalogue, studio, simulation,
+                      lab, interview, application chrome)
 shared/               Cross-feature reusable UI
 assets/               Source artwork imported by feature components
 content/worlds/       World/maze definitions — authored data
@@ -70,6 +73,30 @@ Production build / lint:
 npm run build
 npm run lint
 ```
+
+## Deployment (Netlify)
+
+The site deploys to Netlify with the official Next.js runtime plugin
+(`@netlify/plugin-nextjs`). The essential settings live in
+[`../netlify.toml`](../netlify.toml):
+
+```toml
+[build]
+  command = "npm run build"
+  publish = ".next"        # Next.js output — NOT "dist"
+```
+
+> **Gotcha:** the publish directory must be **`.next`**. This project began as a
+> separate Vite landing site whose output was `dist`; a stale `dist` publish
+> directory (left in the Netlify UI) makes the build fail with
+> *"publish directory was not found at .../dist"* even though `next build`
+> succeeds. `netlify.toml` overrides the UI, but if the UI value ever wins again,
+> fix it under **Site configuration → Build & deploy → Build settings → Publish
+> directory** (`.next`, or clear it to let the plugin auto-detect).
+
+`NEXT_PUBLIC_SITE_URL` (in `netlify.toml`) is the absolute origin for social-share
+metadata; update it on a custom domain. Real secrets go in the Netlify dashboard,
+never in `netlify.toml`.
 
 ## Design rules (do not violate)
 

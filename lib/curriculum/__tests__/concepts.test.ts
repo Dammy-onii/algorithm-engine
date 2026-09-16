@@ -62,6 +62,8 @@ describe("progression gating", () => {
       "parking-first-shift", "parking-match-vehicle", "parking-priority-access",
       "parking-interview-controller", "parking-interview-operations",
       "parking-interview-orchestrator",
+      "drone-first-sweep",
+      "drone-cargo-run",
     ];
     for (const id of order) {
       expect(isChallengeUnlocked(id, done), `expected ${id} unlocked`).toBe(true);

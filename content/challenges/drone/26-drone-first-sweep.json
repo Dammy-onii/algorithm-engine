@@ -1,0 +1,164 @@
+{
+  "id": "drone-first-sweep",
+  "pack": "drone",
+  "number": 26,
+  "name": "First Sweep",
+  "difficulty": 1,
+  "stage": "practice",
+  "worldKey": "drone-first-sweep",
+  "tagline": "Teach a drone to search an area and find what's hidden.",
+  "narrative": "A vehicle has gone missing somewhere in Sector 7, a 6×6 kilometre block of open ground.\n\nYou are writing the drone's autonomy. Nobody is flying it — once it lifts off the pad, every decision is yours. It does not know where the vehicle is. All it has is a downward sensor that covers the ring of cells around it, a memory of everywhere that sensor has already looked, and enough battery for a patient search.\n\nYour job is to turn that hardware into behaviour: sweep the sector until the sensor picks the vehicle up, close in on it, and radio the find in.",
+  "objective": "Find the missing vehicle and report it before the battery runs out.",
+  "learningObjective": "Write an agent that switches between two modes — searching unknown ground, then homing in on a target once it is detected.",
+  "intelligenceExplanation": "A complete working policy is already loaded, so you can press Apply & Run and watch the whole mission play out before changing anything.\n\nThe drone's senses do the bookkeeping. Its sensor covers every neighbouring cell each tick and remembers what it has seen, so it always knows which way the nearest unsearched ground lies — that is what fly toward unsearched ground follows. The moment the vehicle falls under the sensor, targetDetected flips on and fly toward the vehicle becomes available.\n\nThat makes the whole policy three rules, and their order is the entire answer. Report sits first, so the drone radios in the instant it is overhead. Closing in sits above searching, so a found vehicle always wins. Searching is the fallback that runs when neither of the others applies.\n\nRead it, run it, then take it apart: drag the search rule above the close-in rule and watch the drone map the whole sector and never radio in.",
+  "hint": "Rules are read top to bottom and the first one that fits wins. Press Apply & Run to watch the loaded policy, then read the three rules from the top down.",
+  "hints": [
+    "Press Apply & Run first. Watch the dark ground clear as the sensor covers it, and watch the status flip from Searching to Target detected.",
+    "Follow along in the debug panel: while sweeping, the triggered rule is keep-searching. The tick the vehicle is detected, close-in takes over instead — because it sits higher in the list.",
+    "Now break it on purpose: move keep-searching above close-in. The drone covers the whole sector and never radios in, because its WHEN is always, so it matches first every tick. Put it back and the level passes again."
+  ],
+  "taxonomy": {
+    "domain": "Drone",
+    "simulation": "Surveillance",
+    "tier": "tutorial",
+    "grade": 1
+  },
+  "brief": "Sweep Sector 7, find the missing vehicle, and report it.",
+  "context": "The drone knows the boundaries of the search area, but not where the vehicle is.",
+  "steps": [
+    {
+      "id": "search",
+      "label": "Run the policy and watch the drone sweep the sector",
+      "hint": "Press Apply & Run — the keep-searching rule takes it off the pad"
+    },
+    {
+      "id": "detect",
+      "label": "Pick the vehicle up on the sensor",
+      "hint": "Cover enough ground and targetDetected flips on by itself",
+      "check": "targetDetected"
+    },
+    {
+      "id": "close-in",
+      "label": "Close in on the detected vehicle",
+      "hint": "The close-in rule sits above the search rule, so it takes over",
+      "check": "atTarget"
+    },
+    {
+      "id": "report",
+      "label": "Report the find",
+      "hint": "WHEN atTarget -> DO report the find, first in the list",
+      "check": "reached"
+    }
+  ],
+  "availableBricks": [
+    "fly-to-search",
+    "fly-to-target",
+    "report-find",
+    "recharge",
+    "hover"
+  ],
+  "availableConditions": [
+    "atTarget",
+    "targetDetected",
+    "searchPending",
+    "areaCovered",
+    "coverage",
+    "batteryLow",
+    "onPad",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "statesUnlocked": false,
+  "scaffoldVersion": 3,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "find-vehicle",
+          "priority": 10,
+          "description": "Locate the missing vehicle and report it."
+        }
+      ]
+    },
+    "states": {
+      "initial": "searching",
+      "states": [
+        {
+          "id": "searching",
+          "description": "Sweeping the sector for the missing vehicle."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "report-it",
+          "when": "atTarget",
+          "do": "report-find",
+          "description": "First in the list, so the drone radios in the moment it is overhead."
+        },
+        {
+          "id": "close-in",
+          "when": "targetDetected",
+          "do": "fly-to-target",
+          "description": "Above the sweep rule, so closing in on a found vehicle always beats carrying on searching."
+        },
+        {
+          "id": "keep-searching",
+          "when": "always",
+          "do": "fly-to-search",
+          "description": "The fallback: nothing found yet, so keep sweeping unsearched ground."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "fly-to-search",
+          "action": "flyToSearch",
+          "description": "Fly one cell toward the nearest ground the sensor has not covered yet."
+        },
+        {
+          "id": "fly-to-target",
+          "action": "flyToTarget",
+          "description": "Fly one cell toward the detected vehicle. Only available once the sensor has found it."
+        },
+        {
+          "id": "report-find",
+          "action": "report",
+          "description": "Radio in the vehicle's location. Only works while directly above it."
+        },
+        {
+          "id": "recharge",
+          "action": "recharge",
+          "description": "Take on battery while sitting on the pad."
+        },
+        {
+          "id": "hover",
+          "action": "wait",
+          "description": "Hold position for one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "reported",
+      "label": "Find the missing vehicle and report it",
+      "check": "reached"
+    },
+    {
+      "id": "swift",
+      "label": "Report the find within 20 ticks",
+      "check": "reached && ticks <= 20",
+      "bonus": true
+    },
+    {
+      "id": "tidy",
+      "label": "Solve it with 4 rules or fewer",
+      "check": "reached && rules <= 4",
+      "bonus": true
+    }
+  ]
+}

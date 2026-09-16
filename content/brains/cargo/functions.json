@@ -1,0 +1,13 @@
+{
+  "functions": [
+    { "id": "run-knapsack", "action": "runKnapsack", "description": "Choose the best-value set of remaining crates that fits the carry limit." },
+    { "id": "plan-route", "action": "planRoute", "description": "Order the planned crates into the shortest tour home." },
+    { "id": "clear-plan", "action": "clearPlan", "description": "Throw away the current plan so a fresh selection can be made." },
+    { "id": "fly-to-plan-target", "action": "flyToPlanTarget", "description": "Fly one cell toward the next crate on the routed plan." },
+    { "id": "fly-to-depot", "action": "flyToDepot", "description": "Fly one cell toward the depot." },
+    { "id": "grab", "action": "pickUp", "description": "Pick up the crate on this cell if it fits." },
+    { "id": "unload", "action": "dropOff", "description": "Drop every carried crate at the depot." },
+    { "id": "charge", "action": "recharge", "description": "Top the battery up while parked on the depot." },
+    { "id": "hover", "action": "wait", "description": "Hold position for one tick." }
+  ]
+}

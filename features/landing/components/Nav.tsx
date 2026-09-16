@@ -20,9 +20,6 @@ export function Nav() {
 
         <nav className="hidden items-center gap-7 md:flex">
           <Link href="/" className="text-sm text-ink-60 transition hover:text-ink">
-            For individuals
-          </Link>
-          <Link href="/companies" className="text-sm text-ink-60 transition hover:text-ink">
             For companies
           </Link>
           <Link href="/education" className="text-sm text-ink-60 transition hover:text-ink">

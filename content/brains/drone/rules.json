@@ -1,0 +1,7 @@
+{
+  "rules": [
+    { "id": "report-it", "when": "atTarget", "do": "report-find", "description": "Radio the find in the moment the drone is overhead." },
+    { "id": "close-in", "when": "targetDetected", "do": "fly-to-target", "description": "Closing in on a found vehicle beats carrying on searching." },
+    { "id": "keep-searching", "when": "always", "do": "fly-to-search", "description": "Nothing found yet, so keep sweeping unsearched ground." }
+  ]
+}

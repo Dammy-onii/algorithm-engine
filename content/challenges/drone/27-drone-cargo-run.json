@@ -1,0 +1,330 @@
+{
+  "id": "drone-cargo-run",
+  "pack": "drone",
+  "number": 27,
+  "name": "Recovery Run",
+  "difficulty": 3,
+  "stage": "hard",
+  "worldKey": "drone-cargo-run",
+  "tagline": "Clear the sector: select, route, fly, recharge, repeat.",
+  "narrative": "Eight crates are scattered across a 6×9 sector after a supply drop went wrong. Your drone has to bring them all home to the depot in the corner — but it cannot take everything in one trip, and every unit of weight it carries burns extra battery on every move.\n\nThe manifest is known before takeoff:\n\n| Crate | Cell (col,row) | Weight | Value |\n| --- | --- | --- | --- |\n| A | 5,0 | 4 | 6 |\n| B | 2,2 | 3 | 5 |\n| C | 5,3 | 6 | 9 |\n| D | 1,4 | 2 | 2 |\n| E | 4,5 | 5 | 7 |\n| F | 2,6 | 3 | 6 |\n| G | 5,8 | 4 | 4 |\n| H | 0,7 | 2 | 3 |\n\nTotal weight 29, total value 42. The drone carries 9 at a time and starts with 140 battery. The depot refuels it, so there is no excuse for leaving cargo behind: the mission ends when every crate is home and the drone is on the pad. Value decides which crates ride together on a trip, not which ones get abandoned.\n\nThis is the drone-autonomy problem in miniature: a real stack does not decide crate by crate. It selects a load on the ground, plans a route through it, flies the route, comes home when the battery says so, and then does it all again for what is left. That loop is already wired for you and it already clears the sector — your job is to make it fly well.",
+  "objective": "Recover all eight crates to the depot and land, then tune the loop to do it quickly and with battery to spare.",
+  "learningObjective": "Assemble an autonomous mission pipeline from planning primitives: invoke a selection step, invoke a routing step, execute the resulting plan, and close the loop with recharging and replanning — deciding in your policy when each stage runs.",
+  "intelligenceExplanation": "This level gives you the two solvers as actions you must call yourself. run-knapsack picks the best-value set of remaining crates that fits the carry limit and writes it to the plan. plan-route orders that plan into the shortest tour through the chosen crates and back to the depot. Neither moves the drone, and both cost a tick.\n\nNothing runs them for you. fly-to-plan-target refuses to fire unless a plan exists and has been routed, so the pipeline order is yours to get right — and a plan that has been collected is stale until you clear it and select again.\n\nThe scaffold is a complete working mission. Press Apply & Run and it brings all eight crates home in 144 ticks with 95 battery left. That is the bar, not the ceiling: it takes the reserve bonus and misses the speed one.\n\nThe two bonuses pull against each other, which is the whole exercise. grab-it fires on atPlanTarget && canPickHere, so the drone ignores crates it flies over and comes back for them on a later trip — safe, and slow. Loosening it to canPickHere alone pockets them as it passes and cuts about fifteen ticks, but it costs a planned stop the capacity it needed, so the loop has to replan around the mess. That extra scrambling burns battery, which puts the reserve bonus at risk unless you also raise the charge threshold in top-up and keep-charging. Get both right and you take both bonuses; drop the threshold too low and the drone dies in the field.",
+  "hint": "The scaffold already clears the sector. It is just slow. Speeding it up costs battery, so the grab guard and the charge threshold have to be tuned together.",
+  "hints": [
+    "Press Apply & Run first and read the result: eight crates, 144 ticks, 95 battery. The reserve bonus is already yours; the speed one is not.",
+    "grab-it only fires at atPlanTarget, so the drone flies over crates without touching them. Drop that guard and it grabs whatever is underfoot — roughly fifteen ticks faster, because fewer trips.",
+    "Opportunistic grabbing steals capacity from a planned stop, so the loop replans more and burns more battery. Raise the threshold in top-up and keep-charging to buy that back — 135 is a reasonable place to look.",
+    "Do not push the charge threshold down chasing ticks. Below about 105 the drone leaves the pad without enough to get home, and the run ends in the field with crates still out there."
+  ],
+  "taxonomy": {
+    "domain": "Drone",
+    "simulation": "Logistics",
+    "tier": "hard",
+    "grade": 20
+  },
+  "brief": "Run the mission loop until every crate is home and the drone has landed — then tune it for speed and a landing reserve.",
+  "context": "Eight crates of known weight and value, a carry limit of 9, a battery that drains faster the more the drone is holding, and a depot that can refuel it.",
+  "steps": [
+    {
+      "id": "pipeline",
+      "label": "Run the mission loop and read the baseline",
+      "hint": "Apply & Run: the scaffold selects, routes, collects, recharges and repeats until the sector is clear"
+    },
+    {
+      "id": "return",
+      "label": "Land back on the depot with every crate recovered",
+      "hint": "Empty-handed on the depot with nothing left on the ground ends the mission",
+      "check": "reached"
+    },
+    {
+      "id": "swift",
+      "label": "Cut the mission time by grabbing crates the route passes over",
+      "hint": "grab-it is guarded by atPlanTarget; the replan loop can absorb off-plan pickups"
+    },
+    {
+      "id": "reserve",
+      "label": "Keep a landing reserve while flying the faster route",
+      "hint": "More replanning burns more battery — raise the threshold in top-up and keep-charging"
+    }
+  ],
+  "availableBricks": [
+    "run-knapsack",
+    "plan-route",
+    "clear-plan",
+    "fly-to-plan-target",
+    "fly-to-depot",
+    "grab",
+    "unload",
+    "charge",
+    "north",
+    "east",
+    "south",
+    "west",
+    "hover"
+  ],
+  "availableConditions": [
+    "hasPlan",
+    "planRouted",
+    "planCount",
+    "planWeight",
+    "planValue",
+    "atPlanTarget",
+    "objectHere",
+    "canPickHere",
+    "weightHere",
+    "valueHere",
+    "load",
+    "capacity",
+    "capacityLeft",
+    "carriedCount",
+    "carriedValue",
+    "anyFits",
+    "deliveredValue",
+    "valueTarget",
+    "valueMet",
+    "pendingCount",
+    "sectorClear",
+    "atDepot",
+    "distanceToDepot",
+    "battery",
+    "batteryLow",
+    "batteryFull",
+    "batteryHome",
+    "batteryMargin",
+    "drainPerMove",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "statesUnlocked": true,
+  "scaffoldVersion": 5,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "recover-cargo",
+          "priority": 10,
+          "description": "Recover the target value of cargo to the depot."
+        }
+      ]
+    },
+    "states": {
+      "initial": "selecting",
+      "states": [
+        {
+          "id": "selecting",
+          "description": "Choosing which crates this trip will carry."
+        },
+        {
+          "id": "routing",
+          "description": "Ordering the chosen crates into a flight path."
+        },
+        {
+          "id": "collecting",
+          "description": "Flying the route and picking crates up."
+        },
+        {
+          "id": "returning",
+          "description": "Heading home to unload."
+        },
+        {
+          "id": "charging",
+          "description": "Parked on the depot, topping the battery up."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "select-load",
+          "state": "selecting",
+          "when": "anyFits",
+          "do": "run-knapsack",
+          "setState": "routing",
+          "description": "Choose the best-value set of remaining crates that fits the carry limit."
+        },
+        {
+          "id": "nothing-to-take",
+          "state": "selecting",
+          "when": "always",
+          "do": "fly-to-depot",
+          "setState": "returning",
+          "description": "Nothing fits any more — head home."
+        },
+        {
+          "id": "order-route",
+          "state": "routing",
+          "when": "hasPlan",
+          "do": "plan-route",
+          "setState": "collecting",
+          "description": "Order the chosen crates into the shortest tour home."
+        },
+        {
+          "id": "no-plan",
+          "state": "routing",
+          "when": "always",
+          "do": "clear-plan",
+          "setState": "selecting",
+          "description": "The selection came back empty — start over."
+        },
+        {
+          "id": "grab-it",
+          "state": "collecting",
+          "when": "atPlanTarget && canPickHere",
+          "do": "grab",
+          "description": "Pick up the crate the route stopped for."
+        },
+        {
+          "id": "next-stop",
+          "state": "collecting",
+          "when": "planRouted",
+          "do": "fly-to-plan-target",
+          "description": "Fly one cell toward the next crate on the route."
+        },
+        {
+          "id": "route-done",
+          "state": "collecting",
+          "when": "always",
+          "do": "fly-to-depot",
+          "setState": "returning",
+          "description": "Route finished — carry the load home."
+        },
+        {
+          "id": "unload-all",
+          "state": "returning",
+          "when": "atDepot && carriedCount > 0",
+          "do": "unload",
+          "description": "Bank everything aboard at the depot."
+        },
+        {
+          "id": "top-up",
+          "state": "returning",
+          "when": "atDepot && battery < 110",
+          "do": "charge",
+          "setState": "charging",
+          "description": "Recharge on the pad before setting out again."
+        },
+        {
+          "id": "next-trip",
+          "state": "returning",
+          "when": "atDepot && anyFits",
+          "do": "clear-plan",
+          "setState": "selecting",
+          "description": "Crates still out there — drop the finished plan and select again."
+        },
+        {
+          "id": "keep-going-home",
+          "state": "returning",
+          "when": "always",
+          "do": "fly-to-depot",
+          "description": "Keep flying toward the depot."
+        },
+        {
+          "id": "keep-charging",
+          "state": "charging",
+          "when": "atDepot && battery < 110",
+          "do": "charge",
+          "description": "Keep charging until the threshold is cleared."
+        },
+        {
+          "id": "set-off",
+          "state": "charging",
+          "when": "always",
+          "do": "clear-plan",
+          "setState": "selecting",
+          "description": "Charged — plan the next trip."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "run-knapsack",
+          "action": "runKnapsack",
+          "description": "Choose the best-value set of crates still on the ground that fits the remaining carry capacity, and store it as the plan. Costs a tick; does not move the drone."
+        },
+        {
+          "id": "plan-route",
+          "action": "planRoute",
+          "description": "Order the planned crates into the shortest tour from here, through them, back to the depot. Costs a tick; does not move the drone."
+        },
+        {
+          "id": "clear-plan",
+          "action": "clearPlan",
+          "description": "Throw away the current plan so a fresh selection can be made."
+        },
+        {
+          "id": "fly-to-plan-target",
+          "action": "flyToPlanTarget",
+          "description": "Fly one cell toward the next crate on the routed plan. Only available once a plan has been selected and routed."
+        },
+        {
+          "id": "fly-to-depot",
+          "action": "flyToDepot",
+          "description": "Fly one cell toward the depot."
+        },
+        {
+          "id": "grab",
+          "action": "pickUp",
+          "description": "Pick up the crate on this cell if it fits the remaining capacity."
+        },
+        {
+          "id": "unload",
+          "action": "dropOff",
+          "description": "Drop every carried crate at the depot, banking their value."
+        },
+        {
+          "id": "charge",
+          "action": "recharge",
+          "description": "Top the battery up while parked on the depot. Costs a tick per charge."
+        },
+        {
+          "id": "north",
+          "action": "moveNorth",
+          "description": "Fly one cell north."
+        },
+        {
+          "id": "east",
+          "action": "moveEast",
+          "description": "Fly one cell east."
+        },
+        {
+          "id": "south",
+          "action": "moveSouth",
+          "description": "Fly one cell south."
+        },
+        {
+          "id": "west",
+          "action": "moveWest",
+          "description": "Fly one cell west."
+        },
+        {
+          "id": "hover",
+          "action": "wait",
+          "description": "Hold position for one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "recovered",
+      "label": "Recover every crate to the depot and land",
+      "check": "reached"
+    },
+    {
+      "id": "swift",
+      "label": "Finish within 135 ticks",
+      "check": "reached && ticks <= 135",
+      "bonus": true
+    },
+    {
+      "id": "reserve",
+      "label": "Land with 50 or more battery to spare",
+      "check": "reached && battery >= 50",
+      "bonus": true
+    }
+  ]
+}

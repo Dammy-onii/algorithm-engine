@@ -306,6 +306,72 @@ Their renderers consume public module queries. Neither the generic `World` nor
 the decision pipeline contains Supermarket-, Finance-, or Parking-specific
 branches.
 
+### Drone module
+
+`lib/engine/worlds/drone.ts` is the one operational world that is still spatial:
+it keeps `tracksMovement: false` (the drone legitimately re-crosses covered
+ground to home in or refuel, so the generic idle-tile heuristic would fire on
+correct behaviour) while flying over an authored grid.
+
+- Owns the drone's onboard bookkeeping: the set of cells the sensor has covered,
+  sticky target detection, the recharge pad, and `scanRadius` as runtime state
+  so a later level can trade battery for a wider sweep.
+- Replaces turn-and-step with four cardinal actions (`moveNorth`, `moveEast`,
+  `moveSouth`, `moveWest`), plus `report` and `recharge`. Preconditions guard
+  each: movement on `!blockedX`, `report` on `atTarget`, `recharge` on `onPad`.
+- Adds two **composite** actions, `flyToTarget` and `flyToSearch`, which resolve
+  a bearing to one cardinal step inside the module — the same shape as Parking's
+  `parkStandard` resolving "nearest free standard space". They exist so a policy
+  can express the search/track switch without four near-identical rules per
+  direction; a test asserts the composite and hand-written cardinal policies fly
+  identical routes. Guarded by `targetDetected && !atTarget` and `searchPending`.
+  Withholding them from a later challenge's `availableBricks` is the difficulty
+  dial: the user then has to author the four-way dispatch themselves.
+- Sensing is passive and runs in `advanceTick`, so hovering and recharging scan
+  exactly as moving does.
+- Because the condition grammar has no strings, every bearing is four booleans.
+  `searchNorth`/`searchEast`/… is a breadth-first first step toward the nearest
+  uncovered cell, so it stays correct once a level adds no-fly zones to route
+  around. Target bearings and `targetDistance` stay blank until detection, so an
+  undetected target leaks nothing through the observation.
+- Completion is `reported`; running the battery flat ends the run through the
+  generic energy rule.
+
+This module is the clearest illustration of the division of labour the engine
+assumes: the *bookkeeping* is drone hardware and belongs in the module, exactly
+as the base grid tracks `visited` for the maze, while the *strategy* — how to
+sweep, when to break off and close in — stays with the user in either authoring
+surface.
+
+### Cargo module
+
+`lib/engine/worlds/cargo.ts` is the drone as a logistics agent, and the hard
+counterpart to the search world. Nothing is hidden: the manifest — every crate's
+cell, weight, and value — is given up front. The problem is combinatorial, not
+perceptual.
+
+- Owns pickup/carry/deliver bookkeeping, the carry-weight cap, and a battery
+  model where each move costs `1 + ceil(load × drainPerWeight)` — so carrying
+  weight is what drains the battery, and carrying the wrong things far is what
+  fails a run. Completion is a *safe homecoming*: back on the depot, empty, with
+  the delivered-value target met.
+- Actions: the four cardinal moves, `pickUp`/`dropOff`, and the composites
+  `flyToNearestObject` / `flyToDepot`. A greedy visual policy (fly to nearest
+  fitting crate, bank it, repeat) clears the required objective; the bonuses
+  reward value-for-weight selection and routing, which is where the Code
+  Controller earns its keep.
+- The manifest is exposed two ways because the condition grammar has no arrays:
+  aggregate facts (`weightHere`, `capacityLeft`, `deliveredValue`, `drainPerMove`)
+  for the visual palette, and the full flattened manifest (`obj0Weight`,
+  `obj0Col`, `obj0Active`, … up to `CARGO_OBJECT_SLOTS`) on `observation.domain`
+  for a Code Controller to run a real knapsack over.
+
+The level is calibrated so a straightforward strategy passes and an optimal one
+is measurably better — the shipped greedy scaffold delivers 33 value in 74 ticks
+with 17 battery left (required met, every bonus missed), while a value-aware
+routing planner delivers 36 in 63 ticks with 51 battery (every bonus met). Both
+outcomes are locked by tests.
+
 ### Registry of shipped modules
 
 `lib/engine/worlds/registry.ts` maps known `WorldData.kind` values to modules:
@@ -316,6 +382,8 @@ branches.
 "supermarket" → supermarketModule
 "finance"   → financeModule
 "parking"   → parkingModule
+"drone"     → droneModule
+"cargo"     → cargoModule
 missing kind → mazeModule
 ```
 
@@ -458,11 +526,14 @@ content/
     warehouse/           sample warehouse worker
     finance/             sample payment router
     parking/             sample smart-facility operator
+    drone/               sample surveillance drone
+    cargo/               sample greedy cargo drone
   challenges/
     maze/                Maze descriptors
     warehouse/           Warehouse descriptors
     finance/             Finance descriptors
     parking/             Parking descriptors
+    drone/               Drone Surveillance + cargo descriptors
     index.ts             ordered bundled registry
 lib/
   engine/                framework-independent runtime and world modules
@@ -507,6 +578,8 @@ The App Router owns what screen is displayed:
 /warehouse              validated Warehouse challenge-row directory
 /finance                validated Finance challenge-row directory
 /parking                validated Parking challenge-row directory
+/drone                  validated Drone Surveillance challenge-row directory
+                        (mixed world kinds: search + cargo)
 /[pack]/[challenge]     one validated, shareable Studio challenge
 /i/[assignmentId]       signed interview directory
 /i/[assignmentId]/[challengeId] selected signed interview problem

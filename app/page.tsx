@@ -1,6 +1,6 @@
-import { LandingPage } from "@/features/landing/pages/LandingPage";
+import { CompaniesPage } from "@/features/landing/pages/CompaniesPage";
 
-/** Public marketing landing. The product catalogue moved to `/app`. */
+/** The default landing at `/` is the companies page. */
 export default function HomePage() {
-  return <LandingPage />;
+  return <CompaniesPage />;
 }

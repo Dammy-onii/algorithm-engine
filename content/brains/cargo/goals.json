@@ -1,0 +1,1 @@
+{ "goals": [ { "id": "recover-cargo", "priority": 1, "description": "Recover valuable cargo to the depot." } ] }

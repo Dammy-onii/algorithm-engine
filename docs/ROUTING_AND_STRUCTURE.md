@@ -7,9 +7,9 @@ dedicated feature page component; there is no `view` enum or shared stateful she
 
 | URL | Server-route responsibility | Client view |
 |---|---|---|
-| `/` | none | Home = the individuals page — practise real problems |
+| `/` | none | **Default home = the companies page** — the hiring pitch |
 | `/education` | none | Pitch for schools, bootcamps, and programs — teach coding and thinking |
-| `/companies` | none | Detailed hiring pitch and what CTRL offers companies |
+| `/companies` | redirect | Redirects to `/` (companies is the default home) |
 | `/login` | reads `?company=1` to preselect the company tab | Individual + company sign-in. **Hidden for now** — the route exists but nothing links to it; login will be implemented later. |
 | `/app` | none | The product: pick a problem to solve. Open to everyone — no login required. |
 | `/[pack]` | Validate the pack | Filterable challenge-row directory with per-row difficulty |
@@ -28,10 +28,11 @@ Examples: `/maze`, `/warehouse`, and
 
 ```text
 app/
-  page.tsx                        <LandingPage />   (marketing home)
-  companies/page.tsx              <CompaniesPage /> (hiring pitch)
+  page.tsx                        <CompaniesPage /> (default home = companies)
   education/page.tsx              <EducationPage /> (schools, bootcamps, programs)
+  companies/page.tsx              redirect("/")     (companies is the default home)
   login/page.tsx                  <LoginPage /> (hidden for now; not linked)
+  not-found.tsx                   <NotFoundPage /> (custom 404 with the live demo)
   app/page.tsx                    <WorldCataloguePage /> (product entry)
   [pack]/page.tsx                 validates pack, renders <ChallengeDirectoryPage />
   [pack]/[challenge]/page.tsx     validates membership, renders <StudioPage />
@@ -43,9 +44,10 @@ app/
   api/interview/submit/route.ts   hidden Finance/Parking evaluation
 
 features/
-  landing/                        marketing pages, sections, and the live demo
-    pages/                        LandingPage (/) and CompaniesPage (/companies)
-    components/                   hero, sections, waitlist, shared Nav/Footer
+  landing/                        public site pages, sections, and the live demo
+    pages/                        CompaniesPage (/), EducationPage, LoginPage,
+                                  NotFoundPage
+    components/                   heros, sections, waitlist, shared Nav/Footer
     lib/                          the self-contained demo engine (sim.ts)
   engine/
     application/components/       shared PageLayout and application header
@@ -58,10 +60,13 @@ shared/
   components/                     product-wide UI with no feature ownership
 ```
 
-> The marketing landing was merged in from a separate Vite project. It shares the
-> product's design system (fonts, palette, radii in `app/globals.css`), so the
-> whole site reads as one CTRL. The `/` home is engine-first and dual-audience;
-> `/companies` is the company-focused detail; `/app` is the product.
+> **One app.** The public site and the product live in a single Next.js project
+> and share one design system (fonts, palette, radii in `app/globals.css`), so the
+> whole thing reads as one CTRL. The site pages are in `features/landing/`, the
+> product in `features/engine/`. The `/` home is the **companies** page (the
+> current focus); `/education` is the other audience page; `/app` is the product,
+> open to everyone with no login. (The public site was originally a separate Vite
+> app; that merge is complete — there is no second repo or build.)
 
 The dynamic route pages are server components. In this version of Next's App
 Router, their `params` prop is a promise, so pages await it before validation.
@@ -111,7 +116,7 @@ The application is organized by ownership rather than by file type:
 app/                       route files, root layout and global CSS only
 assets/                    source assets imported by components
 features/
-  landing/                 marketing home (/) and companies (/companies) pages
+  landing/                 public site pages: home (/) = companies, education, login, 404
   engine/
     application/           shared page frame and application chrome
     catalogue/             discovery page UI, components and difficulty mapping
@@ -153,7 +158,7 @@ file extensions.
 
 | Area | Public responsibility | Important reusable pieces |
 |---|---|---|
-| `features/landing/` | Owns the marketing `/` and `/companies` pages | `LandingPage`, `CompaniesPage`, `Nav`, `Footer`, `WaitlistForm` |
+| `features/landing/` | Owns the public site pages (`/` = companies, `/education`, `/login`, 404; `/companies` redirects to `/`) | `CompaniesPage`, `EducationPage`, `LoginPage`, `NotFoundPage`, `Nav`, `Footer`, `WaitlistForm`, `LiveSim` |
 | `features/engine/application/` | Provides shared page chrome without route state | `PageLayout` |
 | `features/engine/catalogue/` | Owns `/app` and `/[pack]` page UI | `WorldCataloguePage`, `ChallengeDirectoryPage`, `difficultyFor()` |
 | `features/engine/lab/` | Owns `/lab` UI and Lab-only state | `LabPageView`, `BrainEditor` |

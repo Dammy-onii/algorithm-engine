@@ -5,6 +5,163 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-09-15 — Recovery Run rebuilt around an explicit mission pipeline
+
+The cargo level previously shipped a `flyToNearestObject` action that chose the
+next crate *and* routed to it. That silently performed the selection the level
+exists to assess, so it has been removed from the module entirely — along with
+the greedy scaffold built on it.
+
+- **Planning is now something a policy invokes.** Three new actions on the cargo
+  module, none of which move the drone: `runKnapsack` (0/1 knapsack over the
+  crates still on the ground, bounded by remaining capacity, written to the
+  plan), `planRoute` (exact shortest tour through the planned crates and back to
+  the depot; nearest-neighbour above six stops), and `clearPlan`. A fourth,
+  `flyToPlanTarget`, follows the routed plan one cell per tick. Each costs a
+  tick. Pipeline order is enforced by preconditions, not hidden sequencing:
+  `flyToPlanTarget` requires `planRouted`, so nothing can be flown that has not
+  been selected and ordered first. `clearPlan` is deliberately unconditional —
+  gating it dead-ends a machine that has collected everything it planned for.
+- **Recharging.** `recharge` tops the battery up while parked on the depot
+  (`rechargePerTick`, default 8). New facts: `hasPlan`, `planRouted`,
+  `planCount`, `planWeight`, `planValue`, `atPlanTarget`, `batteryFull`,
+  `batteryHome`, and `batteryMargin` (battery left over after flying home at the
+  current load — the condition grammar has no arithmetic, so the subtraction is
+  supplied as a sense and the threshold stays the author's).
+- **Completion is sector-clear, not target-met.** `resolveStatus` now requires
+  every crate delivered, on top of the safe homecoming and the value floor. The
+  depot refuels the drone, so "enough value" was never a reason to abandon
+  cargo — value decides which crates ride together on a trip, not which ones get
+  left behind. New fact: `sectorClear`.
+- **Recalibrated** (`drone-cargo-run`): battery 240 → 140, value target 36 as a
+  floor, recharge 8/tick. The scaffold ships as a complete working mission —
+  select, route, collect, return, recharge, replan — and clears the sector: all
+  8 crates, 42 value, 144 ticks, 95 battery left. It takes the reserve bonus and
+  misses the speed one. The two bonuses are deliberately coupled: loosening
+  `grab-it` from `atPlanTarget && canPickHere` to `canPickHere` lets the drone
+  pocket crates it flies over (144 ticks → 133), but that costs planned stops the
+  capacity they needed, so the loop replans more and burns more battery — which
+  has to be paid back by raising the `top-up` / `keep-charging` threshold from
+  110 to about 135. Neither lever alone takes both bonuses, and dropping the
+  threshold below ~105 strands the drone in the field. Thresholds
+- **Problem statements can carry tables.** `tableFromParagraph` parses a markdown
+  pipe table out of a brief paragraph and `ProblemBrief` renders it as a real
+  table; other paragraphs are unchanged. The Recovery Run statement now prints
+  the manifest (crate, cell, weight, value) as a table.
+- The cargo board draws the plan: selected crates carry their position in the
+  route, and the telemetry strip reports plan size, planned value, and whether it
+  has been routed. The shipped demo brain (`cargo-planner`, previously
+  `cargo-greedy`) is now the reference pipeline, and the code starter no longer
+  points at a crate-choosing action.
+
+## 2026-09-14 — Cargo recovery: a hard drone logistics level
+
+- Added a sixth world module, `cargo` (`lib/engine/worlds/cargo.ts`): the drone
+  as a logistics agent. A manifest of weighted, valued crates is given up front;
+  the drone must recover a target total value to a depot and land, under a
+  carry-weight cap and a battery that drains faster the more weight it carries
+  (`1 + ceil(load × drainPerWeight)` per move). Completion is a safe homecoming —
+  on the depot, empty-handed, target met.
+- Actions: cardinal moves, `pickUp` / `dropOff`, and composites
+  `flyToNearestObject` / `flyToDepot`. The manifest is exposed both as aggregate
+  facts for the visual palette and as the full flattened set (`obj0Weight`,
+  `obj0Col`, `obj0Active`, …) on `observation.domain`, so a Code Controller can
+  run a real knapsack over it.
+- Added the hard level `drone-cargo-run` ("Recovery Run"): a 6×9 sector, eight
+  crates, a corner depot, capacity 9, battery 240, deliver-value target 30. It
+  ships pre-filled with a greedy scaffold (fly to nearest fitting crate, bank it,
+  repeat) that clears the required objective — 33 value in 74 ticks, 17 battery
+  left. The three bonuses (recover ≥36 value, finish ≤66 ticks, land with ≥35
+  battery) are out of greedy's reach and want value-for-weight selection plus
+  routing; a value-aware planner earns all three (36 value, 63 ticks, 51
+  battery). Both outcomes are locked by tests. Target placement, battery, and
+  bonus thresholds were tuned by simulation, not guessed.
+- Added a `CARGO_CONTROLLER_STARTER` (points at the flattened manifest), a
+  `CargoRenderer` (crates labelled with value and weight, teal depot, the drone's
+  docked/airborne depth cues, and a logistics telemetry strip: value, load,
+  battery, drain-per-move, items aboard), a `content/brains/cargo/` greedy sample
+  for Lab, and a `constrained-recovery` curriculum concept that unlocks after
+  First Sweep.
+
+## 2026-09-14 — Drone Surveillance world; first level "First Sweep"
+
+- Added a fifth world module, `drone` (`lib/engine/worlds/drone.ts`): a search
+  drone sweeps a bounded area for a target whose position it does not know,
+  detects it with a downward sensor, closes in, and reports the find. The module
+  owns the drone's onboard bookkeeping — the covered-ground map, detection,
+  battery endurance and the recharge pad — and exposes all of it as observation
+  facts, the same way the base grid already tracks `visitedAhead` for the maze.
+  The *strategy* stays with the user.
+- Movement is four cardinal domain actions (`moveNorth`/`moveEast`/`moveSouth`/
+  `moveWest`) rather than the maze's turn-and-step, because a drone over open
+  ground has no meaningful facing. Plus `report` (guarded by `atTarget`) and
+  `recharge` (guarded by `onPad`).
+- Because the condition grammar has no strings, every bearing is exposed as four
+  booleans — `targetNorth`/`targetEast`/… and `searchNorth`/`searchEast`/… —
+  never a direction value. `searchX` is a breadth-first step toward the nearest
+  uncovered cell, so it still returns a usable heading once a later level adds
+  no-fly zones. Target bearings and `targetDistance` stay blank (`-1`) until
+  detection, so an undetected target leaks nothing.
+- `scanRadius` is runtime state rather than a constant, so a later level can
+  trade battery for a wider sweep without reworking the sensing code.
+- Added `/drone` and the level `drone-first-sweep` ("First Sweep"): an open 6×6
+  sector, a hidden vehicle in the far corner, and a recharge pad on the launch
+  cell. Required objective is reporting the find; bonuses are speed (≤20 ticks)
+  and a tidy policy (≤4 rules). The intended policy solves it in 16 ticks. A
+  sweep with no close-in rule covers the whole sector and still never reports —
+  closing in has to be authored. Target placement was chosen by scoring all 36
+  candidate cells and taking the one the frontier sweep reaches last.
+- Added the composite actions `flyToTarget` and `flyToSearch`. Because bearings
+  are four booleans and movement is four cardinal actions, "go toward X" used to
+  cost four rules, so the tutorial needed nine. These resolve the bearing to a
+  single cardinal step inside the module — the same shape as Parking's
+  `parkStandard` — and bring the level down to **three rules**: report when
+  overhead, close in when detected, otherwise keep sweeping. A test asserts the
+  three-rule and nine-rule policies fly identical 16-tick routes, so this is
+  shorthand rather than a different algorithm. The cardinal actions remain for
+  later levels and Code mode; withholding the composites from a challenge's
+  `availableBricks` is the difficulty dial.
+- The level ships **pre-filled** with that three-rule policy
+  (`scaffoldVersion: 3`, so a saved brain cannot shadow it): Apply & Run
+  completes the mission on a clean load. It is a read-run-and-take-apart
+  tutorial rather than a blank page — the copy and hints walk the three rules
+  and invite the learner to move the search rule above the close-in rule and
+  watch the drone map the whole sector without ever radioing in. A test asserts
+  the shipped scaffold passes every objective, bonuses included. The tidy bonus
+  is now "4 rules or fewer".
+- The recharge pad has its own colour (teal, painted through the fog since the
+  dock is known infrastructure), and the drone now reads as airborne: a cast
+  shadow tightens and darkens on the dock, then spreads and softens as the drone
+  lifts off, with a matching lift and scale.
+- Authored for both surfaces: the visual policy expresses the search→track
+  switch as ordered rules, and a `DRONE_CONTROLLER_STARTER` seeds Code
+  Controller with instance state for users who want to build their own map and
+  plan against it. Both are covered by tests.
+- Added `DroneRenderer`: a sector view drawn from the drone's point of view —
+  uncovered ground stays dark, the sensor footprint is ringed, the target is
+  only drawn once detected, and a telemetry strip shows phase, area searched,
+  battery, and sensor radius.
+- Added the `drone` pack to the catalogue, an `autonomous-search` curriculum
+  concept (no prerequisites — a separate world track, open from the start), and
+  a `content/brains/drone/` sample brain selectable in Lab.
+
+## 2026-09-16 — Theme: site is light-only; dark-mode text is white
+
+- The public site pages (`/`, `/education`, `/login`, 404) are now **light-only**.
+  A `.site-light` wrapper forces the light palette even when the app's `.dark`
+  class is active (it persists site-wide via localStorage), so toggling dark in the
+  app no longer darkens — and made unreadable — the landing.
+- Dark mode (the app) now uses **white primary text** (`--foreground: #fff`) and
+  lifts the muted secondary-text steps for readability.
+
+## 2026-09-16 — Companies is the default home; individuals page scrapped
+
+- The default landing (`/`) is now the **companies** page. The standalone
+  individuals page and its components (`LandingPage`, `IndividualsHero`,
+  `HomeHowItWorks`, `HomeFaq`, `CompaniesTeaser`, `Individuals`) were removed.
+  `/companies` now redirects to `/`. Nav is **For companies · For education ·
+  Open app**. Individuals still use `/app` directly (open, no login).
+
 ## 2026-09-10 — Education page; login hidden; app open to all
 
 - Added `/education` — a pitch for schools, bootcamps, universities, and cohort
@@ -18,6 +175,10 @@ world document.
   replaced with "Open app", and all `/login` CTAs across the site now point into the
   app. The `/login` route and its code remain but are unlinked. `/app` is open to
   everyone — no login required.
+- Nav order is For individuals · For companies · For education (+ Open app).
+- Fixed the Netlify deploy: pinned `publish = ".next"` in `netlify.toml`. The stale
+  `dist` publish directory (from the old Vite landing) was failing the build. See
+  [BUILD.md](./BUILD.md#deployment-netlify).
 
 ## 2026-09-10 — Site pages merged into the app; one CTRL project
 

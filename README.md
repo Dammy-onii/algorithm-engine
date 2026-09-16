@@ -5,17 +5,23 @@ decision-making logic that runs a changing system — a maze, a payment router, 
 parking facility — and watch it perform, decision by decision, instead of writing a
 single static answer.
 
-The same engine serves two audiences:
+The same engine serves several audiences:
 
-- **Individuals** log in and take on problem statements themselves — building a
-  solution as ordered visual policies or a JavaScript controller, running it, and
-  keeping a record of the challenges and interviews they've taken.
-- **Companies** — the current product focus — send candidates a realistic problem
-  shaped like their actual work, and see how they think, what they prioritise, and
-  how their solution performs before committing to another interview.
+- **Companies** — the current focus — send candidates a realistic problem shaped
+  like their actual work, and see how they think, what they prioritise, and how
+  their solution performs before committing to another interview. This is the
+  default landing.
+- **Education** — schools, bootcamps, and programs use it to teach programming and
+  computational thinking, from visual blocks to real code, including AI agents and
+  decision logic.
+- **Individuals** can open the product directly and take on problems themselves —
+  no login required.
 
-The site reflects this: `/` introduces the engine and both audiences, `/companies`
-is the detailed hiring pitch, and `/app` is the product where problems are solved.
+The public site and the product are **one Next.js app**. The site pages live in
+`features/landing/` and the product in `features/engine/`, sharing one design
+system. The `/` home is the **companies** page, `/education` is the other audience
+page, and `/app` is the product — open to everyone, no login required. (Login
+exists in code but is hidden for now.)
 
 The shared runtime follows one lifecycle:
 
@@ -49,10 +55,11 @@ the configured Google fonts.
 
 ## Project map
 
-- `app/` — thin Next.js route segments and interview APIs. Marketing routes (`/`,
-  `/companies`), the product entry (`/app`), and the challenge/interview routes.
-- `features/landing/` — the marketing site: the `/` home (engine + both audiences)
-  and the `/companies` hiring pitch, sharing the product's design system.
+- `app/` — thin Next.js route segments and interview APIs. Site routes (`/` =
+  companies, `/education`, `/login` [hidden], custom 404; `/companies` redirects to
+  `/`), the product entry (`/app`), and the challenge/interview routes.
+- `features/landing/` — the public site pages: the `/` home (companies),
+  `/education`, `/login`, and the 404 — sharing one design system with the product.
 - `features/engine/catalogue/` — world and challenge directories (`/app`, `/[pack]`).
 - `features/engine/studio/` — challenge authoring and interview workspace.
 - `features/engine/simulation/` — shared controls, renderers, and diagnostics.

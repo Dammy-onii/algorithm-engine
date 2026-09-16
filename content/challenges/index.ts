@@ -28,6 +28,8 @@ import c19 from "./parking/19-parking-priority-access.json";
 import c23 from "./parking/23-parking-interview-controller.json";
 import c24 from "./parking/24-parking-interview-operations.json";
 import c25 from "./parking/25-parking-interview-orchestrator.json";
+import c26 from "./drone/26-drone-first-sweep.json";
+import c27 from "./drone/27-drone-cargo-run.json";
 
 export const CHALLENGES: ChallengeData[] = [
   c1 as ChallengeData,
@@ -50,6 +52,8 @@ export const CHALLENGES: ChallengeData[] = [
   c23 as ChallengeData,
   c24 as ChallengeData,
   c25 as ChallengeData,
+  c26 as ChallengeData,
+  c27 as ChallengeData,
 ];
 
 export function findChallenge(id: string): ChallengeData {

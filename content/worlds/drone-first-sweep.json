@@ -1,0 +1,25 @@
+{
+  "name": "Sector 7 — Missing Vehicle",
+  "kind": "drone",
+  "width": 6,
+  "height": 6,
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "startDirection": "E",
+  "energy": 60,
+  "tiles": [
+    [2, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0]
+  ],
+  "drone": {
+    "target": { "x": 0, "y": 5 },
+    "pad": { "x": 0, "y": 0 },
+    "scanRadius": 1,
+    "lowBatteryThreshold": 15,
+    "rechargePerTick": 6
+  }
+}

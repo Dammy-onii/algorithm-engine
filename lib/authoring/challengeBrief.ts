@@ -45,6 +45,48 @@ export function paragraphsFromText(text: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * A markdown pipe table parsed out of one brief paragraph.
+ *
+ * Briefs are plain prose, not markdown — but an operational problem statement
+ * often has to carry a small dataset (a cargo manifest, a provider list) that
+ * is unreadable as a sentence. A paragraph whose every line is pipe-delimited
+ * is rendered as a real table; everything else stays a paragraph.
+ */
+export interface BriefTable {
+  head: string[];
+  rows: string[][];
+}
+
+function splitRow(line: string): string[] {
+  return line
+    .replace(/^\s*\|/, "")
+    .replace(/\|\s*$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+/** Parse a paragraph as a pipe table, or return null if it is not one. */
+export function tableFromParagraph(paragraph: string): BriefTable | null {
+  const lines = paragraph
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length < 3 || !lines.every((line) => line.startsWith("|"))) return null;
+
+  const isDivider = (cells: string[]) =>
+    cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+
+  const head = splitRow(lines[0]);
+  if (!isDivider(splitRow(lines[1]))) return null;
+
+  const rows = lines
+    .slice(2)
+    .map(splitRow)
+    .filter((cells) => cells.length === head.length);
+  return rows.length > 0 ? { head, rows } : null;
+}
+
 /** Required (non-bonus) objectives, expressed as checklist steps. */
 function objectivesAsSteps(objectives: ChallengeObjective[]): TaskStep[] {
   return objectives

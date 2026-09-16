@@ -1,0 +1,4 @@
+{
+  "initial": "searching",
+  "states": [{ "id": "searching", "description": "Sweep the sector, then close in once the sensor finds the vehicle." }]
+}

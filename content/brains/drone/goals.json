@@ -1,0 +1,5 @@
+{
+  "goals": [
+    { "id": "find-vehicle", "priority": 1, "description": "Locate the missing vehicle and report its position." }
+  ]
+}

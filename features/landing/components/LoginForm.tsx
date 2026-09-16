@@ -142,7 +142,7 @@ export function LoginForm({ defaultTab = "individual" }: { defaultTab?: Tab }) {
             </div>
             <p className="mt-4 text-xs text-ink-40">
               Want the full picture first?{" "}
-              <Link href="/companies" className="text-ink underline underline-offset-2">
+              <Link href="/" className="text-ink underline underline-offset-2">
                 See CTRL for companies
               </Link>
               .

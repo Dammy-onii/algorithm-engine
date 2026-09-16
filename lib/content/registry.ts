@@ -53,6 +53,14 @@ export const PACKS: PackInfo[] = [
       "Operate a smart parking facility: allocate arrivals, match vehicle requirements, and protect priority access as spaces turn over.",
     action: "Explore parking operations",
   },
+  {
+    id: "drone",
+    eyebrow: "Autonomous search curriculum",
+    title: "Drone Surveillance",
+    description:
+      "Write the autonomy for a search drone: sweep an area it has never seen, detect the target, close in on it, and report the find before the battery runs out.",
+    action: "Explore drone missions",
+  },
 ];
 
 /** All packs in catalog order. */

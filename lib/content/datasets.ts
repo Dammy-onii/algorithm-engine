@@ -30,6 +30,8 @@ import parkingPriorityAccess from "@/content/worlds/parking-priority-access.json
 import parkingInterviewController from "@/content/worlds/parking-interview-controller.json";
 import parkingInterviewOperations from "@/content/worlds/parking-interview-operations.json";
 import parkingInterviewDistributed from "@/content/worlds/parking-interview-distributed.json";
+import droneFirstSweep from "@/content/worlds/drone-first-sweep.json";
+import droneCargoRun from "@/content/worlds/drone-cargo-run.json";
 import entities from "@/content/worlds/entities.json";
 
 import goals from "@/content/brains/default/goals.json";
@@ -61,6 +63,18 @@ import pStates from "@/content/brains/parking/states.json";
 import pRules from "@/content/brains/parking/rules.json";
 import pFunctions from "@/content/brains/parking/functions.json";
 import pMemory from "@/content/brains/parking/memory.json";
+
+import drGoals from "@/content/brains/drone/goals.json";
+import drStates from "@/content/brains/drone/states.json";
+import drRules from "@/content/brains/drone/rules.json";
+import drFunctions from "@/content/brains/drone/functions.json";
+import drMemory from "@/content/brains/drone/memory.json";
+
+import caGoals from "@/content/brains/cargo/goals.json";
+import caStates from "@/content/brains/cargo/states.json";
+import caRules from "@/content/brains/cargo/rules.json";
+import caFunctions from "@/content/brains/cargo/functions.json";
+import caMemory from "@/content/brains/cargo/memory.json";
 
 const sharedEntities = entities as EntitiesData;
 
@@ -182,6 +196,16 @@ export const WORLDS: WorldOption[] = [
     label: "Parking Interview — Production Parking Orchestrator",
     source: { world: parkingInterviewDistributed as WorldData, entities: sharedEntities },
   },
+  {
+    key: "drone-first-sweep",
+    label: "Drone Tutorial — First Sweep (6×6)",
+    source: { world: droneFirstSweep as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "drone-cargo-run",
+    label: "Drone Hard — Cargo Recovery Run (6×9)",
+    source: { world: droneCargoRun as WorldData, entities: sharedEntities },
+  },
 ];
 
 export const BRAINS: BrainOption[] = [
@@ -232,6 +256,28 @@ export const BRAINS: BrainOption[] = [
       rules: pRules,
       functions: pFunctions,
       memory: pMemory,
+    } as BrainSource,
+  },
+  {
+    key: "drone-searcher",
+    label: "Surveillance Drone (sweeps, then closes in)",
+    source: {
+      goals: drGoals,
+      states: drStates,
+      rules: drRules,
+      functions: drFunctions,
+      memory: drMemory,
+    } as BrainSource,
+  },
+  {
+    key: "cargo-planner",
+    label: "Cargo Drone (plans each trip, then flies it)",
+    source: {
+      goals: caGoals,
+      states: caStates,
+      rules: caRules,
+      functions: caFunctions,
+      memory: caMemory,
     } as BrainSource,
   },
 ];

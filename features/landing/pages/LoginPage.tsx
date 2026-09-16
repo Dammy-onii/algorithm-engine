@@ -10,7 +10,7 @@ export function LoginPage({ defaultTab = "individual" }: { defaultTab?: "individ
   const samples = sampleProblems();
 
   return (
-    <>
+    <div className="site-light min-h-screen">
       <Nav />
       <main>
         <section className="grid min-h-[calc(100svh-3.75rem)] gap-px border-t border-line bg-line lg:grid-cols-2">
@@ -70,6 +70,6 @@ export function LoginPage({ defaultTab = "individual" }: { defaultTab?: "individ
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

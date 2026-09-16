@@ -1,0 +1,39 @@
+{
+  "name": "Depot 9 — Recovery Run",
+  "kind": "cargo",
+  "width": 6,
+  "height": 9,
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "startDirection": "S",
+  "energy": 140,
+  "tiles": [
+    [2, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0]
+  ],
+  "cargo": {
+    "depot": { "x": 0, "y": 0 },
+    "capacity": 9,
+    "valueTarget": 36,
+    "drainPerWeight": 0.5,
+    "lowBatteryThreshold": 30,
+    "rechargePerTick": 8,
+    "objects": [
+      { "id": "crate-A", "col": 5, "row": 0, "weight": 4, "value": 6 },
+      { "id": "crate-B", "col": 2, "row": 2, "weight": 3, "value": 5 },
+      { "id": "crate-C", "col": 5, "row": 3, "weight": 6, "value": 9 },
+      { "id": "crate-D", "col": 1, "row": 4, "weight": 2, "value": 2 },
+      { "id": "crate-E", "col": 4, "row": 5, "weight": 5, "value": 7 },
+      { "id": "crate-F", "col": 2, "row": 6, "weight": 3, "value": 6 },
+      { "id": "crate-G", "col": 5, "row": 8, "weight": 4, "value": 4 },
+      { "id": "crate-H", "col": 0, "row": 7, "weight": 2, "value": 3 }
+    ]
+  }
+}

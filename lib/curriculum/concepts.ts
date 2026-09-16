@@ -167,6 +167,23 @@ export const CONCEPTS: Concept[] = [
     taughtBy: "parking-interview-orchestrator",
     prerequisites: ["parking-incident-recovery"],
   },
+  {
+    id: "autonomous-search",
+    name: "Autonomous search",
+    teaches:
+      "Sweep unknown ground, then switch from searching to closing in once a target is detected.",
+    taughtBy: "drone-first-sweep",
+    // First level of a separate world track — open from the start.
+    prerequisites: [],
+  },
+  {
+    id: "constrained-recovery",
+    name: "Constrained recovery",
+    teaches:
+      "Choose which weighted, valued items to carry (a knapsack choice) and route them home under a battery budget.",
+    taughtBy: "drone-cargo-run",
+    prerequisites: ["autonomous-search"],
+  },
 ];
 
 export function conceptById(id: string): Concept | undefined {

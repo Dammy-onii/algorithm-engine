@@ -19,7 +19,7 @@ const TAGLINE =
  */
 export function CompaniesPage() {
   return (
-    <>
+    <div className="site-light min-h-screen">
       <Nav />
       <main>
         <Hero />
@@ -33,6 +33,6 @@ export function CompaniesPage() {
         <Faq />
       </main>
       <Footer tagline={TAGLINE} />
-    </>
+    </div>
   );
 }

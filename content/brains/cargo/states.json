@@ -1,0 +1,10 @@
+{
+  "initial": "selecting",
+  "states": [
+    { "id": "selecting", "description": "Choosing which crates this trip will carry." },
+    { "id": "routing", "description": "Ordering the chosen crates into a flight path." },
+    { "id": "collecting", "description": "Flying the route and picking crates up." },
+    { "id": "returning", "description": "Heading home to unload." },
+    { "id": "charging", "description": "Parked on the depot, topping the battery up." }
+  ]
+}

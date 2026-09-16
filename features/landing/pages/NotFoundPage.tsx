@@ -7,7 +7,7 @@ import { Eyebrow } from "../components/primitives";
 /** Custom 404 — a wrong turn, with the engine finding its own way. */
 export function NotFoundPage() {
   return (
-    <>
+    <div className="site-light min-h-screen">
       <Nav />
       <main>
         <section className="px-5 pt-16 pb-6 text-center sm:px-10 lg:px-16">
@@ -34,10 +34,10 @@ export function NotFoundPage() {
               Open a problem
             </Link>
             <Link
-              href="/companies"
+              href="/education"
               className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink transition hover:border-ink/40"
             >
-              For companies
+              For education
             </Link>
           </div>
         </section>
@@ -67,6 +67,6 @@ export function NotFoundPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

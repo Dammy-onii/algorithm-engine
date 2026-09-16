@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  CARGO_CONTROLLER_STARTER,
+  DRONE_CONTROLLER_STARTER,
   FINANCE_CONTROLLER_STARTER,
   MAZE_CONTROLLER_STARTER,
   PARKING_CONTROLLER_STARTER,
@@ -25,6 +27,8 @@ const TEMPLATES: Record<string, string> = {
   maze: MAZE_CONTROLLER_STARTER,
   finance: FINANCE_CONTROLLER_STARTER,
   parking: PARKING_CONTROLLER_STARTER,
+  drone: DRONE_CONTROLLER_STARTER,
+  cargo: CARGO_CONTROLLER_STARTER,
 };
 
 // Base senses that live directly on the observation (not observation.domain).

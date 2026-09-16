@@ -3,6 +3,8 @@
 import { MazeRenderer } from "@/features/engine/simulation/components/MazeRenderer";
 import { FinanceRenderer } from "./FinanceRenderer";
 import { ParkingRenderer } from "./ParkingRenderer";
+import { DroneRenderer } from "./DroneRenderer";
+import { CargoRenderer } from "./CargoRenderer";
 import { World } from "@/lib/engine/world/world";
 
 interface RendererProps {
@@ -14,6 +16,8 @@ const RENDERERS: Record<string, (props: RendererProps) => React.ReactNode> = {
   maze: MazeRenderer,
   finance: FinanceRenderer,
   parking: ParkingRenderer,
+  drone: DroneRenderer,
+  cargo: CargoRenderer,
 };
 
 /** Resolve visual presentation by module id; unknown modules get the base grid. */
@@ -29,7 +33,7 @@ export function WorldLegend({ world }: { world?: World }) {
   // Operational boards are self-describing (each renders
   // its own operational panel), so they need no separate tile legend.
   const id = world?.module.id;
-  if (id === "finance" || id === "parking") return null;
+  if (id === "finance" || id === "parking" || id === "drone" || id === "cargo") return null;
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
       <Legend color="bg-zinc-700" label="wall" />
