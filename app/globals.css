@@ -67,9 +67,33 @@
 .dark {
   --background: #0d0d12;
   --foreground: #ffffff; /* white primary text for readability in dark mode */
-  /* Lift the dim secondary-text steps so muted copy stays readable on dark. */
-  --color-zinc-400: #b4b4bd;
-  --color-zinc-500: #9a9aa4;
+  /* NOTE: the muted text steps are NOT remapped here on purpose. Those same zinc
+     tokens are also used for borders (dark:border-zinc-600) and inverted chips
+     (dark:bg-zinc-100), so forcing them white would wreck surfaces. Text is
+     whitened separately, colour-only, in the rule below. */
+}
+
+/* Per design, ALL body/secondary text is solid white in the app's dark mode — the
+   muted steps (ink-40/60 and zinc-100–700) otherwise read as faded grey / off-white
+   ("faded white") on the dark background. This targets text colour ONLY, so it never
+   touches backgrounds or borders, and it excludes the light-only public site pages. */
+.dark
+  :is(
+    [class~="text-ink"],
+    [class~="text-ink-60"],
+    [class~="text-ink-40"],
+    [class~="text-zinc-400"],
+    [class~="text-zinc-500"],
+    [class~="text-zinc-600"],
+    [class~="text-zinc-700"],
+    [class~="dark:text-zinc-100"],
+    [class~="dark:text-zinc-200"],
+    [class~="dark:text-zinc-300"],
+    [class~="dark:text-zinc-400"],
+    [class~="dark:text-zinc-500"],
+    [class~="dark:text-zinc-600"]
+  ):not(.site-light):not(.site-light *) {
+  color: #ffffff;
 }
 
 /* The public site pages are light-only for now: force the light palette even
@@ -79,8 +103,12 @@
 .dark .site-light {
   --background: #fbfbf9;
   --foreground: #0a0a0b;
+  --color-ink: #0a0a0b;
+  --color-ink-60: #56565c;
+  --color-ink-40: #8a8a92;
   --color-zinc-400: #8a8a92;
   --color-zinc-500: #6f6f75;
+  --color-zinc-600: #56565c;
   color-scheme: light;
   background: var(--color-paper);
   color: var(--color-ink);
@@ -118,9 +146,12 @@ section[id] {
   }
 }
 
+/* The highlight colour (volt) is a bright lime, so selected text must stay dark
+   in BOTH themes — using var(--color-ink) turned it white-on-lime in dark mode,
+   which was invisible and harsh. Pin the selected text to near-black everywhere. */
 ::selection {
   background: var(--color-volt);
-  color: var(--color-ink);
+  color: #0a0a0b;
 }
 
 /* Native select popovers otherwise keep the OS light palette even when dark. */
