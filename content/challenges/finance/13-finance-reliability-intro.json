@@ -21,7 +21,7 @@
     "Use WHEN onlineB -> DO route-b to keep processing reliable."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Process all payments" },
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed && lost == 0", "hint": "Process all payments" },
     { "id": "reliable", "label": "Allow at most one failed payment", "check": "allProcessed && failed <= 1" },
     { "id": "expected-cost", "label": "Keep total cost at or below ₦1.60", "check": "allProcessed && totalCost <= 1.6" }
   ],
@@ -46,7 +46,7 @@
     "memory": {}
   },
   "objectives": [
-    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "process-all", "label": "Put every payment through — none left to expire", "check": "allProcessed && lost == 0" },
     { "id": "reliable", "label": "At most one failed payment", "check": "allProcessed && failed <= 1" },
     { "id": "cheap", "label": "Keep total cost at or below ₦1.60", "check": "allProcessed && totalCost <= 1.6" }
   ]

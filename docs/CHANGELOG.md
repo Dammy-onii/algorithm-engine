@@ -5,6 +5,33 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-09-17 — Six finance levels could be passed by doing nothing
+
+An audit that ran an empty policy (no rules, so it can only wait) against all 22
+challenges found six that graded it as a pass: `finance-basic-route`,
+`finance-skip-offline`, `finance-reliability-intro`, `finance-route-selection`,
+`finance-cost-and-reliability`, and `finance-provider-health`. Each also shipped
+a scaffold that routed nothing — 0 succeeded, every payment expired — and showed
+green.
+
+- **Cause.** `allProcessed` is true once every payment has reached a terminal
+  state, and a payment left until it expires is terminal. So routing nothing
+  satisfied it. The other required objectives fell with it: every cost ceiling
+  was met at a cost of zero, and `failed == 0` held because expiry is counted as
+  `lost`, not `failed` (`countByStatus(world, "failed")`, finance.ts:983). The
+  engine knew better — `resolveStatus` returned `stuck` — but no objective read
+  the status.
+- **Fix.** The graded objective and the progress checklist on those six levels
+  now check `allProcessed && lost == 0`, which is what their labels already
+  claimed. Verified both ways: an empty policy now fails all nine finance levels,
+  and the `finance-router` reference brain still passes all six with every
+  payment succeeded, nothing lost, and costs inside the ceilings — so the fix
+  closed a loophole rather than making anything unwinnable.
+- **Regression guard.** `lib/content/__tests__/challenge-integrity.test.ts` runs
+  an empty policy against every challenge in the catalogue and asserts none of
+  them passes, plus that every objective expression evaluates without error. The
+  test was confirmed to fail against the pre-fix content before being kept.
+
 ## 2026-09-15 — Recovery Run rebuilt around an explicit mission pipeline
 
 The cargo level previously shipped a `flyToNearestObject` action that chose the

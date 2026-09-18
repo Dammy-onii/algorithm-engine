@@ -21,7 +21,7 @@
     "Place WHEN onlineB -> DO route-b second as a fallback."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Process all payments through the health transition" },
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed && lost == 0", "hint": "Process all payments through the health transition" },
     { "id": "adapt", "label": "Allow at most one failure during the outage transition", "check": "allProcessed && failed <= 1", "hint": "Use onlineA -> route-a with onlineB -> route-b fallback" }
   ],
   "availableBricks": ["route-a", "route-b", "hold"],
@@ -45,7 +45,7 @@
     "memory": {}
   },
   "objectives": [
-    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "process-all", "label": "Put every payment through — none left to expire", "check": "allProcessed && lost == 0" },
     { "id": "adapt", "label": "At most one failed payment", "check": "allProcessed && failed <= 1" },
     { "id": "smooth", "label": "Keep total cost at or below ₦2.00", "check": "allProcessed && totalCost <= 2", "bonus": true }
   ]

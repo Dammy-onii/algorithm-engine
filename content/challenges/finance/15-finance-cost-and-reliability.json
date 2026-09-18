@@ -21,7 +21,7 @@
     "Use WHEN onlineB -> DO route-b."
   ],
   "steps": [
-    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed", "hint": "Process all payments" },
+    { "id": "drain", "label": "Clear the payment queue", "check": "allProcessed && lost == 0", "hint": "Process all payments" },
     { "id": "budget", "label": "Keep total cost at or below ₦3.00", "check": "allProcessed && totalCost <= 3" }
   ],
   "availableBricks": ["route-a", "route-b", "route-c", "hold"],
@@ -42,7 +42,7 @@
     "memory": {}
   },
   "objectives": [
-    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "process-all", "label": "Put every payment through — none left to expire", "check": "allProcessed && lost == 0" },
     { "id": "budget", "label": "Total cost at or below ₦3.00", "check": "allProcessed && totalCost <= 3" },
     { "id": "excellent", "label": "Total cost at or below ₦1.60", "check": "allProcessed && totalCost <= 1.6", "bonus": true }
   ]

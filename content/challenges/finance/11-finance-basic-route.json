@@ -21,7 +21,7 @@
     "Add the rule WHEN onlineB -> DO route-b to clear the queue."
   ],
   "steps": [
-    { "id": "drain", "label": "Process every queued payment", "check": "allProcessed", "hint": "Route all payments until queue is empty" },
+    { "id": "drain", "label": "Put every queued payment through", "check": "allProcessed && lost == 0", "hint": "Route all payments until queue is empty" },
     { "id": "clean", "label": "Ensure zero failed payments", "check": "allProcessed && failed == 0" },
     { "id": "cost", "label": "Keep total routing cost at or below ₦0.31", "check": "allProcessed && totalCost <= 0.31" }
   ],
@@ -42,7 +42,7 @@
     "memory": {}
   },
   "objectives": [
-    { "id": "process-all", "label": "Process every payment", "check": "allProcessed" },
+    { "id": "process-all", "label": "Put every payment through — none left to expire", "check": "allProcessed && lost == 0" },
     { "id": "no-failures", "label": "No failed payments", "check": "allProcessed && failed == 0" },
     { "id": "cheapest", "label": "Keep total cost at or below ₦0.31", "check": "allProcessed && totalCost <= 0.31" }
   ]
