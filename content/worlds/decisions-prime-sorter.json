@@ -1,0 +1,28 @@
+{
+  "name": "Number Desk — Prime or Not",
+  "kind": "sorter",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "sorter": {
+    "binA": { "label": "Prime Block" },
+    "binB": { "label": "Non-Prime Block" },
+    "binARule": "isPrime",
+    "items": [
+      { "id": "n1", "label": "2", "number": 2 },
+      { "id": "n2", "label": "9", "number": 9 },
+      { "id": "n3", "label": "7", "number": 7 },
+      { "id": "n4", "label": "15", "number": 15 },
+      { "id": "n5", "label": "11", "number": 11 },
+      { "id": "n6", "label": "1", "number": 1 },
+      { "id": "n7", "label": "13", "number": 13 },
+      { "id": "n8", "label": "4", "number": 4 },
+      { "id": "n9", "label": "17", "number": 17 },
+      { "id": "n10", "label": "21", "number": 21 },
+      { "id": "n11", "label": "5", "number": 5 },
+      { "id": "n12", "label": "10", "number": 10 }
+    ]
+  }
+}

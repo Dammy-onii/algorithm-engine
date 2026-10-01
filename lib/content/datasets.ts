@@ -32,6 +32,9 @@ import parkingInterviewOperations from "@/content/worlds/parking-interview-opera
 import parkingInterviewDistributed from "@/content/worlds/parking-interview-distributed.json";
 import droneFirstSweep from "@/content/worlds/drone-first-sweep.json";
 import droneCargoRun from "@/content/worlds/drone-cargo-run.json";
+import decisionsFragileParcels from "@/content/worlds/decisions-fragile-parcels.json";
+import decisionsEvenOdd from "@/content/worlds/decisions-even-odd.json";
+import decisionsPrimeSorter from "@/content/worlds/decisions-prime-sorter.json";
 import entities from "@/content/worlds/entities.json";
 
 import goals from "@/content/brains/default/goals.json";
@@ -205,6 +208,21 @@ export const WORLDS: WorldOption[] = [
     key: "drone-cargo-run",
     label: "Drone Hard — Cargo Recovery Run (6×9)",
     source: { world: droneCargoRun as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "decisions-fragile-parcels",
+    label: "Decisions Tutorial — Fragile Parcels",
+    source: { world: decisionsFragileParcels as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "decisions-even-odd",
+    label: "Decisions Tutorial — Even or Odd",
+    source: { world: decisionsEvenOdd as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "decisions-prime-sorter",
+    label: "Decisions Tutorial — Prime or Not",
+    source: { world: decisionsPrimeSorter as WorldData, entities: sharedEntities },
   },
 ];
 

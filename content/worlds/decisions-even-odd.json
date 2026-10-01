@@ -1,0 +1,32 @@
+{
+  "name": "Number Desk — Even or Odd",
+  "kind": "sorter",
+  "width": 1,
+  "height": 1,
+  "tiles": [[2]],
+  "start": { "x": 0, "y": 0 },
+  "goal": { "x": 0, "y": 0 },
+  "sorter": {
+    "binA": { "label": "Even Block" },
+    "binB": { "label": "Odd Block" },
+    "binARule": "isEven",
+    "items": [
+      { "id": "n1", "label": "14", "number": 14 },
+      { "id": "n2", "label": "3", "number": 3 },
+      { "id": "n3", "label": "27", "number": 27 },
+      { "id": "n4", "label": "8", "number": 8 },
+      { "id": "n5", "label": "11", "number": 11 },
+      { "id": "n6", "label": "20", "number": 20 },
+      { "id": "n7", "label": "6", "number": 6 },
+      { "id": "n8", "label": "19", "number": 19 },
+      { "id": "n9", "label": "33", "number": 33 },
+      { "id": "n10", "label": "42", "number": 42 },
+      { "id": "n11", "label": "5", "number": 5 },
+      { "id": "n12", "label": "16", "number": 16 },
+      { "id": "n13", "label": "9", "number": 9 },
+      { "id": "n14", "label": "2", "number": 2 },
+      { "id": "n15", "label": "25", "number": 25 },
+      { "id": "n16", "label": "30", "number": 30 }
+    ]
+  }
+}

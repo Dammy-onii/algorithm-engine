@@ -30,6 +30,14 @@ export interface PackInfo {
  */
 export const PACKS: PackInfo[] = [
   {
+    id: "decisions",
+    eyebrow: "Beginner curriculum",
+    title: "Simple Decisions",
+    description:
+      "Start here: items arrive one at a time and you decide where each one goes. Sort even and odd numbers, primes, and parcels with one or two rules.",
+    action: "Explore simple decisions",
+  },
+  {
     id: "maze",
     eyebrow: "Navigation curriculum",
     title: "Maze",

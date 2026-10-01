@@ -1,0 +1,117 @@
+{
+  "id": "decisions-prime-sorter",
+  "pack": "decisions",
+  "number": 29,
+  "name": "Prime or Not",
+  "difficulty": 1,
+  "stage": "practice",
+  "functionsUnlocked": false,
+  "worldKey": "decisions-prime-sorter",
+  "taxonomy": {
+    "domain": "Decisions",
+    "simulation": "Sorting Desk",
+    "tier": "tutorial",
+    "grade": 2
+  },
+  "tagline": "Send prime numbers to the Prime Block and all other numbers to the Non-Prime Block.",
+  "brief": "Send each prime number to the Prime Block. Send every other number to the Non-Prime Block.",
+  "context": "A prime number is bigger than 1, and only 1 and the number itself divide into it evenly. Examples are 2, 3, 5, 7 and 11.",
+  "narrative": "Welcome back to the number desk. This time you are sorting prime numbers.\n\nA prime number is bigger than 1. Only two numbers divide into it evenly: 1 and the number itself.\n\n7 is prime. Only 1 and 7 divide into it evenly.\n\n9 is not prime. 3 also divides into it, because 3 × 3 = 9.\n\n1 is not prime. 2 is prime, and it is the only even prime number.\n\nThe desk checks each item for you, so you do not need to do any maths. You can see the facts it gives you in the Conditions tab.",
+  "objective": "Sort all twelve numbers. Every number must end up in the right block.",
+  "learningObjective": "How to pick the fact that really answers the question, instead of one that only looks similar.",
+  "intelligenceExplanation": "Right now there are no rules. The cards wait and nothing moves.\n\nYour task: build a rule that sends every prime number to the Prime Block. Then build a rule that sends every other number to the Non-Prime Block.\n\nRules are checked from the top, and the first rule that is true wins. So the order of your rules matters.\n\nBe careful: odd is not the same as prime. 9, 15 and 21 are odd, but they are not prime. 2 is even, but it is prime.",
+  "hint": "Odd is not the same as prime. Look for the fact that answers the real question.",
+  "hints": [
+    "Look at 9 and 15. They are odd, but they are not prime. So checking for odd numbers will not work.",
+    "You need one rule for prime numbers and one rule for everything else. Think about which one should be checked first.",
+    "Answer: WHEN isPrime -> DO send-to-prime-block. Then, below it, WHEN always -> DO send-to-non-prime-block."
+  ],
+  "steps": [
+    {
+      "id": "first",
+      "label": "Send the first card to a block",
+      "check": "sortedCount >= 1",
+      "hint": "Add a rule that sends cards to a block"
+    },
+    {
+      "id": "all",
+      "label": "Sort all twelve cards",
+      "check": "allSorted"
+    },
+    {
+      "id": "clean",
+      "label": "Put every card in the right block",
+      "check": "allSorted && mistakes == 0",
+      "hint": "1, 9, 15 and 21 are not prime"
+    }
+  ],
+  "availableBricks": [
+    "send-to-prime-block",
+    "send-to-non-prime-block"
+  ],
+  "availableConditions": [
+    "isPrime",
+    "isEven",
+    "isOdd",
+    "number",
+    "hasItem",
+    "always"
+  ],
+  "scaffoldVersion": 3,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "sort",
+          "priority": 1,
+          "description": "Sort every number into the right block."
+        }
+      ]
+    },
+    "states": {
+      "initial": "sorting",
+      "states": [
+        {
+          "id": "sorting",
+          "description": "Choose a block for each number."
+        }
+      ]
+    },
+    "rules": {
+      "rules": []
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "send-to-prime-block",
+          "action": "sendToA",
+          "description": "Send the card to the Prime Block."
+        },
+        {
+          "id": "send-to-non-prime-block",
+          "action": "sendToB",
+          "description": "Send the card to the Non-Prime Block."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "sort-all",
+      "label": "Sort every number",
+      "check": "allSorted"
+    },
+    {
+      "id": "no-mistakes",
+      "label": "Every number is in the right block",
+      "check": "allSorted && mistakes == 0"
+    },
+    {
+      "id": "simple",
+      "label": "Use two rules or fewer",
+      "check": "allSorted && mistakes == 0 && rules <= 2",
+      "bonus": true
+    }
+  ]
+}

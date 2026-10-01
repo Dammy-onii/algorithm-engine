@@ -1,0 +1,116 @@
+{
+  "id": "decisions-even-odd",
+  "pack": "decisions",
+  "number": 28,
+  "name": "Even or Odd",
+  "difficulty": 1,
+  "stage": "practice",
+  "functionsUnlocked": false,
+  "worldKey": "decisions-even-odd",
+  "taxonomy": {
+    "domain": "Decisions",
+    "simulation": "Sorting Desk",
+    "tier": "tutorial",
+    "grade": 1
+  },
+  "tagline": "Send even numbers to the Even Block and odd numbers to the Odd Block.",
+  "brief": "Send each even number to the Even Block. Send each odd number to the Odd Block.",
+  "context": "Number cards arrive one at a time. Each number is either even or odd.",
+  "narrative": "Welcome to the number desk.\n\nNumber cards arrive one at a time. Your job is to put each card in the right block.\n\nEven numbers go to the Even Block. An even number can be split into two equal halves, like 2, 4, 6 and 8.\n\nOdd numbers go to the Odd Block. An odd number cannot be split into two equal halves, like 1, 3, 5 and 7.\n\nThe desk checks each item for you, so you do not need to do any maths. You can see the facts it gives you in the Conditions tab.",
+  "objective": "Sort all sixteen numbers. Every number must end up in the right block.",
+  "learningObjective": "How to use a fact about a number to choose between two blocks.",
+  "intelligenceExplanation": "Right now there are no rules. The cards wait and nothing moves.\n\nYour task: build a rule that sends every even number to the Even Block. Then build a rule that sends every odd number to the Odd Block.\n\nEvery whole number is either even or odd. So each card belongs in exactly one block.",
+  "hint": "Look in the Conditions tab for a fact that tells you whether a number is even or odd.",
+  "hints": [
+    "Even numbers end in 0, 2, 4, 6 or 8. Look in the Conditions tab for a fact that tells you this.",
+    "You need one rule for even numbers and one rule for odd numbers.",
+    "Answer: WHEN isEven -> DO send-to-even-block, and WHEN isOdd -> DO send-to-odd-block."
+  ],
+  "steps": [
+    {
+      "id": "first",
+      "label": "Send the first card to a block",
+      "check": "sortedCount >= 1",
+      "hint": "Add a rule that sends cards to a block"
+    },
+    {
+      "id": "all",
+      "label": "Sort all sixteen cards",
+      "check": "allSorted"
+    },
+    {
+      "id": "clean",
+      "label": "Put every card in the right block",
+      "check": "allSorted && mistakes == 0",
+      "hint": "Check which cards landed in the wrong block"
+    }
+  ],
+  "availableBricks": [
+    "send-to-even-block",
+    "send-to-odd-block"
+  ],
+  "availableConditions": [
+    "isEven",
+    "isOdd",
+    "number",
+    "hasItem",
+    "always"
+  ],
+  "scaffoldVersion": 3,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "sort",
+          "priority": 1,
+          "description": "Sort every number into the right block."
+        }
+      ]
+    },
+    "states": {
+      "initial": "sorting",
+      "states": [
+        {
+          "id": "sorting",
+          "description": "Choose a block for each number."
+        }
+      ]
+    },
+    "rules": {
+      "rules": []
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "send-to-even-block",
+          "action": "sendToA",
+          "description": "Send the card to the Even Block."
+        },
+        {
+          "id": "send-to-odd-block",
+          "action": "sendToB",
+          "description": "Send the card to the Odd Block."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "sort-all",
+      "label": "Sort every number",
+      "check": "allSorted"
+    },
+    {
+      "id": "no-mistakes",
+      "label": "Every number is in the right block",
+      "check": "allSorted && mistakes == 0"
+    },
+    {
+      "id": "simple",
+      "label": "Use two rules or fewer",
+      "check": "allSorted && mistakes == 0 && rules <= 2",
+      "bonus": true
+    }
+  ]
+}

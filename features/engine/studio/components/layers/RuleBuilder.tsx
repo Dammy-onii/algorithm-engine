@@ -380,64 +380,68 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
         <p className="mb-1 font-semibold text-zinc-700 dark:text-zinc-300">
           How a rule works
         </p>
-        <p>
-          Every tick the robot looks at its surroundings and picks{" "}
-          <em>one</em> rule to run. A rule reads:
-        </p>
+        <p>A rule has two parts:</p>
         <p className="my-1.5 font-mono text-zinc-700 dark:text-zinc-300">
-          WHEN &lt;what the robot senses&gt; → DO &lt;which action to run&gt;
+          WHEN &lt;something is true&gt; → DO &lt;this action&gt;
         </p>
-        <p>
-          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">WHEN</strong> is
-          the condition — a fact about what the robot can sense{" "}
-          <em>right now</em>, like &quot;there is a wall directly ahead&quot;. If it is
-          true, the rule is allowed to fire.{" "}
-          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">DO</strong> is
-          the action it performs.
-        </p>
-        <p className="mt-1.5">
-          The engine checks cards from <strong>top to bottom</strong> — the list is a
-          flowchart. The <strong>first</strong> card whose WHEN is true <em>and</em>{" "}
-          whose action is possible right now runs; every card below it is skipped that
-          tick. Order is the only thing that decides which rule wins — drag cards or use
-          the arrows to change it. (Priority numbers are ignored.)
-        </p>
-        <p className="mt-1.5">
-          A DO that is a <strong>multi-step brick</strong> (e.g. &quot;turn right,
-          then step&quot;, composed in the Functions tab) runs each of its steps on the
-          next ticks before the list is checked from the top again — unless a step
-          becomes unsafe, which interrupts it. If <em>no</em> card&apos;s action is
-          possible, the robot simply waits.
-        </p>
+        <ul className="ml-4 list-disc space-y-0.5">
+          <li>
+            <strong className="font-semibold text-zinc-700 dark:text-zinc-300">WHEN</strong>{" "}is
+            a question about what is happening right now. For example: &quot;Is it
+            raining?&quot; or &quot;Is there a wall ahead?&quot;
+          </li>
+          <li>
+            <strong className="font-semibold text-zinc-700 dark:text-zinc-300">DO</strong>{" "}is
+            what happens when the answer is yes.
+          </li>
+        </ul>
+        <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
+          <li>The simulation runs one step at a time.</li>
+          <li>
+            On each step, the rules are checked from <strong>top to bottom</strong>.
+          </li>
+          <li>
+            The <strong>first</strong> rule that is true wins. The rules below it are
+            skipped for that step.
+          </li>
+          <li>To change which rule wins, move it up or down the list.</li>
+          <li>If no rule is true, nothing happens on that step.</li>
+          <li>
+            Some actions have more than one step, like &quot;turn right, then
+            move&quot;. You build these in the Functions tab.
+          </li>
+          <li>
+            Once a multi-step action starts, it finishes all its steps before the rules
+            are checked again. It only stops early if the next step is not safe.
+          </li>
+        </ul>
 
         <details className="mt-2">
           <summary className="cursor-pointer select-none font-medium text-zinc-500 transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
-            See an example run
+            See an example
           </summary>
           <div className="mt-2 rounded border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900">
             <p className="mb-1 font-semibold text-zinc-700 dark:text-zinc-200">
-              A wall-follower, checked top → bottom:
+              Two rules for deciding about an umbrella:
             </p>
             <pre className="overflow-x-auto rounded bg-zinc-50 p-2 font-mono text-[11px] leading-relaxed text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-{`1  WHEN atGoal      → hold
-2  WHEN !wallRight  → right-and-step   (turn right, then step)
-3  WHEN !wallAhead  → step
-4  WHEN always      → turn-around-and-step`}
+{`1  WHEN isRaining  → take an umbrella
+2  WHEN always     → leave the umbrella at home`}
             </pre>
-            <p className="mb-1 mt-2 font-semibold text-zinc-700 dark:text-zinc-200">
-              One action per tick:
-            </p>
-            <ul className="ml-4 list-disc space-y-0.5">
-              <li>Tick 1 — right is open, so rule 2 is the first match → <strong>turn right</strong>.</li>
-              <li>Tick 2 — rule 2&apos;s brick isn&apos;t finished, so it continues → <strong>move forward</strong>.</li>
-              <li>Tick 3 — right blocked, front open → rule 3 → <strong>move forward</strong>.</li>
-              <li>Tick 4 — right open again → back to rule 2 → <strong>turn right</strong>…</li>
+            <ul className="ml-4 mt-2 list-disc space-y-0.5">
+              <li>
+                It is raining. Rule 1 is true, so you <strong>take an umbrella</strong>.
+                Rule 2 is skipped.
+              </li>
+              <li>
+                It is sunny. Rule 1 is false, so rule 2 is checked next. Rule 2 is always
+                true, so you <strong>leave the umbrella at home</strong>.
+              </li>
+              <li>
+                Order matters. If rule 2 were on top, it would be true every day, and you
+                would never take an umbrella.
+              </li>
             </ul>
-            <p className="mt-1.5 text-zinc-400">
-              Rules 1–3 never had to be &quot;false&quot; for rule 4 to exist — the engine
-              just takes the first one that applies. Because rule 2&apos;s DO is a two-step
-              brick, it commits to both steps before the list restarts from the top.
-            </p>
           </div>
         </details>
       </div>
@@ -500,7 +504,7 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
 
       {ordered.length === 0 && (
         <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-4 text-center text-sm text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900">
-          No rules yet. The robot will wait forever without at least one rule.
+          No rules yet. Nothing will happen until you add at least one rule.
         </div>
       )}
 

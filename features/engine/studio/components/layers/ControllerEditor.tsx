@@ -6,6 +6,7 @@ import {
   FINANCE_CONTROLLER_STARTER,
   MAZE_CONTROLLER_STARTER,
   PARKING_CONTROLLER_STARTER,
+  SORTER_CONTROLLER_STARTER,
 } from "@/lib/authoring/controllerCompiler";
 import {
   ControllerReference,
@@ -29,6 +30,7 @@ const TEMPLATES: Record<string, string> = {
   parking: PARKING_CONTROLLER_STARTER,
   drone: DRONE_CONTROLLER_STARTER,
   cargo: CARGO_CONTROLLER_STARTER,
+  sorter: SORTER_CONTROLLER_STARTER,
 };
 
 // Base senses that live directly on the observation (not observation.domain).

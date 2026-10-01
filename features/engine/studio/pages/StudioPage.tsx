@@ -52,6 +52,7 @@ import { AuthoringPanel } from "@/features/engine/studio/components/AuthoringPan
 import { ResultsPanel } from "@/features/engine/studio/components/ResultsPanel";
 import { InterviewResultsPanel } from "@/features/engine/studio/components/InterviewResultsPanel";
 import { ChallengeWalkthrough } from "@/features/engine/studio/components/ChallengeWalkthrough";
+import { LearnedDialog } from "@/features/engine/studio/components/LearnedDialog";
 import {
   InterviewProblemDrawer,
   type InterviewAssignmentContext,
@@ -300,6 +301,9 @@ async function runDevelopmentCodeSubmission(
   return report;
 }
 
+/** Bump when the guide changes enough that every learner should see it again. */
+const WALKTHROUGH_STORAGE_KEY = "ae-challenge-walkthrough-v3";
+
 /** Complete interactive UI and state for `/[pack]/[challenge]`. */
 export function StudioPage({
   packId,
@@ -398,10 +402,22 @@ export function StudioPage({
     return "session" in result ? result.session : null;
   }, [challengeId]);
 
+  // Open the guide on load until the learner finishes or skips it once.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(WALKTHROUGH_STORAGE_KEY) !== "complete") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setWalkthroughOpen(true);
+      }
+    } catch {
+      // Without storage the guide stays available from the header.
+    }
+  }, []);
+
   const finishWalkthrough = () => {
     setWalkthroughOpen(false);
     try {
-      localStorage.setItem("ae-challenge-walkthrough-v2", "complete");
+      localStorage.setItem(WALKTHROUGH_STORAGE_KEY, "complete");
     } catch {
       // Non-persistent dismissal is still valid.
     }
@@ -790,25 +806,6 @@ export function StudioPage({
       </div>
 
       <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 xl:overflow-hidden">
-        {justLearned && (
-          <div className="flex items-start justify-between gap-4 rounded-lg border border-zinc-900 bg-zinc-900 p-4 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-                You just learned
-              </div>
-              <div className="mt-0.5 font-semibold">{justLearned.name}</div>
-              <div className="mt-0.5 text-sm text-zinc-300 dark:text-zinc-600">
-                {justLearned.teaches}
-              </div>
-            </div>
-            <button
-              onClick={() => setJustLearned(null)}
-              className="shrink-0 rounded-md border border-zinc-700 px-3 py-1.5 text-xs"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
 
         <div className="grid min-h-0 w-full max-w-full flex-1 grid-cols-1 gap-2 xl:grid-cols-[minmax(0,1.08fr)_minmax(27rem,0.92fr)] xl:grid-rows-[minmax(0,1fr)] xl:overflow-hidden">
           <section
@@ -989,6 +986,20 @@ export function StudioPage({
           packTitle={pack?.title ?? packId}
           assignment={interviewAssignment}
           onClose={() => setProblemListOpen(false)}
+        />
+      )}
+      {justLearned && (
+        <LearnedDialog
+          concept={justLearned}
+          onClose={() => setJustLearned(null)}
+          onNext={
+            nextChallenge && nextUnlocked
+              ? () => {
+                  setJustLearned(null);
+                  router.push(`/${packId}/${nextChallenge.id}`);
+                }
+              : undefined
+          }
         />
       )}
       {!isInterviewWorkspace && problemListOpen && (

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "ae-first-run-coach-v1";
 
-/** Small in-context orientation that replaces the automatic full-screen guide. */
+/** Small in-context orientation shown alongside the full-screen guide. */
 export function FirstRunCoach() {
   const [visible, setVisible] = useState(true);
 

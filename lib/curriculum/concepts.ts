@@ -184,6 +184,28 @@ export const CONCEPTS: Concept[] = [
     taughtBy: "drone-cargo-run",
     prerequisites: ["autonomous-search"],
   },
+  {
+    id: "number-facts",
+    name: "Number facts",
+    teaches: "Use a fact about a number (even or odd) to choose between two outcomes.",
+    taughtBy: "decisions-even-odd",
+    // First level of a separate world track — open from the start.
+    prerequisites: [],
+  },
+  {
+    id: "choosing-the-right-fact",
+    name: "Choosing the right fact",
+    teaches: "Decide with the fact that answers the question (prime), not one that only looks similar (odd).",
+    taughtBy: "decisions-prime-sorter",
+    prerequisites: ["number-facts"],
+  },
+  {
+    id: "if-otherwise",
+    name: "If / otherwise",
+    teaches: "Make a yes/no decision: one rule for the special case, a fallback for everything else.",
+    taughtBy: "decisions-fragile-parcels",
+    prerequisites: ["choosing-the-right-fact"],
+  },
 ];
 
 export function conceptById(id: string): Concept | undefined {

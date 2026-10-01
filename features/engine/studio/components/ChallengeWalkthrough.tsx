@@ -61,6 +61,9 @@ export function ChallengeWalkthrough({
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-zinc-950/65 p-3 backdrop-blur-sm sm:p-6"
       role="presentation"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onFinish();
+      }}
     >
       <section
         role="dialog"
@@ -258,98 +261,106 @@ function walkthroughSteps(
     {
       shortLabel: "Workspace map",
       eyebrow: "Orientation",
-      title: "Know what each part of the workspace owns",
-      summary: `The challenge page is split between authoring the ${language.controller} and observing the ${language.environment}. Both panels scroll independently, so your logic and the live system remain visible side by side.`,
-      location: "Whole page · Header, authoring panel, and simulation panel",
+      title: "Know what each part of the page does",
+      summary: `The page has two panels side by side. On the left, you read the problem and build the rules for the ${language.controller}. On the right, you watch the ${language.environment} run.`,
+      location: "Whole page · Header, left panel, and right panel",
       details: [
-        "The header owns problem navigation, Apply & Run, interview submission where available, the Guide, and appearance controls.",
-        "The left panel owns the problem statement and every editable intelligence layer. Changes are saved automatically for this challenge.",
-        "The right panel owns the visible environment, controls, task progress, results, and the collapsible decision/debug pipeline.",
+        `The header has the problem list, the previous and next arrows, Apply & Run, Lab, Guide, and the light/dark switch.${includesSubmission ? " Interview problems also have Submit solution." : ""}`,
+        "The left panel shows the problem statement and the rule editor. Your work is saved automatically for each challenge.",
+        `The right panel shows the live ${language.environment}, the play controls, task progress, results, and the debug panel.`,
+        "On a small screen, the two panels become Build and Run tabs.",
       ],
-      note: "The two panels are intentionally independent. Scrolling the problem or editor should not move the simulation panel.",
+      note: "Each panel scrolls on its own, so you can read your rules while the simulation keeps running.",
     },
     {
       shortLabel: "Read the task",
       eyebrow: "Understand",
-      title: "Turn the write-up into an operational contract",
+      title: "Know what you need to achieve",
       summary:
-        "Before adding rules, identify the required outcome, the hard constraints that must never be violated, and the quality metrics that distinguish a robust solution from one that merely terminates.",
-      location: "Left panel · Build the decision",
+        "Start by reading the problem. Find out what must happen, what must never happen, and how your result will be judged.",
+      location: "Left panel · Problem statement; right panel · Task progress",
       details: [
-        "The brief states the immediate task. Expand Learn more for the scenario, context, and what the supplied scaffold already does.",
-        "The task checklist translates the statement into observable milestones. Informational items guide design; checked items update from the live run.",
-        "Hints reveal progressively stronger guidance. They explain the interface and decision dimensions without changing your policy.",
+        "The bold line at the top is the task in one sentence. The scenario and problem statement below it explain the situation.",
+        "What this teaches tells you the idea this challenge is about.",
+        "Task progress & pass contract, on the right, lists the milestones. Each one ticks off while the simulation runs.",
+        "Show a hint reveals one hint at a time. The first hints only nudge you. The last hint may give the answer, so try on your own first.",
       ],
       example: {
-        label: "Questions to answer before coding",
+        label: "Questions to answer first",
         value:
-          "What must finish?\nWhat can fail or become unavailable?\nWhich facts change each tick?\nWhich outcomes are penalized?",
+          "What must be finished?\nWhat can go wrong?\nWhich facts change on each step?\nWhat counts as a mistake?",
       },
     },
     {
-      shortLabel: "Build intelligence",
+      shortLabel: "Build your rules",
       eyebrow: "Author",
-      title: "Choose the right layer for each idea",
-      summary: `The platform separates what the ${language.controller} observes, how it organizes behaviour, and which action it returns. Use the smallest set of layers that expresses your algorithm clearly.`,
+      title: "Write the rules that make each decision",
+      summary: `You control the ${language.controller} with rules. Each rule says: WHEN something is true, DO an action.`,
       location: "Left panel · Policy, Code, and Reference",
       details: [
-        "Policy keeps Rules, Conditions, and Functions one click away. Advanced contains operating states and memory for problems that need persistent modes.",
-        "Conditions explains every available fact and lets you name reusable checks. Functions explains every available action and lets unlocked stages compose reusable action sequences.",
-        "Code is an alternative local controller; Reference contains the pass contract and compiled policy summary. Use the Active controller selector to choose what Apply & Run executes.",
+        "Policy → Rules is where you add, edit, and reorder your rules.",
+        "Policy → Conditions lists every fact you can check. You can also save a named check to reuse.",
+        "Policy → Functions lists every action you can use. On later challenges, you can join actions into multi-step functions.",
+        "Policy → Advanced holds states (modes, such as searching or returning) and memory, for problems that need them.",
+        "Code lets you write a decide() function instead of rules. Reference shows the pass contract and a summary of your policy.",
+        "The Active controller switch chooses what Apply & Run uses: your rules (Visual policy) or your code (Code controller).",
       ],
       example: {
-        label: "World vocabulary",
+        label: "What this world gives you",
         value: `Facts: ${language.facts}\nActions: ${language.actions}`,
       },
-      note: "Do not create a rule merely because a fact exists. Every branch should represent a deliberate decision or fallback.",
+      note: "Only add a rule when it makes a real decision. Every rule should have a clear reason to be there.",
     },
     {
-      shortLabel: "Decision flow",
+      shortLabel: "How a step works",
       eyebrow: "Execute",
-      title: "Understand exactly what happens on one tick",
-      summary:
-        "The engine does not execute every matching action. It observes the current world, evaluates the ordered policy, validates the candidate action, and commits one decision before the world advances.",
-      location: "Policy → Rules and right panel · Decision pipeline",
+      title: "Understand exactly what happens on one step",
+      summary: `The simulation runs one step (a tick) at a time. On each step, the ${language.controller} makes exactly one decision.`,
+      location: "Policy → Rules; right panel · Debug panel",
       details: [
-        "The world publishes a fresh observation. Conditions read only those current facts plus state and memory.",
-        "Rules are checked from top to bottom. The first matching rule whose next action is valid wins; broader fallbacks belong below specific cases.",
-        "The action updates the world, time advances, dynamic events occur, objectives are re-evaluated, and the next tick begins with a new observation.",
+        "The world gives fresh facts about what is happening right now.",
+        "Rules are checked from top to bottom. The first rule whose WHEN is true, and whose action is possible right now, wins. The rules below it are skipped.",
+        `If no rule wins, the ${language.controller} waits for that step.`,
+        "The chosen action runs, the world moves forward one step, and the next step starts with fresh facts.",
+        "A multi-step function carries on with its next steps before the rules are checked again. It stops early if its next step is no longer possible.",
       ],
       example: {
-        label: "Illustrative rule shape — not a challenge answer",
+        label: "The shape of a rule — not a challenge answer",
         value: language.ruleExample,
       },
+      note: "Put specific rules near the top and catch-all rules (such as WHEN always) at the bottom. A catch-all at the top wins every time.",
     },
     {
       shortLabel: "Run and control",
-      eyebrow: "Test visibly",
-      title: "Use Apply & Run as your development loop",
+      eyebrow: "Test",
+      title: "Use Apply & Run to test your rules",
       summary:
-        "Apply & Run compiles the current intelligence and starts a fresh copy of the visible scenario. Use the controls to inspect timing-sensitive behaviour instead of waiting for the final animation.",
-      location: "Sticky header · Apply & Run; right-panel controls",
+        "Apply & Run saves your rules, checks them for errors, and starts a fresh run of the scenario you can see.",
+      location: "Header · Apply & Run; right panel · Controls",
       details: [
-        "Pause and Step isolate one decision. Compare the observation and returned action before advancing again.",
-        "Speed changes presentation time, not simulation semantics. Reset creates a clean run while preserving your authored solution.",
-        "Visible objectives are evaluated when the run terminates. A queue becoming empty or an animation stopping does not automatically mean the challenge passed.",
+        "Start and Pause play or stop the run. Step moves forward exactly one step, so you can study a single decision.",
+        "Speed only changes how fast the run plays. It never changes the result.",
+        "Reset starts the scenario again from the beginning. Your rules are kept.",
+        "When the run ends, the results show which required goals and bonus goals you met. When every required goal is met, the challenge is complete and a pop-up shows what you learned.",
       ],
-      note: "Always inspect failed objectives. A policy can terminate after timeouts, invalid allocations, or other losses and still be an unsuccessful solution.",
+      note: "A run that stops is not always a pass. Always check the results for goals you missed.",
     },
     {
       shortLabel: "Debug and improve",
       eyebrow: "Diagnose",
-      title: "Trace why the policy made its decision",
-      summary:
-        "Use the debug pipeline to connect the environment to the policy. It should answer: what was observed, which branch won, what action was returned, and how the world changed.",
-      location: "Right panel · Debug pipeline, task progress, and results",
+      title: "Find out why a decision was made",
+      summary: `The debug panel shows why the ${language.controller} did what it did on each step.`,
+      location: "Right panel · Debug panel and Task progress",
       details: [
-        "The main decision pipeline remains visible. Expand Observation, Domain metrics, Memory, and other accordions only when you need their detail.",
-        "Compare changing values over several ticks—provider capacity, walls, queues, battery, bays, state, or memory—rather than judging one static frame.",
-        "Results separate required objectives from bonuses. Revise the policy, rerun the same visible case, and verify the correction did not break an earlier branch.",
+        "Decision pipeline shows the step number, the active goal and state, the rule that won, the function that ran, and the action it returned.",
+        "Why this action? shows the WHEN condition of the winning rule.",
+        "Domain facts shows every fact the world gave on that step. Memory shows anything your policy stored. Grid worlds also show World observation.",
+        "Pause and Step through a few steps and watch how the facts change. Then fix your rules, run again, and check that you did not break something that worked before.",
       ],
       example: {
-        label: "Debugging question sequence",
+        label: "Questions to ask on a wrong step",
         value:
-          "Observed facts → matched rule → executed function → returned action\n                         ↓\n              expected world update?",
+          "Which facts were true?\n→ Which rule won?\n→ Which action ran?\n→ Did the world change the way you expected?",
       },
     },
   ];
@@ -397,9 +408,27 @@ function worldLanguage(packId: string): WorldLanguage {
     return {
       controller: "parking controller",
       environment: "parking facility",
-      facts: "vehicle needs, queue pressure, bay and gate availability",
-      actions: "allocate, release, hold, reject",
+      facts: "vehicle needs, queue pressure, space and gate availability",
+      actions: "park in a matching space, release a departing vehicle, wait",
       ruleExample: "WHEN <vehicle and facility condition>\nDO <one parking function>",
+    };
+  }
+  if (packId === "drone") {
+    return {
+      controller: "drone",
+      environment: "search area",
+      facts: "target detected, at target, search and target directions, battery, on pad",
+      actions: "fly toward unsearched ground, fly toward the target, report, recharge, move north/east/south/west",
+      ruleExample: "WHEN <what the drone senses>\nDO <one flight function>",
+    };
+  }
+  if (packId === "decisions") {
+    return {
+      controller: "sorting desk",
+      environment: "sorting desk",
+      facts: "facts about the item at the sorting point, listed in the Conditions tab",
+      actions: "send the item to one block or the other",
+      ruleExample: "WHEN <a fact about the item>\nDO <send it to a block>",
     };
   }
   return {

@@ -18,7 +18,7 @@ const SIGNATURE_BYTES = 6;
 const MAX_ASSIGNMENT_PROBLEMS = 20;
 // Append-only: a pack's code is its index, baked into signed links. Never
 // reorder or remove an entry — that would silently repoint or break live links.
-const PACK_CODES = ["maze", "warehouse", "finance", "parking", "supermarket", "drone"] as const;
+const PACK_CODES = ["maze", "warehouse", "finance", "parking", "supermarket", "drone", "decisions"] as const;
 const DEVELOPMENT_SECRET = "ctrl-development-interview-link-v1";
 
 function assignmentSecret(): string {

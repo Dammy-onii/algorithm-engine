@@ -1,0 +1,114 @@
+{
+  "id": "decisions-fragile-parcels",
+  "pack": "decisions",
+  "number": 30,
+  "name": "Fragile Parcels",
+  "difficulty": 1,
+  "stage": "practice",
+  "functionsUnlocked": false,
+  "worldKey": "decisions-fragile-parcels",
+  "taxonomy": {
+    "domain": "Decisions",
+    "simulation": "Sorting Desk",
+    "tier": "tutorial",
+    "grade": 3
+  },
+  "tagline": "Send fragile parcels to the Fragile Block and all other parcels to the Standard Block.",
+  "brief": "Send each fragile parcel to the Fragile Block. Send every other parcel to the Standard Block.",
+  "context": "Parcels arrive one at a time. Some parcels are fragile, and some are not.",
+  "narrative": "Welcome to the mail room.\n\nParcels arrive one at a time. Some of them break easily, like a glass vase or light bulbs. These parcels have a FRAGILE label.\n\nFragile parcels go to the Fragile Block. All other parcels go to the Standard Block.\n\nFor each parcel, you make one choice: which block does it go to?",
+  "objective": "Sort all eight parcels. Every parcel must end up in the right block.",
+  "learningObjective": "How to make a yes-or-no choice: do one thing when something is true, and another thing when it is not.",
+  "intelligenceExplanation": "Right now there are no rules. The parcels wait and nothing moves.\n\nYour task: build a rule that sends every fragile parcel to the Fragile Block. Then build a rule that sends every other parcel to the Standard Block.\n\nRules are checked from the top, and the first rule that is true wins. So the order of your rules matters.",
+  "hint": "Think about two cases: fragile parcels, and every other parcel.",
+  "hints": [
+    "Look at the parcels. The fragile ones have a FRAGILE label. Is there a fact in the Conditions tab that tells you this?",
+    "You need one rule for fragile parcels and one rule for everything else. Think about which one should be checked first.",
+    "Answer: WHEN isFragile -> DO send-to-fragile-block. Then, below it, WHEN always -> DO send-to-standard-block."
+  ],
+  "steps": [
+    {
+      "id": "first",
+      "label": "Send the first parcel to a block",
+      "check": "sortedCount >= 1",
+      "hint": "Add a rule that sends parcels to a block"
+    },
+    {
+      "id": "all",
+      "label": "Sort all eight parcels",
+      "check": "allSorted"
+    },
+    {
+      "id": "clean",
+      "label": "Put every parcel in the right block",
+      "check": "allSorted && mistakes == 0",
+      "hint": "Check which parcels landed in the wrong block"
+    }
+  ],
+  "availableBricks": [
+    "send-to-fragile-block",
+    "send-to-standard-block"
+  ],
+  "availableConditions": [
+    "isFragile",
+    "hasItem",
+    "always"
+  ],
+  "scaffoldVersion": 3,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "sort",
+          "priority": 1,
+          "description": "Sort every parcel into the right block."
+        }
+      ]
+    },
+    "states": {
+      "initial": "sorting",
+      "states": [
+        {
+          "id": "sorting",
+          "description": "Choose a block for each parcel."
+        }
+      ]
+    },
+    "rules": {
+      "rules": []
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "send-to-fragile-block",
+          "action": "sendToA",
+          "description": "Send the parcel to the Fragile Block."
+        },
+        {
+          "id": "send-to-standard-block",
+          "action": "sendToB",
+          "description": "Send the parcel to the Standard Block."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "sort-all",
+      "label": "Sort every parcel",
+      "check": "allSorted"
+    },
+    {
+      "id": "no-mistakes",
+      "label": "Every parcel is in the right block",
+      "check": "allSorted && mistakes == 0"
+    },
+    {
+      "id": "simple",
+      "label": "Use two rules or fewer",
+      "check": "allSorted && mistakes == 0 && rules <= 2",
+      "bonus": true
+    }
+  ]
+}

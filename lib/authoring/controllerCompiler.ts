@@ -132,6 +132,17 @@ export const PARKING_CONTROLLER_STARTER = `class ParkingController {
 
 return new ParkingController();`;
 
+export const SORTER_CONTROLLER_STARTER = `class SortingDesk {
+  decide(observation) {
+    const facts = observation.domain; // e.g. facts.isPrime, facts.number
+    if (!facts.hasItem) return "wait";
+    // Return "sendToA" for the first bin or "sendToB" for the second.
+    return "sendToB";
+  }
+}
+
+return new SortingDesk();`;
+
 export const DRONE_CONTROLLER_STARTER = `class SurveillanceDrone {
   constructor() {
     // Instance fields persist between ticks, so you can build your own map of
