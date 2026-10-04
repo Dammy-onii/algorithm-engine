@@ -39,13 +39,13 @@ but are not tamper-proof interview evidence.
 ### 2.1 Code editor
 
 The current editor is a controlled text area in
-`features/studio/components/layers/ControllerEditor.tsx`. It:
+`features/engine/studio/components/layers/ControllerEditor.tsx`. It:
 
 - displays and updates `brain.controllerCode`;
 - saves that source with the rest of the visual brain in browser storage;
 - provides one search across primitive actions and observable facts;
 - groups large world vocabularies into shared observation, transaction/queue,
-  provider, vehicle/facility, warehouse, and general world-state accordions;
+  provider, vehicle/facility, and general world-state accordions;
 - can insert a JavaScript example for every current world;
 - does not itself execute or validate the program.
 
@@ -106,7 +106,7 @@ observation snapshot and returns an action request.
 The active `WorldModule` owns domain-specific mechanics:
 
 - Maze owns maze completion facts.
-- Warehouse owns packages, deliveries, charging, and dynamic operations.
+- Simple Decisions owns the item queue, the two blocks, and item facts.
 - Finance owns transactions, provider state, queues, retries, failures, and
   timeouts.
 - Parking owns vehicles, spaces, gates, movements, releases, and congestion.
@@ -712,9 +712,9 @@ knows that the submitted program produced the actions.
 
 | Responsibility | Current source |
 |---|---|
-| Code tab UI | `features/studio/components/layers/ControllerEditor.tsx` |
+| Code tab UI | `features/engine/studio/components/layers/ControllerEditor.tsx` |
 | Code stored in visual brain | `lib/authoring/types.ts` |
-| Apply & Run selection | `features/studio/pages/StudioPage.tsx` |
+| Apply & Run selection | `features/engine/studio/pages/StudioPage.tsx` |
 | Browser JavaScript compiler | `lib/authoring/controllerCompiler.ts` |
 | Controller interface | `lib/engine/controller.ts` |
 | Observation creation | `lib/engine/decision/observation.ts` |
@@ -724,7 +724,7 @@ knows that the submitted program produced the actions.
 | Visual brain compiler | `lib/authoring/brainCompiler.ts` |
 | Visual Policy submission API | `app/api/interview/submit/route.ts` |
 | Demo suite delivery API | `app/api/interview/demo-suite/route.ts` |
-| Browser Code evaluator | `features/studio/workers/interviewCodeEvaluator.worker.ts` |
+| Browser Code evaluator | `features/engine/studio/workers/interviewCodeEvaluator.worker.ts` |
 | Shared scenario scoring | `lib/interview/evaluation/scenarioEvaluation.ts` |
 | Finance hidden evaluator | `lib/interview/server/evaluateFinanceSubmission.ts` |
 
@@ -737,4 +737,4 @@ evaluation.
 The simulation engine should expose one stable observation/action protocol. A
 JavaScript class, Python object, Java class, Go process, or Rust program can then
 participate in the same simulation without duplicating Finance, Parking, Maze,
-or Warehouse mechanics.
+Drone, or Simple Decisions mechanics.

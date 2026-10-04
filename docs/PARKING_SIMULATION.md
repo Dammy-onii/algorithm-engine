@@ -272,7 +272,7 @@ entrance wait × 0.4
 - Module registration:
   `lib/engine/worlds/registry.ts`
 - Operational renderer:
-  `features/simulation/components/renderers/ParkingRenderer.tsx`
+  `features/engine/simulation/components/renderers/ParkingRenderer.tsx`
 - Six immutable visible scenarios:
   `content/worlds/parking-*.json`
 - Six challenge briefs:

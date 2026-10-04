@@ -5,6 +5,85 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-10-04 — Simple Decisions pack, on-screen tour, and consistency pass
+
+### New world: Simple Decisions (first in the catalogue)
+
+- **Module.** `lib/engine/worlds/sorter.ts` (`kind: "sorter"`): items arrive one
+  at a time and the policy sends each to block A or B (`sendToA` / `sendToB`,
+  precondition `hasItem`). Each world supplies its items, two block labels, and
+  a `binARule` condition that decides the correct block, so new scenarios are
+  content only. Number facts (`isEven`, `isOdd`, `isPrime`) and `isFragile` are
+  computed by the module because the condition grammar has no arithmetic.
+- **Levels.** 28 Even or Odd (16 jumbled numbers), 29 Prime or Not (includes 1,
+  2, 9, 15, 21 so `isOdd` fails), 30 Fragile Parcels. All start empty, expose
+  only the two block functions, state the goal as "Your task: build a rule
+  that…", and give the full rules only in the last hint.
+- **Renderer.** `SorterRenderer.tsx`: a sorting point with a scattered pile of
+  waiting items and two blocks that mark each sorted item ✓ or ✗.
+- **Wiring.** Pack `decisions` is first in `PACKS`; curriculum concepts Number
+  facts → Choosing the right fact → If / otherwise; share-link pack code 6
+  (appended); Code-mode starter; world vocabulary in the tour.
+- See [DECISIONS_SIMULATION.md](./DECISIONS_SIMULATION.md).
+
+### Onboarding and dialogs
+
+- **On-screen tour.** The full-screen Guide is replaced by a nine-step tour
+  (`ChallengeWalkthrough.tsx`) that spotlights real elements tagged
+  `data-tour`: task, problem statement, hint, Add rule, the Conditions and
+  Functions sections, Apply & Run, the simulation panel, and Guide. It opens on
+  load until finished or skipped once (`ae-challenge-walkthrough-v5`), opens the
+  Policy subview it is explaining, switches Build/Run on narrow screens, places
+  its card below, above, or beside the highlight, and supports ←/→ and Escape.
+- **Removed** the green "Understand / Build / Run" strip (`FirstRunCoach.tsx`),
+  which repeated the tour.
+- **"You just learned"** is now a pop-up (`LearnedDialog.tsx`) with Next
+  challenge / Stay here, instead of a banner above the workspace.
+- Every Studio modal closes on Escape or a click outside it.
+
+### Plain, world-neutral copy
+
+- **How a rule works** (Rules tab) is rewritten as short bullets with an
+  umbrella example that solves no level.
+- **Conditions and Functions tabs** no longer talk about "the robot" or
+  "bricks". Operator examples and placeholders are built from the current
+  challenge's own facts instead of fixed maze/finance facts.
+- States, Memory, and the rule action picker say "controller" instead of
+  "robot"; the States example is world-specific only for Maze and Finance.
+- The empty rule list says "Nothing will happen until you add at least one
+  rule."
+
+### Public site
+
+- The companies page now marks Payments, Parking, Drone search, and Simple
+  decisions as **Live**, and Warehouse, Customer support, Delivery, Shared
+  software problems, and Your company's scenario as **Custom** (built with a
+  company). Previously unbuilt worlds carried the same "Example" badge as live
+  ones.
+- The 404 page and landing demo label no longer mention a warehouse.
+
+### Docs
+
+- Added [DECISIONS_SIMULATION.md](./DECISIONS_SIMULATION.md). The index lists
+  the five shipped worlds and drops links to deleted Warehouse/Supermarket docs.
+- ARCHITECTURE, ENGINE_LOADING, CHALLENGE_SCHEMA, ROUTING_AND_STRUCTURE,
+  INTERVIEW_SHARING, RULES, CODE_MODE, CONTENT_ARCHITECTURE, PROJECT_SUMMARY,
+  and the root README now describe the shipped modules, routes (`/` companies,
+  `/app` picker), the tour, and `features/engine/...` paths. Historical sections
+  are labelled as such rather than rewritten.
+
+### Verification
+
+- `npm test`: 28 files, 195 tests pass, including the new
+  `lib/engine/__tests__/sorter.test.ts` and the catalogue-wide check that an
+  empty policy passes no challenge.
+- `npx tsc --noEmit` passes. `npm run lint` reports one existing error
+  (`react-hooks/preserve-manual-memoization` on a `useMemo` in
+  `StudioPage.tsx`), unchanged by this work.
+- Browser-checked: all three levels, the tour at desktop and phone widths
+  (including starting from the Advanced tab), the pop-up, and outside-click
+  closing for the tour, problem list, and pop-up.
+
 ## 2026-09-17 — Six finance levels could be passed by doing nothing
 
 An audit that ran an empty policy (no rules, so it can only wait) against all 22

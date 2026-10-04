@@ -660,7 +660,7 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
           <div className="flex flex-wrap items-center gap-1 text-xs">
             <span
               className="shrink-0 font-semibold text-zinc-700 dark:text-zinc-300"
-              title="The action the robot performs when this rule fires"
+              title="The action that runs when this rule wins"
             >
               DO
             </span>
@@ -708,6 +708,7 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
       })}
 
       <button
+        data-tour="add-rule"
         onClick={add}
         className="flex items-center gap-2 rounded-lg border border-dashed border-zinc-300 px-3 py-2 text-sm text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-colors dark:border-zinc-700 dark:hover:border-zinc-500"
       >

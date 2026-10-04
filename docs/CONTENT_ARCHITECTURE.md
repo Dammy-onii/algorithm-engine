@@ -7,6 +7,11 @@ remotely) without redeploying the app.
 
 This is the design contract. Implementation lands in tiers (see the end).
 
+> **Status note.** The examples below use "warehouse" as the illustrative pack.
+> The Warehouse world has since been removed; the shipped packs are Simple
+> Decisions, Maze, Finance, Parking, and Drone Surveillance. The design applies
+> unchanged to any pack.
+
 ---
 
 ## Original coupling that motivated the design
@@ -99,12 +104,12 @@ content/
   lib/engine/worlds/
     maze/           world module (createRuntime, applyAction, observation, status)
     warehouse/      world module
-  features/simulation/components/renderers/
+  features/engine/simulation/components/renderers/
     WorldRenderer.tsx       renderer registry/dispatcher
     WarehouseRenderer.tsx   warehouse presentation
     FinanceRenderer.tsx     finance presentation
     ParkingRenderer.tsx     parking presentation
-  features/simulation/components/
+  features/engine/simulation/components/
     MazeRenderer.tsx        maze presentation
   ```
   A pack's `manifest.json` references these by **id** (`"renderer": "warehouse"`,
@@ -335,8 +340,8 @@ suite green, and only the last two change *where* content lives.
 - **Tier 2 — not started.** Pack manifests + `content/index.json`.
 - **Tier 3 — complete.** `WorldModule` owns domain schema validation, action and
   flag metadata, runtime, observation, and status. `World`, the loader and shared
-  types contain no warehouse behavior; `features/simulation/` dispatches Maze,
-  Warehouse, Supermarket, Finance, and Parking presentations through a renderer registry.
+  types contain no domain behavior; `features/engine/simulation/` dispatches Maze,
+  Sorter, Finance, Parking, Drone, and Cargo presentations through a renderer registry.
   Current verification totals are recorded in
   [CHANGELOG.md](./CHANGELOG.md). See
   [ENGINE_LOADING.md](./ENGINE_LOADING.md) for the current detail.

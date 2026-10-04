@@ -47,7 +47,10 @@ export function ProblemBrief({ challenge, attempts }: Props) {
       </div>
 
       {/* Headline — what to do (always visible) */}
-      <h2 className="mt-2 text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+      <h2
+        data-tour="task"
+        className="mt-2 text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100"
+      >
         {brief.headline}
       </h2>
       {/* One line of scenario framing */}
@@ -64,7 +67,10 @@ export function ProblemBrief({ challenge, attempts }: Props) {
       {(brief.detail.length > 0 ||
         brief.learn ||
         challenge.interviewEvaluation) && (
-        <div className="mt-4 flex flex-col gap-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-700">
+        <div
+          data-tour="problem"
+          className="mt-4 flex flex-col gap-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-700"
+        >
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
             Problem statement
           </p>
@@ -116,6 +122,7 @@ export function ProblemBrief({ challenge, attempts }: Props) {
           )}
           {revealedHints < brief.hints.length && (
             <button
+              data-tour="hint"
               onClick={() => setRevealedHints((n) => n + 1)}
               className={[
                 "text-xs font-medium underline-offset-2 transition-colors hover:underline",

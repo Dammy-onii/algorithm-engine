@@ -53,7 +53,7 @@ export function MemoryEditor({ memory, onChange }: Props) {
           What memory is
         </p>
         <p>
-          Key/value data the robot carries from tick 0. Values appear live in the debug
+          Key/value data the controller carries from the first step. Values appear live in the debug
           panel. Numbers, booleans, and strings are all valid.
         </p>
         <p className="mt-1.5">

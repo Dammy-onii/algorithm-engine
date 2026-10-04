@@ -1,6 +1,6 @@
 # Challenge Schema — the world-agnostic learner flow
 
-Every challenge across Maze, Warehouse, Supermarket, Finance, and Parking renders the
+Every challenge across Simple Decisions, Maze, Finance, Parking, and Drone renders the
 **same** learner experience: a complete problem statement, a live task checklist, escalating
 hints, and a results screen. That consistency comes from one typed schema plus a
 normalizer, so a new simulation type gets the whole flow for free by filling in
@@ -69,8 +69,8 @@ problem statement.
 `check` uses the **same safe expression grammar** as rule conditions and
 objectives, evaluated every tick against `liveContext(sim, brain)` — run-quality
 metrics (`reached`, `ticks`, `rules`, …) merged over the current observation
-(base flags **plus the active WorldModule's domain bag**). That is why a warehouse
-step can say `smallItemsPicked >= 1 || itemsDelivered >= 1` and a maze step `reached`:
+(base flags **plus the active WorldModule's domain bag**). That is why a sorting
+step can say `allSorted && mistakes == 0` and a maze step `reached`:
 the vocabulary is whatever the world exposes. A step with no `check` is
 informational; a malformed `check` reads as *not done* rather than throwing.
 
@@ -78,8 +78,8 @@ informational; a malformed `check` reads as *not done* rather than throwing.
 
 ```ts
 interface ChallengeTaxonomy {
-  domain?: string;      // "Maze" | "Warehouse" | "Finance"
-  simulation?: string;  // "Navigation" | "Order Processing" | "Payment Routing"
+  domain?: string;      // "Decisions" | "Maze" | "Finance" | "Parking" | "Drone"
+  simulation?: string;  // "Sorting Desk" | "Navigation" | "Payment Routing"
   tier?: "tutorial" | "easy" | "medium" | "hard";
   grade?: number;       // complexity ladder within a tier: 1, 5, 10, 20…
 }
@@ -93,21 +93,22 @@ values from the legacy `pack`/`stage`/`difficulty` when `taxonomy` is absent.
 
 ---
 
-## Worked example (warehouse first orders)
+## Worked example (Even or Odd)
 
 ```jsonc
 {
-  "taxonomy": { "domain": "Warehouse", "simulation": "Order Processing", "tier": "tutorial", "grade": 1 },
-  "brief":   "Send the picker to waiting rack tasks, then deliver its cargo to packing.",
-  "context": "One picker works between receiving, four storage racks, and packing.",
+  "taxonomy": { "domain": "Decisions", "simulation": "Sorting Desk", "tier": "tutorial", "grade": 1 },
+  "brief":   "Send each even number to the Even Block. Send each odd number to the Odd Block.",
+  "context": "Number cards arrive one at a time. Each number is either even or odd.",
   "steps": [
-    { "id": "pick",    "label": "Collect the first item-unit", "check": "smallItemsPicked >= 1" },
-    { "id": "deliver", "label": "Deliver cargo to packing",   "check": "itemsDelivered >= 1" }
+    { "id": "first", "label": "Send the first card to a block", "check": "sortedCount >= 1" },
+    { "id": "all",   "label": "Sort all sixteen cards",         "check": "allSorted" },
+    { "id": "clean", "label": "Put every card in the right block", "check": "allSorted && mistakes == 0" }
   ]
 }
 ```
 
-See [content/challenges/warehouse/06-warehouse-first-orders.json](../content/challenges/warehouse/06-warehouse-first-orders.json).
+See [content/challenges/decisions/28-decisions-even-odd.json](../content/challenges/decisions/28-decisions-even-odd.json).
 
 ## Published-content consistency contract
 
@@ -128,6 +129,10 @@ A bundled challenge must satisfy all of these:
    fields may remain in legacy JSON for compatibility, but learner text must
    never claim they control execution.
 7. `stage` and `taxonomy.tier` agree (`practice` is presented as `tutorial`).
+8. A policy that does nothing cannot pass. Required objectives must not be met
+   by an empty rule set (for example, a queue that drains because every item
+   expired).
 
-These checks run in `lib/content/__tests__/registry.test.ts`. The same schema
+Checks 1–7 run in `lib/content/__tests__/registry.test.ts`; check 8 runs in
+`lib/content/__tests__/challenge-integrity.test.ts`. The same schema
 supports future worlds without a new problem-flow UI.

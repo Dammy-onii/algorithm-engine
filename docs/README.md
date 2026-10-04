@@ -6,9 +6,9 @@ Start here. The docs are grouped by purpose.
 - [CHANGELOG.md](./CHANGELOG.md) — **current feature changes, verification, and
   known limits**. Read this first when resuming work.
 - [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) — what the platform is, in one page.
-- [UX_FIRST_GLANCE.md](./UX_FIRST_GLANCE.md) — proposed first-open information
-  architecture, progressive disclosure, debugging flow, and implementation
-  order for reducing learner confusion.
+- [UX_FIRST_GLANCE.md](./UX_FIRST_GLANCE.md) — the original first-open
+  information-architecture proposal. The shipped onboarding is the on-screen
+  tour described in [CHANGELOG.md](./CHANGELOG.md).
 - [summary.md](./summary.md) — the original long-form vision.
 - [ROADMAP.md](./ROADMAP.md) — all 8 milestones: what each proves + how to present it.
 - [MILESTONES.md](./MILESTONES.md) — milestone status overview.
@@ -29,15 +29,17 @@ Start here. The docs are grouped by purpose.
 - [CONTENT_ARCHITECTURE.md](./CONTENT_ARCHITECTURE.md) — the plug-and-play content-pack
   plan (file org, world loading, decoupling, migration tiers).
 
-## Milestone design docs
-- [MILESTONE2.md](./MILESTONE2.md) — Intelligence Authoring System.
-- [MILESTONE3.md](./MILESTONE3.md) — Intelligence Composition (derived conditions, objectives).
-- [MILESTONE4.md](./MILESTONE4.md) — Learning & Progression (curriculum).
-- [WAREHOUSE_SIMULATION.md](./WAREHOUSE_SIMULATION.md) — the warehouse world design:
-  one-picker order processing on a compact factory floor, plus the staged
-  constraints reserved for later levels.
-- [SUPERMARKET_SIMULATION.md](./SUPERMARKET_SIMULATION.md) — live supermarket
-  shelf restocking, customer demand, bot travel, scoring, and curated assets.
+## Shipped worlds
+
+The catalogue, in order: **Simple Decisions, Maze, Finance, Parking, Drone
+Surveillance**. Warehouse and Supermarket worlds existed in earlier builds and
+have been removed; older docs below may still mention them.
+
+- [DECISIONS_SIMULATION.md](./DECISIONS_SIMULATION.md) — the beginner sorting
+  desk: one generic module, three tutorial levels (Even or Odd, Prime or Not,
+  Fragile Parcels).
+- [MAZE_LEVELS.md](./MAZE_LEVELS.md) — Maze level directory, difficulty policy,
+  and the branching-maze authoring reference.
 - [FINANCE_SIMULATION.md](./FINANCE_SIMULATION.md) — the finance (payment routing)
   world: a non-grid world on the same engine and its complete curriculum.
 - [FINANCE_INTERVIEW_TRACK.md](./FINANCE_INTERVIEW_TRACK.md) — the three
@@ -48,11 +50,16 @@ Start here. The docs are grouped by purpose.
 - [PARKING_INTERVIEW_TRACK.md](./PARKING_INTERVIEW_TRACK.md) — three
   interview-grade automated-facility problems, real-time mechanics, hidden
   submission suites, scoring, and current controller boundary.
+- **Drone Surveillance** (search and cargo modules) — documented in
+  [ARCHITECTURE.md](./ARCHITECTURE.md) under "Drone module" and "Cargo module".
 - [INTERVIEW_SHARING.md](./INTERVIEW_SHARING.md) — single-stage and compact
   multi-problem share routes, tutorial-first ordering, signed registry
   references, visible/hidden resolution, and persistence limits.
-- [MAZE_LEVELS.md](./MAZE_LEVELS.md) — Maze level directory, difficulty policy,
-  and the branching-maze authoring reference.
+
+## Milestone design docs
+- [MILESTONE2.md](./MILESTONE2.md) — Intelligence Authoring System.
+- [MILESTONE3.md](./MILESTONE3.md) — Intelligence Composition (derived conditions, objectives).
+- [MILESTONE4.md](./MILESTONE4.md) — Learning & Progression (curriculum).
 
 ## Progress trackers (resumable checklists)
 - [task.md](./task.md) · [PROGRESS.md](./PROGRESS.md) ·

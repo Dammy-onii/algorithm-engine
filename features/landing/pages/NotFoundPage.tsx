@@ -57,8 +57,8 @@ export function NotFoundPage() {
               </h2>
             </div>
             <p className="text-base leading-relaxed text-ink-60">
-              CTRL turns real operational problems — routing payments, dispatching deliveries,
-              running a warehouse — into challenges you solve by designing the decision logic that
+              CTRL turns real operational problems — routing payments, running a parking
+              facility, flying a search drone — into challenges you solve by designing the decision logic that
               runs them, then watching it perform. Practise the problems yourself, or use them to
               see how candidates actually think. The demo above is a small version of the same loop:
               observe, decide, act, repeat — move one rule and the solution stops working.

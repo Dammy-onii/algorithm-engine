@@ -2,11 +2,16 @@
 
 This is the current technical reference for Algorithm Engine. It describes the
 runtime as it is implemented today, including the boundary between the generic
-simulation engine and a world-specific domain such as Warehouse Automation.
+simulation engine and a world-specific domain such as Payment Routing.
+
+Shipped worlds, in catalogue order: **Simple Decisions** (`sorter` module),
+**Maze**, **Finance**, **Parking**, and **Drone Surveillance** (`drone` and
+`cargo` modules). Warehouse and Supermarket modules existed in earlier builds
+and have been removed.
 
 The central rule is simple:
 
-> The engine executes data. It does not contain a particular maze, warehouse
+> The engine executes data. It does not contain a particular maze, sorting desk
 > layout, challenge solution, or user-authored brain.
 
 That rule makes a new **level** primarily a content change, and a new **kind of
@@ -97,7 +102,7 @@ The engine accepts exactly two immutable input contracts.
 
 `WorldData` describes the environment: dimensions, tiles, start/goal, optional
 energy, and a `kind`. A world module can own an additional static configuration:
-Warehouse adds packages, zones, stations, and chargers; Finance adds providers
+the sorting desk adds items and two labelled blocks; Finance adds providers
 and transactions; Parking adds spaces and scheduled vehicles.
 
 Its TypeScript definition lives in `lib/engine/types.ts`; the JSON files live in
@@ -175,14 +180,15 @@ VisualBrain ──► compileBrain() ──► BrainSource
 ```
 
 `lib/engine/runtime/loader.ts` is deliberately strict. It rejects malformed
-grids, out-of-bounds start/goal tiles, bad warehouse robot/shelf/order data,
+grids, out-of-bounds start/goal tiles, bad module data (such as an invalid
+sorting rule or a provider outside A–C),
 unknown functions, duplicate function IDs, recursive function plans, invalid
 conditions, bad state references, and circular derived conditions before a run
 starts. This makes authoring errors appear on **Apply & Run**, not half-way through
 a tick loop.
 
 `lib/content/datasets.ts` is the bundled demonstration registry. It maps stable keys
-such as `warehouse-first-orders` to imported JSON and shared entity data.
+such as `decisions-even-odd` to imported JSON and shared entity data.
 Challenges reference those stable keys rather than importing world files directly.
 
 ---
@@ -260,42 +266,22 @@ evaluator, and the decision pipeline do not branch on a particular world type.
 one domain rule is completion: the agent must occupy the goal for
 `goalHoldTicks` consecutive ticks.
 
-### Warehouse module
+### Sorter module (Simple Decisions)
 
-`lib/engine/worlds/warehouse.ts` owns warehouse-only behaviour:
+`lib/engine/worlds/sorter.ts` is the beginner world. One item arrives at a
+time and the policy sends it to block A or block B with `sendToA` / `sendToB`
+(precondition `hasItem`). The world supplies its items, two block labels, and a
+`binARule` condition that decides which items belong in block A, so every
+scenario (even/odd, prime, fragile parcels) is content on one module. Because
+the condition grammar has no arithmetic, the module publishes `isEven`,
+`isOdd`, `isPrime`, and `isFragile` as yes/no facts. Completion is `reached`
+once the conveyor is empty; objectives grade `mistakes`. See
+[DECISIONS_SIMULATION.md](./DECISIONS_SIMULATION.md).
 
-- Expands arriving orders into one claimable pick task per requested item-unit.
-- Maintains one or more typed robots behind a round-robin current-robot
-  dispatcher. The shipped *First Orders* level instantiates only one `picker`;
-  `forklift` and `coldchain` remain module capabilities for later content.
-- Implements typed `pickSmall`, `pickLarge`, and `pickFrozen` assignments plus
-  `deliver` and optional `charge`.
-- Advances every robot's abstract shelf/packing travel while the generic engine
-  still requests only one policy decision per tick.
-- Enforces robot type, idle state, and cargo capacity through action
-  preconditions; resolves order completion and deadlines in module state.
-- Produces robot, task, order, typed-pick, packing, deadline, and score facts in
-  `Observation.domain`.
+### Finance and Parking modules
 
-Those flags are returned in `Observation.domain`. The common evaluator spreads that
-bag into its context, so a warehouse rule can write
-`robotIsPicker && smallTaskAvailable` without the evaluator gaining
-warehouse-specific code.
+These modules set `tracksMovement: false` and use the common tick lifecycle:
 
-### Supermarket, Finance, and Parking modules
-
-These modules set `tracksMovement: false` and use the common tick lifecycle.
-For Supermarket this means the domain owns its route progress rather than the
-generic maze visited-cell heuristic; it still displays and pathfinds over its
-authored floor grid:
-
-- `supermarket.ts` owns the shared floor/fixture contract, breadth-first routes,
-  phased stockroom → shelf → standby travel, shelf stock, scheduled demand,
-  backroom inventory, lost sales, category-specific dispatch, and completion
-  after the demand period ends with healthy shelves. Layout presentation is an
-  authored choice: the geometry-first tutorial and illustrated Closing Rush
-  both retain the same collision/path contract. The Kenney Mini Market test
-  stage exercises a third presentation variant without adding engine branches.
 - `finance.ts` owns payment queues, provider health, routing outcomes, costs,
   failures, and completion after the queue settles.
 - `parking.ts` owns scheduled arrivals, typed parking capacity, assignments,
@@ -303,8 +289,7 @@ authored floor grid:
   waiting time, utilization, and completion after every vehicle has left.
 
 Their renderers consume public module queries. Neither the generic `World` nor
-the decision pipeline contains Supermarket-, Finance-, or Parking-specific
-branches.
+the decision pipeline contains Finance- or Parking-specific branches.
 
 ### Drone module
 
@@ -378,12 +363,11 @@ outcomes are locked by tests.
 
 ```text
 "maze"      → mazeModule
-"warehouse" → warehouseModule
-"supermarket" → supermarketModule
 "finance"   → financeModule
 "parking"   → parkingModule
 "drone"     → droneModule
 "cargo"     → cargoModule
+"sorter"    → sorterModule
 missing kind → mazeModule
 ```
 
@@ -395,15 +379,15 @@ facts, so a Finance fact cannot enter a Maze run.
 
 ### Decoupling status
 
-The shared `WorldData` now contains only common grid/agent data. Warehouse schema
-types and validation live in `worlds/warehouse.ts`; `ActionType` is an open action
-identifier with shared `BASE_ACTIONS` plus actions collected from registered modules.
-`World` no longer exposes warehouse helpers: renderers and tests use the warehouse
-module's public queries directly.
+The shared `WorldData` now contains only common grid/agent data. Each module's
+schema types and validation live in its own file under `worlds/`; `ActionType`
+is an open action identifier with shared `BASE_ACTIONS` plus actions collected
+from registered modules. `World` exposes no domain helpers: renderers and tests
+use each module's public queries directly.
 
 Function plans are checked a second time when a `World` is built: a plan may use
 only the base actions and actions declared by that world's active module. This keeps
-the open action identifier extensible without allowing a warehouse action to run in
+the open action identifier extensible without allowing a finance action to run in
 a maze.
 
 Studio resolves Code reference facts and playback behaviour from the challenge's
@@ -413,17 +397,14 @@ actions or facts.
 
 Each module declares typed `domainFlags`, and the registry derives both the known
 condition vocabulary and editor metadata from every registered module. Studio's
-condition controls therefore do not maintain a warehouse-specific flag list.
+condition controls therefore do not maintain a per-world flag list.
 
 The application dispatches boards and legends through
-`features/simulation/components/renderers/WorldRenderer.tsx`: `MazeRenderer` is maze-only and
-`WarehouseRenderer` owns the interactive order-flow board, compact sprite-backed
-factory floor, robot travel, shelf/packing inspection, and order workboard;
-`SupermarketRenderer` renders the module's exact plan grid, blocked fixture
-footprints, remaining route, live shelf health, backroom inventory, scheduled
-demand, and cell-by-cell restocking-bot motion;
-`FinanceRenderer` owns the transfer flow; and `ParkingRenderer` owns the
-operational lot. The debug panel is generic and shows whatever facts the active
+`features/engine/simulation/components/renderers/WorldRenderer.tsx`: `MazeRenderer`
+is maze-only; `SorterRenderer` owns the sorting point and the two blocks, marking
+each sorted item right or wrong; `FinanceRenderer` owns the transfer flow;
+`ParkingRenderer` owns the operational lot; and `DroneRenderer` / `CargoRenderer`
+own the search area and cargo run. The debug panel is generic and shows whatever facts the active
 module observed.
 
 Adding a new world still requires its reviewed module and renderer to be registered
@@ -482,14 +463,14 @@ The collapsible Policy Constraints panel exposes the exact expressions and
 world-specific violations. Both autoplay and manual Step use the same terminal
 grading and persistence path.
 
-`features/studio/pages/StudioPage.tsx` persists a user's visual brain through
-`features/studio/persistence.ts` under `ae-brain-<challenge-id>` and completion
+`features/engine/studio/pages/StudioPage.tsx` persists a user's visual brain through
+`features/engine/studio/persistence.ts` under `ae-brain-<challenge-id>` and completion
 under `ae-complete-<challenge-id>` in `localStorage`. Persistence stays keyed by
 challenge ID, so routing does not change saved work.
 
 Studio owns a full-width problem workspace rather than using catalogue page
-chrome. Its toolbar provides challenge-directory, previous/next, run, Lab, and
-theme actions. The authoring and simulation panes scroll independently on wide
+chrome. Its toolbar provides challenge-directory, previous/next, run, Lab, Guide,
+and theme actions. The authoring and simulation panes scroll independently on wide
 screens: the desktop page is fixed to the viewport and each pane body owns its
 visible scrollbar. Narrow screens stack the panes and use normal document
 scrolling. A local Problem list drawer searches the current pack and displays the
@@ -500,6 +481,18 @@ rendered. Drawer difficulty uses the catalogue policy, including a green
 Tutorial label for guided difficulty-1 challenges. Selecting an item still
 changes the URL through the router.
 
+On load, Studio opens an on-screen tour (`ChallengeWalkthrough.tsx`) until the
+learner finishes or skips it once (`ae-challenge-walkthrough-v5`); Guide
+replays it. Each step spotlights a real element tagged with `data-tour` (task,
+problem statement, hint, Add rule, the Conditions and Functions sections, Apply
+& Run, the simulation panel, Guide). The tour opens the Policy subview it is
+explaining through a window event, switches the Build/Run tab on narrow
+screens, and falls back to a centred card when an element is not on screen.
+
+The first time a challenge passes, a "You just learned" pop-up
+(`LearnedDialog.tsx`) names the concept and offers the next unlocked challenge.
+Every Studio modal closes on Escape or a click outside it.
+
 Visual brains may also contain editor-only rule-folder metadata. Folders are saved
 with the visual brain and let users categorise large rule sets, but the compiler
 omits them from `BrainSource`; engine behaviour remains governed by each rule's
@@ -509,8 +502,8 @@ condition and its global top-to-bottom order.
 
 `lib/curriculum/concepts.ts` maps each teaching challenge to a concept and that
 concept's prerequisites. A challenge is open only when the teaching challenges for
-all prerequisite concepts are complete. The maze and warehouse paths intentionally
-have separate first practice challenges.
+all prerequisite concepts are complete. Each world's path has its own first
+practice challenge with no prerequisites, so every world is open from the start.
 
 ---
 
@@ -523,14 +516,13 @@ content/
     default/             sample maze follower
     naive/               deliberately limited sample
     dash/                multi-step-brick sample
-    warehouse/           sample warehouse worker
     finance/             sample payment router
     parking/             sample smart-facility operator
     drone/               sample surveillance drone
     cargo/               sample greedy cargo drone
   challenges/
+    decisions/           Simple Decisions descriptors
     maze/                Maze descriptors
-    warehouse/           Warehouse descriptors
     finance/             Finance descriptors
     parking/             Parking descriptors
     drone/               Drone Surveillance + cargo descriptors
@@ -541,15 +533,18 @@ lib/
   authoring/             Studio compiler, decompiler and objective evaluator
   curriculum/            progression graph
 app/
-  page.tsx               home route
+  page.tsx               companies landing page
+  app/page.tsx           world picker (/app)
   [pack]/…               thin validated route segments
   lab/                    raw JSON harness route
 features/
-  application/           shared PageLayout
-  catalogue/             Home/directory page UI and difficulty policy
-  studio/                Studio page state, persistence and authoring UI
-  lab/                   Lab page state and raw JSON editor
-  simulation/            shared stage, controls, debug panel and renderers
+  engine/
+    application/         shared PageLayout
+    catalogue/           world picker/directory UI and difficulty policy
+    studio/              Studio page state, persistence, tour and authoring UI
+    lab/                 Lab page state and raw JSON editor
+    simulation/          shared stage, controls, debug panel and renderers
+  landing/               public site pages (companies, education, login, 404)
 shared/
   components/            cross-feature UI
 assets/
@@ -562,7 +557,7 @@ fetching should not change the engine, Studio, or route contracts.
 
 The UI dependency direction is also deliberate: each route file renders its own
 feature page component. Catalogue and Lab pages share the stateless
-`features/application/components/PageLayout.tsx`; Studio owns its denser problem
+`features/engine/application/components/PageLayout.tsx`; Studio owns its denser problem
 workspace chrome. Studio and Lab reuse simulation presentation, but no page
 shares route state. The generic engine remains below all React code.
 
@@ -573,9 +568,11 @@ shares route state. The generic engine remains below all React code.
 The App Router owns what screen is displayed:
 
 ```text
-/                       world picker
+/                       companies landing page
+/education              education landing page
+/app                    world picker
+/decisions              validated Simple Decisions challenge-row directory
 /maze                   validated Maze challenge-row directory
-/warehouse              validated Warehouse challenge-row directory
 /finance                validated Finance challenge-row directory
 /parking                validated Parking challenge-row directory
 /drone                  validated Drone Surveillance challenge-row directory

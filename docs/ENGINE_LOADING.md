@@ -15,7 +15,7 @@ Tier 3 decoupling refactor.
 Everything the engine runs is data in one of two shapes:
 
 - **`WorldData`** — the environment (grid dimensions, tiles, start/goal, optional
-  energy, and an optional `kind` + world-type config such as `warehouse`).
+  energy, and an optional `kind` + world-type config such as `finance`).
 - **`BrainSource`** — the six-layer agent intelligence (goals, states, rules,
   functions, conditions, memory).
 
@@ -147,20 +147,11 @@ Shipped modules (`lib/engine/worlds/`):
 - **`maze.ts`** — no domain runtime, no domain actions. Its only behaviour is
   completion: *settle on the goal* for `goalHoldTicks` consecutive ticks
   (tracked as `world.ticksAtGoal`). `observe()` returns `{}`.
-- **`warehouse.ts`** — a **non-grid central-dispatch world**
-  (`tracksMovement: false`): typed robots (one picker in the shipped tutorial),
-  per-unit order tasks, shelves, abstract travel, packing, optional charging
-  and deadlines; the
-  `pickSmall` / `pickLarge` / `pickFrozen` / `deliver` / `charge` actions; and
-  the live robot/order observation bag. See
-  [WAREHOUSE_SIMULATION.md](./WAREHOUSE_SIMULATION.md).
-- **`supermarket.ts`** — a **grid-backed retail-operations world** whose domain
-  owns movement (`tracksMovement: false`): one shared `18 × 14` floor contract,
-  blocked fixture footprints, breadth-first bot routing, five shelf categories,
-  scheduled demand, backroom stock, phased restocking jobs, lost sales,
-  shelf-health metrics, the `restockEmpty` / `restockLow` / `restockAny`
-  fallbacks, and five department-specific restock actions. See
-  [SUPERMARKET_SIMULATION.md](./SUPERMARKET_SIMULATION.md).
+- **`sorter.ts`** — a **non-grid** beginner world (`tracksMovement: false`): a
+  queue of items, two labelled blocks, `sendToA` / `sendToB` actions, a
+  content-supplied `binARule` that decides each item's correct block, and
+  computed yes/no facts (`isEven`, `isOdd`, `isPrime`, `isFragile`). See
+  [DECISIONS_SIMULATION.md](./DECISIONS_SIMULATION.md).
 - **`finance.ts`** — a **non-grid** world (`tracksMovement: false`): a transaction
   queue + provider health as the runtime, `routeTo{A,B,C}` / `hold` / `decline`
   actions with seeded (reproducible) outcomes, completion (*queue drained*), and
@@ -171,6 +162,10 @@ Shipped modules (`lib/engine/worlds/`):
   compatibility violations, entry/exit wait and utilization metrics, and
   completion after every vehicle leaves. See
   [PARKING_SIMULATION.md](./PARKING_SIMULATION.md).
+- **`drone.ts`** and **`cargo.ts`** — grid-backed worlds whose module owns
+  movement (`tracksMovement: false`): a search drone with sensor coverage, and a
+  cargo drone with a weight-dependent battery. See the Drone and Cargo sections
+  of [ARCHITECTURE.md](./ARCHITECTURE.md).
 - **`registry.ts`** — `resolveWorldModule(kind)` maps a `WorldData.kind` to its
   module (default `maze`); `allDomainFlags()` is the union of every module's flag
   names, used for initial parsing and authoring metadata.
@@ -207,6 +202,9 @@ end-to-end without touching the `Observation` type or the evaluator.
 ---
 
 ## Decoupling completion (Tier 3)
+
+> Historical record. The warehouse world described here has since been removed
+> from the product; the seam it proved is what every shipped module now uses.
 
 The warehouse world was originally added *into* the engine. This refactor moved it
 behind the `WorldModule` seam. Warehouse references in the engine core, before → after:

@@ -1,35 +1,55 @@
 import { Eyebrow, Reveal, Section } from "./primitives";
 
+// "Live" scenarios can be opened in the product today; "Custom" ones are
+// built with a company as part of a pilot.
 const SIMS = [
   {
     name: "Banking & payments",
     teaches: "Reliability · cost · recovery",
     body: "Ask candidates to route payments across different providers, respond when a channel fails, and balance speed, cost, and reliability.",
-    status: "Example",
+    status: "Live",
+  },
+  {
+    name: "Parking operations",
+    teaches: "Matching · capacity · priority",
+    body: "Ask candidates to place arriving vehicles, match each one to the right space, and protect priority access as spaces fill and free up.",
+    status: "Live",
+  },
+  {
+    name: "Drone search",
+    teaches: "Search · planning · limited battery",
+    body: "Ask candidates to program a drone that sweeps unknown ground, finds a target, and reports it before the battery runs out.",
+    status: "Live",
+  },
+  {
+    name: "Simple decisions",
+    teaches: "Conditions · rule order · fallbacks",
+    body: "A gentle warm-up: sort each arriving item into the right place with one or two rules. Good for checking the basics before a harder problem.",
+    status: "Live",
   },
   {
     name: "Warehouse operations",
     teaches: "Priorities · workload · resources",
     body: "Ask candidates to assign incoming orders, manage limited resources, and keep work moving as demand and availability change.",
-    status: "Example",
+    status: "Custom",
   },
   {
     name: "Customer support",
     teaches: "Queues · urgency · fairness",
     body: "Ask candidates to organise incoming requests, identify what needs attention first, and prevent important cases from being overlooked.",
-    status: "Example",
+    status: "Custom",
   },
   {
     name: "Delivery operations",
     teaches: "Assignment · timing · change",
     body: "Ask candidates to match drivers with orders while customer promises, traffic, availability, and priorities keep changing.",
-    status: "Example",
+    status: "Custom",
   },
   {
     name: "Shared software problems",
     teaches: "Queues · priorities · capacity",
     body: "Assess the everyday thinking behind software systems, even when the scenario is not tied to one industry or department.",
-    status: "Example",
+    status: "Custom",
   },
   {
     name: "Your company's scenario",
@@ -64,7 +84,7 @@ export function Simulations() {
                 <h3 className="text-lg font-medium">{s.name}</h3>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wide uppercase ${
-                    s.status === "Example"
+                    s.status === "Live"
                       ? "bg-volt text-ink"
                       : "border border-line text-ink-40"
                   }`}

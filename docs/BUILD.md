@@ -113,7 +113,7 @@ never in `netlify.toml`.
 - Engine code: pure functions and small classes; no side effects outside `World`.
 - Route files stay thin; interactive behavior belongs to its owning feature.
 - Cross-feature UI belongs in `shared/`, not in an unrelated feature folder.
-- `features/application/` provides stateless shared page chrome; it must not own a
+- `features/engine/application/` provides stateless shared page chrome; it must not own a
   route enum, simulation timer, or feature state.
 - Keep reusable non-React policy in a feature-level module rather than burying it
   inside a component.

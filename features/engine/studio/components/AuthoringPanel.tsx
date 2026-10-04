@@ -13,11 +13,12 @@
  * not hue.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { VisualBrain, ChallengeData } from "@/lib/authoring/types";
 import { compileBrainToTexts } from "@/lib/authoring/brainCompiler";
 import { BrainIntelligence } from "./BrainIntelligence";
 import { ProblemBrief } from "./ProblemBrief";
+import { SHOW_POLICY_TAB_EVENT } from "./ChallengeWalkthrough";
 import { StateEditor } from "./layers/StateEditor";
 import { RuleBuilder } from "./layers/RuleBuilder";
 import { FunctionComposer } from "./layers/FunctionComposer";
@@ -70,6 +71,17 @@ export function AuthoringPanel({
   const [policyTab, setPolicyTab] = useState<PolicyTab>("rules");
   const [advancedTab, setAdvancedTab] = useState<AdvancedTab>("states");
   const [showJson, setShowJson] = useState(false);
+
+  // The on-screen tour opens the Policy subview it is explaining.
+  useEffect(() => {
+    const show = (event: Event) => {
+      const tab = (event as CustomEvent<PolicyTab>).detail;
+      setPrimaryTab("policy");
+      setPolicyTab(tab);
+    };
+    window.addEventListener(SHOW_POLICY_TAB_EVENT, show);
+    return () => window.removeEventListener(SHOW_POLICY_TAB_EVENT, show);
+  }, []);
 
   const jsonTexts = showJson ? compileBrainToTexts(brain) : null;
 
@@ -163,7 +175,7 @@ export function AuthoringPanel({
 
         <div className="min-h-32">
           {primaryTab === "policy" && (
-            <div className="flex flex-col gap-3">
+            <div data-tour="policy-panel" className="flex flex-col gap-3">
               <div className="flex flex-wrap gap-1 border-b border-zinc-100 pb-3 dark:border-zinc-800">
                 {(["rules", "conditions", "functions", "advanced"] as const).map(
                   (tab) => (

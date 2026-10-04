@@ -226,11 +226,14 @@ observation flags:
 |--------|--------------|
 | `moveForward` | `!wallAhead` |
 | `turnLeft` / `turnRight` / `wait` | always possible |
-| `pickSmall` | `robotIdle && robotIsPicker && smallTaskAvailable && robotCapacityRemaining > 0` |
-| `pickLarge` | `robotIdle && robotIsForklift && largeTaskAvailable && robotCapacityRemaining > 0` |
-| `pickFrozen` | `robotIdle && robotIsColdchain && frozenTaskAvailable && robotCapacityRemaining > 0` |
-| `deliver` | `robotIdle && robotCarrying > 0` |
-| `charge` | `robotIdle && chargerFree` |
+| `sendToA` / `sendToB` (Simple Decisions) | `hasItem` |
+| `parkStandard` (Parking) | `hasWaitingVehicle && standardAvailable && laneAvailable` |
+| `releaseVehicle` (Parking) | `hasExitRequest && exitGateAvailable` |
+| `report` (Drone) | `atTarget` |
+| `recharge` (Drone) | `onPad` |
+
+Each world module lists its full set in `actionPreconditions` in its file under
+`lib/engine/worlds/`.
 
 Base guards live in the engine; each world module may contribute its own via
 `WorldModule.actionPreconditions`. When selecting a rule, the engine skips any
@@ -252,7 +255,7 @@ current tick during a run.
 ### Rule folders in Studio
 
 Studio can group cards into named **rule folders** such as “Safety”, “Navigation”,
-or “Warehouse delivery”. Create, rename, or remove folders in the Rules tab, then
+or “Parking exits”. Create, rename, or remove folders in the Rules tab, then
 choose a folder on each rule card. A folder's **Collapse** control hides its
 assigned cards; **Expand** makes them visible again. Removing a folder leaves its
 rules intact and returns them to **Unfiled**.
@@ -410,9 +413,9 @@ A brick is **either** single-step or multi-step:
 ```
 
 - **Single-step** — `{ "action": ... }`. The maze primitives are `moveForward`,
-  `turnLeft`, `turnRight`, and `wait`; warehouse worlds additionally expose
-  `pickUp`, `deliver`, and (where configured) `charge`. Finance, Parking, and
-  future modules contribute their own single-action wrappers through the same
+  `turnLeft`, `turnRight`, and `wait`. Simple Decisions, Finance, Parking,
+  Drone, and future modules contribute their own single-action wrappers (such
+  as `sendToA`, `routeToB`, `parkStandard`, `report`) through the same
   contract. Studio marks every single-action wrapper as a locked engine/world
   primitive rather than a user-composed function.
 - **Multi-step** — `{ "steps": [...] }`. A list of primitive actions **and/or other

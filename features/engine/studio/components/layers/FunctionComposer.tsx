@@ -76,18 +76,18 @@ export function FunctionComposer({ functions, availableBricks, composable, onCha
           What a function is
         </p>
         <p>
-          A function (or &quot;brick&quot;) is a named action the robot can perform. The
-          engine ships built-in primitives — everything the robot can physically
-          do. {composable
-            ? "You can also compose your own multi-step bricks from them below."
-            : "Composing your own multi-step bricks unlocks in a later challenge."}
+          A function is an action you can use in the DO part of a rule. The ones
+          below come with this challenge.{" "}
+          {composable
+            ? "You can also join them into your own multi-step functions below."
+            : "Joining them into your own multi-step functions unlocks in a later challenge."}
         </p>
       </div>
 
       {/* Default bricks available in this challenge (always listed + explained) */}
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Available bricks in this challenge
+          Functions in this challenge
         </h3>
         <div className="flex flex-col gap-1.5">
           {defaultBrickIds.map((id) => {

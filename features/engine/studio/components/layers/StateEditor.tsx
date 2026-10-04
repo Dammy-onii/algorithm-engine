@@ -110,7 +110,7 @@ export function StateEditor({
               transactions through that lifecycle.
             </p>
           </>
-        ) : (
+        ) : domain === "maze" ? (
           <>
             <p className="mt-2">
               A maze controller might use two modes:
@@ -123,6 +123,22 @@ export function StateEditor({
               <div>
                 <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">seek</span>{" "}
                 — close in once the goal comes into view.
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mt-2">
+              For example, a controller might use two modes:
+            </p>
+            <div className="my-1.5 flex flex-col gap-1 border-l-2 border-zinc-300 pl-3 dark:border-zinc-700">
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">searching</span>{" "}
+                — look for what it needs.
+              </div>
+              <div>
+                <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">acting</span>{" "}
+                — deal with it once it is found.
               </div>
             </div>
           </>
@@ -210,7 +226,7 @@ export function StateEditor({
             <div className="flex flex-col gap-1 border-t border-zinc-100 pt-2 text-xs text-zinc-500 dark:border-zinc-800">
               {isInitial && (
                 <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                  Initial state — the robot starts here.
+                  Initial state — the controller starts here.
                 </span>
               )}
               <span>

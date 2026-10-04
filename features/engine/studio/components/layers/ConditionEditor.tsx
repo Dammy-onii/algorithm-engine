@@ -52,6 +52,21 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
   // Only this challenge's flags are documented; other worlds' vocabulary never
   // leaks in. Derived conditions the user has named are usable too.
   const challengeFlagDocs = ALL_FLAG_DOCS.filter((f) => available.has(f.id));
+  // Examples are built from this challenge's own facts, so the help never
+  // shows another world's vocabulary (no walls in a sorting level).
+  const yesNo = challengeFlagDocs
+    .filter((f) => f.type === "bool" && f.id !== "always" && f.id !== "never")
+    .map((f) => f.id);
+  const numeric = challengeFlagDocs.filter((f) => f.type === "number").map((f) => f.id);
+  const factA = yesNo[0] ?? "factA";
+  const factB = yesNo[1] ?? "factB";
+  // Grouping needs a third fact to read naturally; otherwise negate a group.
+  const groupExample = yesNo[2]
+    ? `(${factA} || ${factB}) && !${yesNo[2]}`
+    : `!(${factA} && ${factB})`;
+  const count = numeric[0] ?? "count";
+  const exampleExpr = `${factA} && !${factB}`;
+
   const suggestions = [
     ...availableConditions,
     ...derived.map((d) => d.id).filter((id) => id.trim()),
@@ -91,26 +106,27 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
           What a condition is
         </p>
         <p>
-          A condition is a <em>fact the robot can sense right now</em>, recomputed
-          every tick. Rules use them in their <span className="font-mono">WHEN</span>.
+          A condition is a fact about what is happening right now. It is checked
+          again on every step. Rules use conditions in their{" "}
+          <span className="font-mono">WHEN</span> part.
         </p>
         <p className="mt-1.5">
-          The engine flags below are fixed — you cannot invent a new sense. But you{" "}
-          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">can name
-          combinations of them</strong>, which becomes new shared vocabulary:{" "}
-          <span className="font-mono">deadEnd = wallAhead &amp;&amp; wallLeft &amp;&amp; wallRight</span>.
-          That is to perception what composing a multi-step brick is to action.
+          You cannot add new facts, but you{" "}
+          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">can
+          combine them and give the combination a name</strong>, such as{" "}
+          <span className="font-mono">myCheck = {exampleExpr}</span>.
+          You can then use that name in any rule.
         </p>
       </div>
 
       {/* 1 — Engine flags (read-only reference) — only this challenge's senses */}
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Engine flags · locked (what the robot can sense here)
+          Facts in this challenge · built in
         </h3>
         {challengeFlagDocs.length === 0 ? (
           <p className="text-sm italic text-zinc-400">
-            This challenge exposes no sensing flags yet.
+            This challenge has no facts to check yet.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -165,7 +181,7 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
                   <span className="text-zinc-400">=</span>
                   <ConditionExpressionInput
                     value={d.expr}
-                    placeholder="wallAhead && wallLeft && wallRight"
+                    placeholder={exampleExpr}
                     suggestions={suggestions}
                     onChange={(expr) => update(i, { expr })}
                   />
@@ -204,39 +220,38 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
             <OperatorHelp
               operator="&&"
               meaning="AND — both sides must be true"
-              example="canRouteA && isPriority"
+              example={`${factA} && ${factB}`}
             />
             <OperatorHelp
               operator="||"
               meaning="OR — either side may be true"
-              example="canRouteA || canRouteB"
+              example={`${factA} || ${factB}`}
             />
             <OperatorHelp
               operator="!"
               meaning="NOT — invert a boolean fact"
-              example="!wallAhead"
+              example={`!${factA}`}
             />
             <OperatorHelp
               operator="( )"
               meaning="Group expressions before combining them"
-              example="(canRouteA || canRouteB) && isPriority"
+              example={groupExample}
             />
             <OperatorHelp
               operator="<  <=  >  >="
               meaning="Compare numeric facts"
-              example="deadlineRemaining <= 2"
+              example={`${count} <= 2`}
             />
             <OperatorHelp
               operator="==  !="
               meaning="Test equality or inequality"
-              example="retryCount != 0"
+              example={`${count} != 0`}
             />
           </div>
           <p className="mt-3 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-            Boolean facts such as <code>wallAhead</code> can stand alone.
-            Numeric facts such as <code>queueDepth</code> need a comparison when
-            you want a true/false result. Derived condition names can be reused
-            inside later expressions.
+            Yes/no facts such as <code>{factA}</code> can stand alone. Number
+            facts such as <code>{count}</code> need a comparison to give a yes/no
+            answer. A condition you name can be reused inside later ones.
           </p>
         </div>
       </details>
@@ -249,13 +264,13 @@ export function ConditionEditor({ derived, availableConditions, onChange }: Prop
         <div className="mb-2 flex items-center gap-2">
           <input
             className={`${FIELD} w-40 font-mono`}
-            placeholder="deadEnd"
+            placeholder="myCheck"
             value={newId}
             onChange={(e) => setNewId(e.target.value)}
           />
           <span className="text-zinc-400">=</span>
           <ConditionExpressionInput
-            placeholder="wallAhead && wallLeft && wallRight"
+            placeholder={exampleExpr}
             value={newExpr}
             suggestions={suggestions}
             onChange={setNewExpr}

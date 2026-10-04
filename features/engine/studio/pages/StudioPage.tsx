@@ -60,7 +60,6 @@ import {
 import { ShareInterviewLink } from "@/features/engine/studio/components/ShareInterviewLink";
 import { TaskChecklist } from "@/features/engine/studio/components/TaskChecklist";
 import { PolicyAuditPanel } from "@/features/engine/studio/components/PolicyAuditPanel";
-import { FirstRunCoach } from "@/features/engine/studio/components/FirstRunCoach";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
 import {
   difficultyFor,
@@ -302,7 +301,7 @@ async function runDevelopmentCodeSubmission(
 }
 
 /** Bump when the guide changes enough that every learner should see it again. */
-const WALKTHROUGH_STORAGE_KEY = "ae-challenge-walkthrough-v3";
+const WALKTHROUGH_STORAGE_KEY = "ae-challenge-walkthrough-v5";
 
 /** Complete interactive UI and state for `/[pack]/[challenge]`. */
 export function StudioPage({
@@ -740,6 +739,7 @@ export function StudioPage({
           )}
           <button
             type="button"
+            data-tour="apply-run"
             onClick={onRun}
             className="ml-1 inline-flex h-9 items-center gap-2 rounded-lg bg-zinc-900 px-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:bg-emerald-500/25"
           >
@@ -769,6 +769,7 @@ export function StudioPage({
           )}
           <button
             type="button"
+            data-tour="guide"
             onClick={() => setWalkthroughOpen(true)}
             className="hidden rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:block"
           >
@@ -777,7 +778,6 @@ export function StudioPage({
           <ThemeToggle />
         </div>
       </header>
-      <FirstRunCoach />
       <div
         className="sticky top-[4.5rem] z-40 mt-2 grid grid-cols-2 gap-1 rounded-lg border border-zinc-200 bg-white/95 p-1 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95 xl:hidden"
         role="tablist"
@@ -838,6 +838,7 @@ export function StudioPage({
           </section>
 
           <section
+            data-tour="simulation"
             className={[
               "min-h-[36rem] w-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-[#1e1e1e] dark:shadow-none xl:flex xl:h-full xl:min-h-0",
               mobileWorkspace === "run" ? "flex" : "hidden",
@@ -1110,10 +1111,9 @@ export function StudioPage({
       )}
       {walkthroughOpen && (
         <ChallengeWalkthrough
-          challengeName={challenge.name}
-          packId={packId}
           includesSubmission={Boolean(challenge.interviewEvaluation)}
           onFinish={finishWalkthrough}
+          onShowPanel={setMobileWorkspace}
         />
       )}
     </main>

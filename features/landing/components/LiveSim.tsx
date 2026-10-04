@@ -78,7 +78,7 @@ export function LiveSim() {
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[11px] text-ink-40">
           <span className="size-2 rounded-full bg-volt" />
-          ctrl · warehouse-nav · run #1
+          ctrl · maze-nav · run #1
         </div>
         <div className="flex items-center gap-2">
           <button

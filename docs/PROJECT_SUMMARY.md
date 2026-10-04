@@ -12,7 +12,8 @@ engine itself.**
 
 ## What it is *not*
 
-- Not a maze game. The maze is only the first, simplest test environment.
+- Not a maze game. The maze is one of several worlds, and not the first: the
+  catalogue opens with Simple Decisions, a beginner sorting desk.
 - Not another Scratch-style visual programming toy.
 - Not a place where the engine contains the robot's logic.
 
@@ -69,9 +70,11 @@ the instructions evolves.
 ## Current product state
 
 The original milestone documents record how the platform was built; they are not
-the current behaviour reference. Today the platform has multiple worlds,
-world modules, ordered visual rules, composed functions, and an optional
-object-oriented Code mode controller. Read [`CHANGELOG.md`](./CHANGELOG.md) for
+the current behaviour reference. Today the platform has five worlds (Simple
+Decisions, Maze, Finance, Parking, Drone Surveillance), world modules, ordered
+visual rules, composed functions, an optional object-oriented Code mode
+controller, and an on-screen tour that opens on every challenge page until it
+is finished once. Read [`CHANGELOG.md`](./CHANGELOG.md) for
 the latest implemented changes, [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the
 runtime contract, and [`RULES.md`](./RULES.md) for both authoring modes.
 

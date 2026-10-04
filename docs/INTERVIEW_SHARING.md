@@ -27,7 +27,7 @@ requires one). The interview workspace offers the same control as **Copy
 link**. A recipient can author and run the visible stage, then use **Submit
 solution** with the active Visual Policy or Code Controller.
 
-Every Maze, Warehouse, Supermarket, Finance, and Parking world page contains an **Interview
+Every world page (Simple Decisions, Maze, Finance, Parking, Drone Surveillance) contains an **Interview
 assignment** selector listing all published levels in that world. The
 interviewer selects a series and creates a compact `/i/[assignmentId]` link.
 The client verifies that every selected ID appears in the signed assignment
@@ -36,8 +36,8 @@ published world without silently dropping a problem.
 
 Finance and Parking currently mark one interview tutorial as required. That
 stage is selected permanently and automatically inserted if omitted from an API
-request. Maze and Warehouse have no required interview-stage marker, so any of
-their published levels may form the assignment. The normalized order is:
+request. Simple Decisions, Maze, and Drone have no required interview-stage
+marker, so any of their published levels may form the assignment. The normalized order is:
 
 1. tutorial;
 2. ascending difficulty;
@@ -73,8 +73,10 @@ assigned workspace.
 
 The short assignment ID is a compact stateless token. The current version 4 contains a
 format version, stable world code, and selected challenge numbers. Including
-the world is required because challenge numbers are unique within a world, not
-globally: Maze and Warehouse both publish a level numbered 6. A truncated HMAC
+the world is required because challenge numbers are only guaranteed unique
+within a world (earlier builds had Maze and Warehouse both use level 6).
+World codes are the index into an append-only list in `assignmentToken.ts`;
+removed worlds keep their slot, and `decisions` was appended as code 6. A truncated HMAC
 signature prevents the sequence from being modified without detection. The
 server resolves the world/number references back to the current registry.
 
@@ -147,18 +149,18 @@ never duplicate challenge or fixture definitions.
 - selected assignment problem route:
   `app/i/[assignmentId]/[challengeId]/page.tsx`
 - interview-only directory:
-  `features/interview/pages/InterviewAssignmentDirectoryPage.tsx`
+  `features/engine/interview/pages/InterviewAssignmentDirectoryPage.tsx`
 - assignment creation route: `app/api/interview/assignments/route.ts`
 - reusable ordering policy: `lib/interview/assignmentOrder.ts`
 - selection validation: `lib/interview/assignment.ts`
 - server-only token signing: `lib/interview/server/assignmentToken.ts`
 - world-page selection UI:
-  `features/catalogue/components/InterviewAssignmentBuilder.tsx`
-- workspace mode: `features/studio/pages/StudioPage.tsx`
+  `features/engine/catalogue/components/InterviewAssignmentBuilder.tsx`
+- workspace mode: `features/engine/studio/pages/StudioPage.tsx`
 - interview-only workspace drawer:
-  `features/studio/components/InterviewProblemDrawer.tsx`
+  `features/engine/studio/components/InterviewProblemDrawer.tsx`
 - generated-link control:
-  `features/studio/components/ShareInterviewLink.tsx`
+  `features/engine/studio/components/ShareInterviewLink.tsx`
 - challenge registry: `lib/content/registry.ts`
 - submit route: `app/api/interview/submit/route.ts`
 - Demo Code suite route: `app/api/interview/demo-suite/route.ts`

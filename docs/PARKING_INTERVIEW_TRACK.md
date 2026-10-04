@@ -232,9 +232,9 @@ and the average reaches the challenge threshold.
 - evaluator: `lib/interview/server/evaluateParkingSubmission.ts`
 - Visual Policy route: `app/api/interview/submit/route.ts`
 - Demo suite route: `app/api/interview/demo-suite/route.ts`
-- Code worker: `features/studio/workers/interviewCodeEvaluator.worker.ts`
+- Code worker: `features/engine/studio/workers/interviewCodeEvaluator.worker.ts`
 - shared scorer: `lib/interview/evaluation/scenarioEvaluation.ts`
-- generic result panel: `features/studio/components/InterviewResultsPanel.tsx`
-- renderer: `features/simulation/components/renderers/ParkingRenderer.tsx`
+- generic result panel: `features/engine/studio/components/InterviewResultsPanel.tsx`
+- renderer: `features/engine/simulation/components/renderers/ParkingRenderer.tsx`
 - regression coverage: `lib/interview/__tests__/parkingInterview.test.ts` and
   `lib/engine/__tests__/parking.test.ts`

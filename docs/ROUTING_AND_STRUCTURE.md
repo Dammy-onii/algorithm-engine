@@ -21,8 +21,8 @@ dedicated feature page component; there is no `view` enum or shared stateful she
 | `/api/interview/assignments` | Validate a same-world problem selection and sign its canonical references | Compact assignment link |
 | `/api/interview/submit` | Validate the interview challenge and resolve its hidden suite | Streamed case results and final score |
 
-Examples: `/maze`, `/warehouse`, and
-`/warehouse/warehouse-first-orders`.
+Examples: `/decisions`, `/maze`, and
+`/decisions/decisions-even-odd`.
 
 ### Route implementation
 
@@ -77,7 +77,7 @@ Invalid URLs call `notFound()`:
 - unknown or non-interview stage: `/interview/not-an-interview`;
 - malformed or modified assignment: `/i/not-a-valid-assignment`;
 - valid challenge in the wrong pack:
-  `/maze/warehouse-first-orders`.
+  `/maze/decisions-even-odd`.
 
 Route validation uses `findPack()` and `getChallenge()`. `getChallenge()` is strict
 and returns `undefined` for an unknown ID. The legacy challenge-index helper
@@ -129,12 +129,13 @@ content/
   worlds/                  immutable authored scenarios
   brains/
     default/ naive/ dash/
-    warehouse/ supermarket/ finance/ parking/
+    finance/ parking/ drone/ cargo/
   challenges/
+    decisions/             Simple Decisions challenge descriptors
     maze/                  Maze challenge descriptors
-    warehouse/             Warehouse challenge descriptors
     finance/               Finance challenge descriptors
     parking/               Parking challenge descriptors
+    drone/                 Drone Surveillance challenge descriptors
     index.ts               ordered bundled challenge registry
 lib/
   engine/                   framework-independent runtime and world modules
@@ -191,10 +192,10 @@ Rules for adding code:
 3. Promote a component to `shared/` only when no product feature is its natural
    owner.
 4. Keep pure policy and mapping functions outside React components, as with
-   `features/catalogue/difficulty.ts`.
+   `features/engine/catalogue/difficulty.ts`.
 5. Renderers consume the generic `World` contract and domain query helpers. They
    do not mutate the simulation.
-6. `features/application/` contains stateless shared page chrome. It must not
+6. `features/engine/application/` contains stateless shared page chrome. It must not
    become another stateful route switch.
 7. Catalogue and Lab sizing is expressed with Tailwind at the `PageLayout`
    call site; `PageLayout` does not translate semantic width props into
@@ -212,7 +213,8 @@ The migrations were performed and TypeScript-checked after each step:
    imports updated.
 3. `challenges/` → `content/challenges/`; application, registry, curriculum and
    test imports updated.
-4. The former `app/page.tsx` → `features/application/AppShell.tsx`; thin pages added.
+4. The former `app/page.tsx` → `features/application/AppShell.tsx`; thin pages added
+   (since removed, see step 8).
 5. UI moved out of `app/components/` into feature-owned folders.
 6. `app/lib/datasets.ts` moved to `lib/content/datasets.ts` because world loading
    is shared by Studio, Lab, and engine tests.
@@ -229,7 +231,8 @@ The migrations were performed and TypeScript-checked after each step:
 
 ## Verification
 
-Completed locally:
+Recorded when the route refactor landed (Warehouse and Supermarket were still
+shipped then). Current test totals are in [CHANGELOG.md](./CHANGELOG.md).
 
 - `npx tsc --noEmit` passes after the feature reorganization.
 - `npm run lint` passes without warnings.
@@ -249,14 +252,14 @@ Completed locally:
 Manual browser smoke-test checklist for an environment where the dev server can
 listen:
 
-1. Open `/`, select Maze: `/maze` shows the challenge-row directory, with
+1. Open `/app`, select Maze: `/maze` shows the challenge-row directory, with
    Examples as its only section heading, concise difficulty labels, and the
    Status/Skills/Difficulty/Subdomains filter sidebar. Use Back to return to the
    picker.
-2. Open `/warehouse`, select First Orders: URL becomes
-   `/warehouse/warehouse-first-orders`.
-3. Paste that deep URL into a fresh tab: warehouse Studio opens with the persisted
-   brain for that challenge.
+2. Open `/decisions`, select Even or Odd: URL becomes
+   `/decisions/decisions-even-odd`.
+3. Paste that deep URL into a fresh tab: Studio opens with the persisted brain
+   for that challenge.
 4. Use Back/Forward between two challenge URLs: the correct challenge and saved
    brain load each time.
 5. Open `/lab`: the raw world/brain JSON harness works independently of Studio.

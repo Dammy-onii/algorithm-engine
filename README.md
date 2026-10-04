@@ -1,9 +1,13 @@
 # CTRL
 
 CTRL is a simulation engine for solving real operational problems. You design the
-decision-making logic that runs a changing system — a maze, a payment router, a
-parking facility — and watch it perform, decision by decision, instead of writing a
-single static answer.
+decision-making logic that runs a changing system — a sorting desk, a maze, a
+payment router, a parking facility, a search drone — and watch it perform,
+decision by decision, instead of writing a single static answer.
+
+The catalogue starts with **Simple Decisions**, a beginner pack where each level
+is one or two rules. Every challenge page opens with a short on-screen tour that
+points at the real controls.
 
 The same engine serves several audiences:
 
@@ -30,7 +34,7 @@ observe → choose one safe action → update the world → inspect the trace
 ```
 
 World modules own their domain mechanics while the core engine remains unaware
-of packages, payment providers, vehicles, or parking bays.
+of sorting blocks, payment providers, vehicles, parking bays, or drones.
 
 ## Run locally
 
