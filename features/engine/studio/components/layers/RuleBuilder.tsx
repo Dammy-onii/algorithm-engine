@@ -13,7 +13,7 @@
  * Rules are rendered in their authored order: the top card is checked first.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { VisualRule, VisualRuleFolder, VisualState, VisualFunction, VisualCondition, ConditionAtom, ConditionGroup, ConditionGuided, LogicalOp } from "@/lib/authoring/types";
 import { compileCondition } from "@/lib/authoring/brainCompiler";
 import { ConditionChip } from "../blocks/ConditionChip";
@@ -254,7 +254,10 @@ interface Props {
   onChange: (rules: VisualRule[] | ((prev: VisualRule[]) => VisualRule[])) => void;
   /** Folders are editor metadata: they organise cards but never change execution. */
   onFoldersChange: (folders: VisualRuleFolder[]) => void;
-  /** Id of the rule firing on the current tick — highlighted live during a run. */
+  /**
+   * The rule firing on the current tick, highlighted and followed during a run.
+   * `null` = a run is showing but no rule matched; `undefined` = no run.
+   */
   activeRuleId?: string | null;
 }
 
@@ -287,6 +290,16 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
   // The array is the flowchart. Do not sort it: top-to-bottom is execution order.
   const ordered = rules;
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // During a run the list scrolls to keep the firing rule on screen.
+  const [followActive, setFollowActive] = useState(true);
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const activeIndex = activeRuleId ? ordered.findIndex((rule) => rule.id === activeRuleId) : -1;
+  const activeRule = activeIndex >= 0 ? ordered[activeIndex] : undefined;
+  const activeFolder = activeRule?.folderId ? folders.find((item) => item.id === activeRule.folderId) : undefined;
+  useEffect(() => {
+    if (!followActive || activeIndex < 0) return;
+    cardRefs.current.get(activeIndex)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [activeIndex, followActive]);
   const commitOrder = (next: VisualRule[]) => onChange(next);
 
   const update = (index: number, patch: Partial<VisualRule>) => {
@@ -508,6 +521,35 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
         </div>
       )}
 
+      {activeRuleId !== undefined ? (
+        <div
+          className="sticky top-0 z-10 -mx-1 flex items-center justify-between gap-3 rounded-md border border-zinc-900 bg-white/95 px-3 py-2 text-xs shadow-sm backdrop-blur dark:border-zinc-500 dark:bg-zinc-900/95"
+          aria-live="polite"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-volt ring-1 ring-zinc-900" aria-hidden />
+            <span className="truncate text-zinc-600 dark:text-zinc-300">
+              {activeRule ? (
+                <>
+                  Firing rule <strong className="font-mono text-zinc-900 dark:text-zinc-100">{activeIndex + 1}. {activeRule.id}</strong>
+                  {activeFolder?.collapsed ? ` (in collapsed folder ${activeFolder.name || "untitled"})` : ""}
+                </>
+              ) : (
+                "No rule matched this tick — waiting"
+              )}
+            </span>
+          </span>
+          <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-zinc-500">
+            <input
+              type="checkbox"
+              checked={followActive}
+              onChange={(event) => setFollowActive(event.target.checked)}
+            />
+            Follow
+          </label>
+        </div>
+      ) : null}
+
       {ordered.map((rule, index) => {
         const folder = rule.folderId ? folders.find((item) => item.id === rule.folderId) : undefined;
         // Keep the global `ordered` list intact. A collapsed folder only hides
@@ -520,6 +562,11 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
         return (
         <div
           key={index}
+          ref={(node) => {
+            if (node) cardRefs.current.set(index, node);
+            else cardRefs.current.delete(index);
+          }}
+          aria-current={isActive ? "step" : undefined}
           draggable
           onDragStart={() => setDragIndex(index)}
           onDragEnd={() => setDragIndex(null)}
@@ -529,9 +576,9 @@ export function RuleBuilder({ rules, folders, states, functions, availableBricks
             setDragIndex(null);
           }}
           className={[
-            "flex flex-col gap-3 rounded-lg border p-3 transition-colors",
+            "relative flex scroll-mt-14 scroll-mb-4 flex-col gap-3 rounded-lg border p-3 transition-colors duration-150",
             isActive
-              ? "border-amber-400 bg-amber-50 ring-2 ring-amber-300/70 dark:border-amber-400/60 dark:bg-amber-400/10 dark:ring-amber-400/30"
+              ? "border-zinc-900 bg-volt/15 ring-2 ring-volt shadow-[inset_4px_0_0_var(--color-volt)] dark:border-volt/70 dark:bg-volt/10 dark:ring-volt/40"
               : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900",
           ].join(" ")}
         >

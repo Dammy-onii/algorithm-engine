@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /** Tiny uppercase mono label that opens most sections. */
@@ -96,5 +97,35 @@ export function PillLink({
     <a href={href} className={`${base} ${styles}`}>
       {children}
     </a>
+  );
+}
+
+/**
+ * The "Try it now" call to action — one component so the nav, hero, and section
+ * buttons stay identical. `dark` sits on paper; `light` sits on the hero's mesh.
+ */
+export function TryItNow({
+  tone = "dark",
+  label = "Try it now",
+  className = "",
+}: {
+  tone?: "dark" | "light";
+  label?: string;
+  className?: string;
+}) {
+  const styles =
+    tone === "dark"
+      ? "bg-ink text-white ring-ink/10 hover:bg-ink/85 hover:ring-ink/20"
+      : "bg-white text-ink ring-white/25 hover:bg-white/90 hover:ring-white/40";
+  return (
+    <Link
+      href="/app"
+      className={`group inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-md ring-4 transition hover:-translate-y-0.5 hover:shadow-lg ${styles} ${className}`}
+    >
+      {label}
+      <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+        →
+      </span>
+    </Link>
   );
 }

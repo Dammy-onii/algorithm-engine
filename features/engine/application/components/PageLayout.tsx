@@ -5,6 +5,8 @@ import { ThemeToggle } from "@/shared/components/ThemeToggle";
 
 interface PageLayoutProps {
   title: string;
+  /** When set, the title links here (e.g. the CTRL wordmark back to the home page). */
+  titleHref?: string;
   subtitle?: string;
   backLabel?: string;
   backHref?: string;
@@ -20,6 +22,7 @@ const actionClass =
 /** Shared visual frame; route-specific UI and state remain in feature pages. */
 export function PageLayout({
   title,
+  titleHref,
   subtitle,
   backLabel,
   backHref,
@@ -52,7 +55,17 @@ export function PageLayout({
               backLabel ? "mt-1" : "",
             ].join(" ")}
           >
-            {title}
+            {titleHref ? (
+              <Link
+                href={titleHref}
+                className="transition hover:opacity-70"
+                aria-label={`${title} home`}
+              >
+                {title}
+              </Link>
+            ) : (
+              title
+            )}
           </h1>
           {subtitle ? (
             <p className="mt-0.5 text-sm text-ink-40">{subtitle}</p>

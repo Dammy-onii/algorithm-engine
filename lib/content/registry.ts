@@ -69,6 +69,14 @@ export const PACKS: PackInfo[] = [
       "Write the autonomy for a search drone: sweep an area it has never seen, detect the target, close in on it, and report the find before the battery runs out.",
     action: "Explore drone missions",
   },
+  {
+    id: "warehouse",
+    eyebrow: "Logistics operations curriculum",
+    title: "Warehouse",
+    description:
+      "Run the yard at a distribution hub: drive forklifts between staged pallets and the loading bay and get every shipment onto its truck.",
+    action: "Explore warehouse operations",
+  },
 ];
 
 /** All packs in catalog order. */

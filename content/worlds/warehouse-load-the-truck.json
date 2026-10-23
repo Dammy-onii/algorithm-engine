@@ -1,0 +1,35 @@
+{
+  "name": "Riverside Hub — Outbound to Northgate",
+  "kind": "warehouse",
+  "width": 10,
+  "height": 7,
+  "start": { "x": 1, "y": 0 },
+  "goal": { "x": 7, "y": 6 },
+  "startDirection": "S",
+  "energy": 160,
+  "tiles": [
+    [0, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+  ],
+  "warehouse": {
+    "dock": { "x": 7, "y": 6 },
+    "store": "Northgate Market",
+    "forkliftId": "FL-01",
+    "truck": { "id": "TRK-2051", "capacity": 4, "tripTicks": 10, "unloadTicks": 3 },
+    "pallets": [
+      { "id": "PAL-1021", "col": 3, "row": 1, "store": "Northgate Market", "sku": "Dry goods" },
+      { "id": "PAL-1022", "col": 8, "row": 1, "store": "Northgate Market", "sku": "Beverages" },
+      { "id": "PAL-1023", "col": 0, "row": 4, "store": "Northgate Market", "sku": "Dry goods" },
+      { "id": "PAL-1024", "col": 3, "row": 5, "store": "Northgate Market", "sku": "Household" },
+      { "id": "PAL-1025", "col": 5, "row": 5, "store": "Northgate Market", "sku": "Beverages" },
+      { "id": "PAL-1026", "col": 9, "row": 4, "store": "Northgate Market", "sku": "Household" },
+      { "id": "PAL-2031", "col": 1, "row": 1, "store": "Harbor Depot", "sku": "Hardware" },
+      { "id": "PAL-2032", "col": 6, "row": 4, "store": "Harbor Depot", "sku": "Hardware" }
+    ]
+  }
+}

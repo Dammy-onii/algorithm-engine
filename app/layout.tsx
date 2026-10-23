@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Clarity } from "@/shared/components/Clarity";
+import { CookieBanner } from "@/shared/components/CookieBanner";
 
 // Shared type system with the marketing landing: Inter for UI, JetBrains Mono
 // for code/labels, Instrument Serif for the accent italics in headlines.
@@ -75,6 +76,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}
         <Clarity />
+        <CookieBanner />
       </body>
     </html>
   );

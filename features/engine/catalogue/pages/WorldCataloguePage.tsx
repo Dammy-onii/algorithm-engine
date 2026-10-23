@@ -8,7 +8,7 @@ export function WorldCataloguePage() {
   const packs = listPacks();
 
   return (
-    <PageLayout title="CTRL" className=" w-full max-w-none">
+    <PageLayout title="CTRL" titleHref="/" className=" w-full max-w-none">
       <section className="mx-auto flex w-full max-w-none flex-col gap-10 px-6 py-10 sm:px-10 lg:px-16">
         <div className="flex flex-col gap-5">
           <div className="max-w-3xl">

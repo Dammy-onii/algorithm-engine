@@ -1,0 +1,258 @@
+{
+  "id": "warehouse-load-the-truck",
+  "pack": "warehouse",
+  "number": 31,
+  "name": "Outbound to Northgate",
+  "difficulty": 1,
+  "stage": "practice",
+  "worldKey": "warehouse-load-the-truck",
+  "tagline": "Load the right pallets, dispatch the truck, and get the whole order to the store.",
+  "narrative": "Riverside Hub has an order to fill for Northgate Market. Six pallets for it are staged across the yard, mixed in with two pallets tagged for Harbor Depot that belong on a different truck.\n\nYou run the whole outbound operation from one policy. Forklift FL-01 carries one pallet at a time to the loading bay, where truck TRK-2051 holds four pallets per trip. When you dispatch the truck it drives to Northgate, unloads and comes back on its own — about 23 ticks — while the forklift keeps working. The order is complete when every Northgate pallet has reached the store and the truck is back in the bay.\n\nThe catch is the tags: a Harbor Depot pallet loaded onto this truck is a mis-ship, and a mis-ship fails the order.",
+  "objective": "Deliver all six Northgate pallets with no mis-ships and the truck back in the bay.",
+  "learningObjective": "Run a multi-stage operation from one ordered rule list: screen work before doing it (check the tag), then do the work (lift, carry, load) and hand off each batch (dispatch).",
+  "intelligenceExplanation": "The scaffold already runs the yard: it targets the nearest pallet, drives to it, lifts it, carries it to the dock and loads it. Two dispatch rules sit at the top, so the truck leaves as soon as it is full (dispatch-full) and also leaves with a partial load once nothing for this store is left to load (dispatch-last). The truck never sits loaded in the bay.\n\nOne decision is missing: the scaffold never checks a pallet’s tag, so it loads Harbor Depot pallets — the very first pallet it targets is one. Add a rule that leaves a targeted pallet in the yard when it is not for this store, and move it to the very top with the ↑ arrows so it is checked before lift.\n\nRules are checked top to bottom; the first one whose condition holds and whose action is possible fires. When no rule matches, the yard waits for a tick — for example, the forklift waits with its next pallet while the truck is on the road.\n\nThe forklift’s battery is only spent driving, so waiting for the truck is free. If the yard sits completely still for 12 ticks with the truck in the bay, the run stops as stalled and the view tells you which decision was missing.",
+  "hint": "Add WHEN hasTarget && !targetForRoute -> DO leave-pallet and move it to the top with ↑.",
+  "hints": [
+    "Press Apply & Run: the first pallet the forklift targets has a coral tag — Harbor Depot — and it goes on the truck. Watch the manifest: it turns coral when it reaches the store.",
+    "New rules are added at the bottom. Add WHEN hasTarget && !targetForRoute -> DO leave-pallet.",
+    "Use ↑ to move the new rule to the top, above lift, so the tag is checked before the forklift picks the pallet up.",
+    "Run again: two trips, a full load of four and a final load of two, with both Harbor pallets left in the yard."
+  ],
+  "taxonomy": {
+    "domain": "Warehouse",
+    "simulation": "Outbound Operations",
+    "tier": "tutorial",
+    "grade": 2
+  },
+  "brief": "Ship every Northgate pallet to the store — leave other stores' pallets in the yard and dispatch the truck when a load is ready.",
+  "context": "Six pallets for Northgate Market and two for Harbor Depot staged in the yard, one forklift, and a truck that carries four pallets per trip.",
+  "steps": [
+    {
+      "id": "screen",
+      "label": "Leave a pallet that is tagged for another store",
+      "hint": "WHEN hasTarget && !targetForRoute -> DO leave-pallet, moved to the top",
+      "check": "palletsHeld >= 1"
+    },
+    {
+      "id": "first-trip",
+      "label": "Send a full truck to Northgate",
+      "hint": "The scaffold’s dispatch-full rule does this",
+      "check": "truckAway || routePalletsDelivered >= 1"
+    },
+    {
+      "id": "partial",
+      "label": "Send the last, partly-filled load too",
+      "hint": "The scaffold’s dispatch-last rule does this",
+      "check": "routePalletsDelivered == routePalletsTotal"
+    },
+    {
+      "id": "all",
+      "label": "Deliver the whole order with no mis-ships",
+      "hint": "Harbor pallets stay in the yard, and the truck must return",
+      "check": "reached && misShips == 0"
+    }
+  ],
+  "availableBricks": [
+    "target-pallet",
+    "leave-pallet",
+    "drive-to-target",
+    "lift-pallet",
+    "drive-to-dock",
+    "load-truck",
+    "dispatch-truck",
+    "north",
+    "east",
+    "south",
+    "west",
+    "wait"
+  ],
+  "availableConditions": [
+    "hasTarget",
+    "targetForRoute",
+    "atTarget",
+    "distanceToTarget",
+    "palletsHeld",
+    "palletsUnchecked",
+    "palletHere",
+    "palletHereForRoute",
+    "carryingPallet",
+    "carriedForRoute",
+    "atDock",
+    "distanceToDock",
+    "truckAtDock",
+    "truckAway",
+    "truckLoad",
+    "truckCapacity",
+    "truckFull",
+    "truckEta",
+    "truckTrips",
+    "routePalletsLeft",
+    "routePalletsDelivered",
+    "routePalletsTotal",
+    "allDelivered",
+    "misShips",
+    "blockedNorth",
+    "blockedEast",
+    "blockedSouth",
+    "blockedWest",
+    "always"
+  ],
+  "functionsUnlocked": false,
+  "scaffoldVersion": 5,
+  "scaffoldBrain": {
+    "goals": {
+      "goals": [
+        {
+          "id": "fill-order",
+          "priority": 1,
+          "description": "Deliver every Northgate pallet to the store."
+        }
+      ]
+    },
+    "states": {
+      "initial": "operate",
+      "states": [
+        {
+          "id": "operate",
+          "description": "Run the yard: forklift and truck."
+        }
+      ]
+    },
+    "rules": {
+      "rules": [
+        {
+          "id": "dispatch-full",
+          "state": "operate",
+          "when": "truckAtDock && truckFull",
+          "do": "dispatch-truck",
+          "description": "The truck is full — send it to Northgate."
+        },
+        {
+          "id": "dispatch-last",
+          "state": "operate",
+          "when": "truckAtDock && truckLoad > 0 && routePalletsLeft == 0",
+          "do": "dispatch-truck",
+          "description": "Nothing left to load — send the partial load too."
+        },
+        {
+          "id": "load",
+          "state": "operate",
+          "when": "atDock && carryingPallet && truckAtDock && !truckFull",
+          "do": "load-truck",
+          "description": "Put the pallet on the truck."
+        },
+        {
+          "id": "lift",
+          "state": "operate",
+          "when": "atTarget && !carryingPallet",
+          "do": "lift-pallet",
+          "description": "Lift the targeted pallet."
+        },
+        {
+          "id": "to-dock",
+          "state": "operate",
+          "when": "carryingPallet",
+          "do": "drive-to-dock",
+          "description": "Carry the pallet to the loading bay."
+        },
+        {
+          "id": "to-target",
+          "state": "operate",
+          "when": "hasTarget",
+          "do": "drive-to-target",
+          "description": "Drive toward the targeted pallet."
+        },
+        {
+          "id": "pick",
+          "state": "operate",
+          "when": "!carryingPallet && palletsUnchecked > 0",
+          "do": "target-pallet",
+          "description": "Pick the nearest pallet to work on next."
+        }
+      ]
+    },
+    "functions": {
+      "functions": [
+        {
+          "id": "target-pallet",
+          "action": "targetPallet",
+          "description": "Pick the nearest pallet that has not been checked yet as the forklift's target."
+        },
+        {
+          "id": "leave-pallet",
+          "action": "leavePallet",
+          "description": "Leave the targeted pallet in the yard; it will not be targeted again."
+        },
+        {
+          "id": "drive-to-target",
+          "action": "driveToTarget",
+          "description": "Drive one cell toward the targeted pallet."
+        },
+        {
+          "id": "lift-pallet",
+          "action": "liftPallet",
+          "description": "Raise the forks and pick up the pallet on this cell."
+        },
+        {
+          "id": "drive-to-dock",
+          "action": "driveToDock",
+          "description": "Drive one cell toward the loading bay."
+        },
+        {
+          "id": "load-truck",
+          "action": "loadTruck",
+          "description": "Load the carried pallet onto the truck. Needs the truck in the bay with room."
+        },
+        {
+          "id": "dispatch-truck",
+          "action": "dispatchTruck",
+          "description": "Send the truck to the store. It unloads and returns on its own."
+        },
+        {
+          "id": "north",
+          "action": "moveNorth",
+          "description": "Drive one cell north."
+        },
+        {
+          "id": "east",
+          "action": "moveEast",
+          "description": "Drive one cell east."
+        },
+        {
+          "id": "south",
+          "action": "moveSouth",
+          "description": "Drive one cell south."
+        },
+        {
+          "id": "west",
+          "action": "moveWest",
+          "description": "Drive one cell west."
+        },
+        {
+          "id": "wait",
+          "action": "wait",
+          "description": "Do nothing for one tick."
+        }
+      ]
+    },
+    "memory": {}
+  },
+  "objectives": [
+    {
+      "id": "delivered",
+      "label": "Deliver every Northgate pallet, truck back in the bay",
+      "check": "reached && allDelivered"
+    },
+    {
+      "id": "clean",
+      "label": "No mis-shipped pallets",
+      "check": "reached && misShips == 0"
+    },
+    {
+      "id": "two-trips",
+      "label": "Finish in two truck trips",
+      "check": "reached && misShips == 0 && truckTrips <= 2",
+      "bonus": true
+    }
+  ]
+}

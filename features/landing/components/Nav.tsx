@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { TryItNow } from "./primitives";
+
 export type NavLink = { label: string; href: string };
 
 /**
@@ -27,12 +29,7 @@ export function Nav() {
           </Link>
         </nav>
 
-        <Link
-          href="/app"
-          className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ink/85"
-        >
-          Open app
-        </Link>
+        <TryItNow />
       </div>
     </header>
   );

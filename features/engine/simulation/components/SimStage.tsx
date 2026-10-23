@@ -38,7 +38,7 @@ export function SimStage({
   return (
     <div className={wrap}>
       <div className="flex flex-col items-center gap-3">
-        <WorldRenderer world={world} animationRate={animationRate} />
+        <WorldRenderer world={world} step={step} animationRate={animationRate} />
         <WorldLegend world={world} />
       </div>
       <div className="flex flex-col gap-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eyebrow } from "./primitives";
+import { Eyebrow, TryItNow } from "./primitives";
 import { WaitlistForm } from "./WaitlistForm";
 
 const DOMAINS = [
@@ -50,7 +50,12 @@ export function Hero() {
             solution performs before you commit to another interview.
           </p>
 
-          <div className="mt-9 flex w-full justify-center">
+          <div className="mt-9 flex flex-col items-center gap-3">
+            <TryItNow tone="light" />
+            <span className="font-mono text-xs text-white/50">or request early access for your team</span>
+          </div>
+
+          <div className="mt-4 flex w-full justify-center">
             <WaitlistForm tone="light" />
           </div>
 

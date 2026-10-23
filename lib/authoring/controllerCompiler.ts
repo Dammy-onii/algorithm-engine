@@ -197,6 +197,26 @@ export const CARGO_CONTROLLER_STARTER = `class CargoDrone {
 
 return new CargoDrone();`;
 
+export const WAREHOUSE_CONTROLLER_STARTER = `class Outbound {
+  decide(observation) {
+    const f = observation.domain; // e.g. f.targetForRoute, f.truckFull, f.atDock
+
+    // One policy runs the whole yard: the forklift every tick, and the truck
+    // whenever you call dispatchTruck.
+    // Send the truck when it is full, or when nothing for this store is left to load.
+    if (f.truckAtDock && (f.truckFull || (f.truckLoad > 0 && f.routePalletsLeft === 0))) return "dispatchTruck";
+    if (f.atDock && f.carryingPallet && f.truckAtDock && !f.truckFull) return "loadTruck";
+    if (f.atTarget && !f.carryingPallet) return "liftPallet";
+    if (f.carryingPallet) return "driveToDock";
+    if (f.hasTarget) return "driveToTarget";
+    if (f.palletsUnchecked > 0) return "targetPallet";
+    // Missing: leave pallets tagged for other stores in the yard (leavePallet).
+    return "wait";
+  }
+}
+
+return new Outbound();`;
+
 export function compileController(source: string): AgentController {
   if (!source.trim()) throw new Error("Write a controller class before running Code mode.");
   let value: unknown;

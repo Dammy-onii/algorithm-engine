@@ -206,6 +206,14 @@ export const CONCEPTS: Concept[] = [
     taughtBy: "decisions-fragile-parcels",
     prerequisites: ["choosing-the-right-fact"],
   },
+  {
+    id: "outbound-operations",
+    name: "Outbound operations",
+    teaches: "Run a multi-stage operation from one rule list: screen work before doing it, do it, and hand off a batch when it is ready.",
+    taughtBy: "warehouse-load-the-truck",
+    // First level of a separate world track — open from the start.
+    prerequisites: [],
+  },
 ];
 
 export function conceptById(id: string): Concept | undefined {

@@ -4,7 +4,7 @@ import type { NavLink } from "./Nav";
 const DEFAULT_LINKS: NavLink[] = [
   { label: "For companies", href: "/" },
   { label: "For education", href: "/education" },
-  { label: "Open app", href: "/app" },
+  { label: "Try it now", href: "/app" },
 ];
 
 interface FooterProps {

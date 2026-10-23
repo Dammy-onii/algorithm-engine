@@ -1,4 +1,4 @@
-import { Eyebrow, Reveal, Section } from "./primitives";
+import { Eyebrow, Reveal, Section, TryItNow } from "./primitives";
 import { LiveSim } from "./LiveSim";
 
 const LOOP = [
@@ -23,6 +23,7 @@ export function HowItWorks() {
           shows you the outcome, decision by decision. The example below is deliberately simple:
           move one rule and the same solution stops working.
         </p>
+        <TryItNow label="Try a problem statement" className="mt-8" />
       </Reveal>
 
       <Reveal delay={80} className="mt-14">

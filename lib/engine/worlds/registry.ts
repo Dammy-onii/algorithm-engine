@@ -13,6 +13,7 @@ import { parkingModule } from "./parking";
 import { droneModule } from "./drone";
 import { cargoModule } from "./cargo";
 import { sorterModule } from "./sorter";
+import { warehouseModule } from "./warehouse";
 
 const MODULES: Record<string, WorldModule> = {
   [mazeModule.id]: mazeModule,
@@ -21,6 +22,7 @@ const MODULES: Record<string, WorldModule> = {
   [droneModule.id]: droneModule,
   [cargoModule.id]: cargoModule,
   [sorterModule.id]: sorterModule,
+  [warehouseModule.id]: warehouseModule,
 };
 
 /** Resolve a world module by kind, defaulting to the maze (base grid). */
@@ -43,4 +45,4 @@ export function allDomainActions(): string[] {
   return [...new Set(Object.values(MODULES).flatMap((module) => module.domainActions))];
 }
 
-export { mazeModule, financeModule, parkingModule, droneModule, cargoModule, sorterModule };
+export { mazeModule, financeModule, parkingModule, droneModule, cargoModule, sorterModule, warehouseModule };

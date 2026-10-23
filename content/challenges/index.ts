@@ -33,6 +33,7 @@ import c27 from "./drone/27-drone-cargo-run.json";
 import c28 from "./decisions/28-decisions-even-odd.json";
 import c29 from "./decisions/29-decisions-prime-sorter.json";
 import c30 from "./decisions/30-decisions-fragile-parcels.json";
+import c31 from "./warehouse/31-warehouse-load-the-truck.json";
 
 export const CHALLENGES: ChallengeData[] = [
   c1 as ChallengeData,
@@ -60,6 +61,7 @@ export const CHALLENGES: ChallengeData[] = [
   c28 as ChallengeData,
   c29 as ChallengeData,
   c30 as ChallengeData,
+  c31 as ChallengeData,
 ];
 
 export function findChallenge(id: string): ChallengeData {

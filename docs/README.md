@@ -32,8 +32,9 @@ Start here. The docs are grouped by purpose.
 ## Shipped worlds
 
 The catalogue, in order: **Simple Decisions, Maze, Finance, Parking, Drone
-Surveillance**. Warehouse and Supermarket worlds existed in earlier builds and
-have been removed; older docs below may still mention them.
+Surveillance, Warehouse**. The current Warehouse world (one 3D level, see the
+CHANGELOG) is a new build; the older grid Warehouse and the Supermarket world
+were removed, and older docs below may still describe them.
 
 - [DECISIONS_SIMULATION.md](./DECISIONS_SIMULATION.md) — the beginner sorting
   desk: one generic module, three tutorial levels (Even or Odd, Prime or Not,

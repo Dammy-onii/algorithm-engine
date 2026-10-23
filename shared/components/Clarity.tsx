@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import clarity from "@microsoft/clarity";
 
+import { applyConsent, readConsent } from "@/shared/analytics/consent";
+
 /**
  * Microsoft Clarity — session replay + heatmaps for understanding how people use
  * the platform and work through interview problems.
@@ -28,6 +30,9 @@ export function Clarity() {
       process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || DEFAULT_PROJECT_ID;
     if (!projectId) return;
     clarity.init(projectId);
+    // Re-send a remembered cookie choice so sessions stitch across page loads.
+    const choice = readConsent();
+    if (choice) applyConsent(choice);
   }, []);
 
   return null;

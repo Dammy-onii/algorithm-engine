@@ -830,8 +830,8 @@ export function StudioPage({
                 attempts={attempts}
                 activeRuleId={
                   session && (running || session.step.tick > 0)
-                    ? session.step.trace.ruleId
-                    : null
+                    ? (session.step.trace.ruleId ?? null)
+                    : undefined
                 }
               />
             </div>

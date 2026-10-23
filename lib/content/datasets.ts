@@ -35,6 +35,7 @@ import droneCargoRun from "@/content/worlds/drone-cargo-run.json";
 import decisionsFragileParcels from "@/content/worlds/decisions-fragile-parcels.json";
 import decisionsEvenOdd from "@/content/worlds/decisions-even-odd.json";
 import decisionsPrimeSorter from "@/content/worlds/decisions-prime-sorter.json";
+import warehouseLoadTheTruck from "@/content/worlds/warehouse-load-the-truck.json";
 import entities from "@/content/worlds/entities.json";
 
 import goals from "@/content/brains/default/goals.json";
@@ -223,6 +224,11 @@ export const WORLDS: WorldOption[] = [
     key: "decisions-prime-sorter",
     label: "Decisions Tutorial — Prime or Not",
     source: { world: decisionsPrimeSorter as WorldData, entities: sharedEntities },
+  },
+  {
+    key: "warehouse-load-the-truck",
+    label: "Warehouse Tutorial — Load the Truck (10×7)",
+    source: { world: warehouseLoadTheTruck as WorldData, entities: sharedEntities },
   },
 ];
 

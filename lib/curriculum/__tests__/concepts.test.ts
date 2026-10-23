@@ -67,6 +67,7 @@ describe("progression gating", () => {
       "decisions-even-odd",
       "decisions-prime-sorter",
       "decisions-fragile-parcels",
+      "warehouse-load-the-truck",
     ];
     for (const id of order) {
       expect(isChallengeUnlocked(id, done), `expected ${id} unlocked`).toBe(true);

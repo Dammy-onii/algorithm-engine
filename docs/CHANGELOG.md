@@ -5,6 +5,47 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-10-04 — Warehouse world, first 3D renderer
+
+### New world: Warehouse (one level, for review)
+
+- **Module.** `lib/engine/worlds/warehouse.ts` (`kind: "warehouse"`): one
+  policy runs a hub's outbound yard. Forklift actions `targetPallet`,
+  `leavePallet`, `driveToTarget`, `liftPallet`, `driveToDock`, `loadTruck`;
+  truck action `dispatchTruck`, after which the truck drives to the store,
+  unloads and returns on its own (`advanceTick`, `tripTicks` / `unloadTicks`).
+  Pallets carry a destination store; loading another store's pallet is counted
+  in `misShips`. Completion: every pallet for the route store delivered and the
+  truck back in the bay. Routing is BFS inside the drive actions.
+  The forklift's battery is spent only on driving actions (other actions are
+  refunded against the engine's per-tick drain), and a yard that sits
+  unchanged for `STALL_TICKS` (12) with the truck in the bay ends as `stuck`;
+  `warehouseStallReason` names the missing decision for the renderer.
+- **Level.** 31 Outbound to Northgate: six Northgate pallets, two Harbor Depot
+  decoys, truck capacity 4 (so the last load is partial). The scaffold loads
+  and dispatches both full trucks (`dispatch-full`) and the final partial load
+  (`dispatch-last`), so a loaded truck never waits in the bay; it never screens
+  tags, and the learner adds that check. The Code-mode starter dispatches the
+  same way.
+- Track camera (the warehouse default): a still camera on the yard that glides
+  to the whole-route view only while the forklift is idle and the truck is on
+  the road. Racks, the hub, trees, lamps and the store fade to see-through when
+  they stand between the camera and the forklift, its target or the truck. The
+  Track button names what is acting this tick. Orbiting or zooming leaves the
+  camera where the user put it until the next station change or ⌂.
+- Rule list follows the run: the firing rule is highlighted in volt and
+  scrolled into view, with a sticky "Firing rule" bar and a Follow toggle.
+  Manifest tags are coloured by pallet state (staged / on forks / on truck /
+  delivered / mis-shipped).
+- **Renderer.** `WarehouseRenderer.tsx` + `renderers/warehouse/` — the first
+  Three.js renderer: procedural low-poly models in the CTRL palette, path dots,
+  target ring, rule-fired tag (`SimStage` now passes `step` to renderers), and
+  an HTML overlay for stats, labels and the manifest. Dependency: `three`.
+  Camera modes (Yard / Route / Follow forklift / Follow truck), a full-screen
+  button, a picture-in-picture truck cam while the truck is away, and a road
+  with a cul-de-sac at Northgate that the truck drives continuously. Rendering
+  pauses while the viewport is off-screen.
+
 ## 2026-10-04 — Simple Decisions pack, on-screen tour, and consistency pass
 
 ### New world: Simple Decisions (first in the catalogue)
