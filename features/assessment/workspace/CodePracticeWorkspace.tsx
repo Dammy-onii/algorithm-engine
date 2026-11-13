@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSandpack } from "@codesandbox/sandpack-react";
 
-import { getRuntime } from "@/lib/assessment/runtime/registry";
+import { boilerplateTemplate, getRuntime } from "@/lib/assessment/runtime/registry";
+import type { RuntimeAdapter } from "@/lib/assessment/runtime/types";
 import type { CodeProblem } from "@/lib/assessment/problems";
 import { collectProjectFiles } from "./collect";
 import { loadPracticeFiles as loadSaved, practiceStorageKey as storageKey } from "./practiceStorage";
@@ -21,9 +22,11 @@ const LEVEL_STYLE: Record<CodeProblem["level"], string> = {
  * Sandpack's file API, so the workspace itself renders immediately with the starter code),
  * saves changes back to this browser as the learner types, and exposes a reset.
  */
-function LocalProgress({ problem, template, registerReset }: {
-  problem: CodeProblem; template: "react" | "vanilla"; registerReset: (reset: () => void) => void;
+function LocalProgress({ problem, runtime, registerReset }: {
+  problem: CodeProblem; runtime: RuntimeAdapter; registerReset: (reset: () => void) => void;
 }) {
+  const template = boilerplateTemplate(runtime);
+  const entryFile = runtime.entryFile;
   const { sandpack, listen } = useSandpack();
   const sp = useRef(sandpack);
   const listenRef = useRef(listen);
@@ -33,7 +36,7 @@ function LocalProgress({ problem, template, registerReset }: {
   // Apply saved work only after the first bundle finishes. Changes made before the bundler
   // is live update the editor but never reach the preview or the test runner.
   useEffect(() => {
-    const saved = loadSaved(problem.id);
+    const saved = loadSaved(problem.id, entryFile);
     if (!saved) return;
     let applied = false;
     const apply = () => {
@@ -47,14 +50,28 @@ function LocalProgress({ problem, template, registerReset }: {
       }
       for (const path of initialKeys) if (!(path in saved)) api.deleteFile(path);
     };
+    // Wait until every Sandpack frame (the preview and the test runner) has finished its
+    // first build. Sandpack only pushes file changes to frames that are done, so applying on
+    // the first "done" (often the test runner's) left the preview on the starting code.
+    // A fallback applies anyway a few seconds after the first "done".
+    let doneCount = 0;
+    let fallback = 0;
     const unsubscribe = listenRef.current((message) => {
-      if (message.type === "done") {
-        unsubscribe();
-        apply();
-      }
+      if (message.type !== "done") return;
+      doneCount += 1;
+      if (doneCount === 1) fallback = window.setTimeout(finish, 4000);
+      if (doneCount >= Object.keys(sp.current.clients).length) finish();
     });
-    return unsubscribe;
-  }, [problem.id, initialKeys]);
+    function finish() {
+      window.clearTimeout(fallback);
+      unsubscribe();
+      apply();
+    }
+    return () => {
+      window.clearTimeout(fallback);
+      unsubscribe();
+    };
+  }, [problem.id, initialKeys, entryFile]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -108,12 +125,13 @@ export function CodePracticeWorkspace({ problem }: { problem: CodeProblem }) {
         </div>
       }
       brief={problem.scenario}
-      template={runtime.template}
+      runtime={runtime}
       files={problem.files}
-      activeFile={runtime.entryFile}
+      activeFile={problem.openFile ?? runtime.entryFile}
+      tabs={problem.tabs}
       previewHref={`/app/code/${problem.id}/preview`}
     >
-      <LocalProgress problem={problem} template={runtime.template} registerReset={registerReset} />
+      <LocalProgress problem={problem} runtime={runtime} registerReset={registerReset} />
     </WorkspaceShell>
   );
 }

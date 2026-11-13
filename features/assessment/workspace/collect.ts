@@ -11,10 +11,11 @@ type SandpackFiles = Record<string, string | { code: string }>;
 export function collectProjectFiles(
   sandpackFiles: SandpackFiles,
   initialKeys: string[],
-  template: "react" | "vanilla",
+  /** null for a standalone project: every file is the author's, nothing is dropped. */
+  template: "react" | "vanilla" | null,
 ): FileMap {
   const known = new Set(initialKeys);
-  const defaults = SANDBOX_TEMPLATES[template].files as SandpackFiles;
+  const defaults = (template ? SANDBOX_TEMPLATES[template].files : {}) as SandpackFiles;
   const out: FileMap = {};
   for (const [path, file] of Object.entries(sandpackFiles)) {
     const code = typeof file === "string" ? file : file.code;

@@ -18,6 +18,7 @@ interface RuntimeAdapter {
   isTestFile: (path: string) => boolean;   // which files are visible tests
   entryFile: string;                // file opened first in the editor
   exampleProject: () => { files; hiddenTests; scenario };
+  standalone?: { entry: string };   // the project's files are the whole project (see below)
 }
 ```
 
@@ -25,12 +26,20 @@ interface RuntimeAdapter {
 
 | id | Stack | Template | Tests |
 |---|---|---|---|
-| `react-js` | React 18, JavaScript | Sandpack `react` | `*.test.js` / `*.spec.js` (Jest, in browser) |
+| `react-app` | React 19, standard `src/` layout, Tailwind | none (standalone, `create-react-app` environment, entry `/src/index.js`) | `*.test.js` / `*.spec.js` (Jest, in browser) |
+| `react-js` | React, files at the root | Sandpack `react` | `*.test.js` / `*.spec.js` (Jest, in browser) |
 | `vanilla-js` | Plain JavaScript and HTML | Sandpack `vanilla`, run on the `create-react-app` environment | same |
 
 The ids are stored in saved assessments, so they must stay stable.
 
 ## How the workspace uses an adapter
+
+Every `SandpackProvider` (the workspace and the new-tab preview) takes its `template` and
+`customSetup` from `sandpackProviderSetup(runtime)` in `runtime/registry.ts`. The returned
+objects are cached per runtime and **must stay the same object between renders**:
+SandpackProvider treats a new `customSetup` object as a new project and resets every
+file to the starting code. Building it fresh on each render reset the learner's work
+whenever the workspace re-rendered, for example when switching preview size.
 
 - `template` configures `SandpackProvider`, which supplies the bundler, preview
   and Jest runner for that stack.
@@ -50,6 +59,17 @@ The ids are stored in saved assessments, so they must stay stable.
 - `entryFile` is opened first when it exists in the project.
 - `isTestFile` marks test files in the authoring UI and is where a stack with
   different test naming plugs in.
+
+## Standalone projects: the `react-app` runtime
+
+With `standalone` set, no Sandpack template is passed. Sandpack then uses only the
+project's own files, with `customSetup: { environment: "create-react-app", entry }`, so a
+project can look like a normal React app (`public/`, `src/`, `package.json`) with no
+template `App.js` / `index.js` / `styles.css` added to the explorer. Dependencies come
+from the project's `package.json` (Sandpack merges it and sets `main` to the entry).
+Saving keeps every file (`boilerplateTemplate(runtime)` is `null`, so nothing is
+filtered as boilerplate). The `react-app` example project (`reactAppExample`) is the cart
+in this layout with its hidden tests in `src/utils/cart.hidden.test.js`.
 
 ## Adding a stack
 

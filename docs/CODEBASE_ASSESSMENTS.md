@@ -39,12 +39,32 @@ brief and visible tests:
 
 | Problem | Level | Stack | What is wrong |
 |---|---|---|---|
-| Fix the cart total | easy | React | `cartTotal` ignores quantity |
+| Fix the cart total | easy | React app | `cartTotal` ignores quantity |
 | Fix the word counter | easy | JavaScript | repeated spaces and new lines inflate the count |
-| Order history pagination | medium | React | pages are 0-based, no default or max limit, no total |
-| The wrong product gets added | medium | React | `addToCart` uses the id as an array position; search is case-sensitive |
+| Order history pagination | medium | React app | pages are 0-based, no default or max limit, no total |
+| The wrong product gets added | medium | React app | `addToCart` uses the id as an array position; search is case-sensitive |
 | Checkout must be all or nothing | hard | JavaScript | partial writes on failure; no input validation |
-| Make the storefront responsive | medium | React | desktop-only CSS: fixed widths and header height, non-wrapping nav, big heading, 3-column grids, no viewport meta |
+| Make the storefront responsive | medium | React app | desktop-only Tailwind classes: fixed widths and header height, non-wrapping nav, big heading, 3-column grids, no viewport meta |
+
+**React problems use the standard React app layout** (runtime `react-app`, built by
+`reactApp()` in `lib/assessment/reactApp.ts`), styled with Tailwind:
+
+```text
+package.json          react, react-dom, react-scripts; main: src/index.js
+public/index.html     the page (<div id="root">)
+src/index.js          starts the app, imports index.css, loads Tailwind
+src/index.css         global styles
+src/App.js            the app
+src/App.css           custom styles for App (one or two real rules); the rest is Tailwind classes
+src/components/ …     src/utils/ …  src/data/ …  with tests next to the code
+```
+
+The project's files are the whole project: Sandpack's template files (`/App.js`,
+`/index.js`, `/styles.css`) are not added (see
+[the runtimes doc](./CODEBASE_ASSESSMENT_RUNTIMES.md#standalone-projects-the-react-app-runtime)).
+Each problem sets `openFile` (the file the work starts in) and `tabs`. Work saved in a
+browser before the move to `src/` doesn't contain `/src/App.js` and is ignored, so the
+problem opens with the new starting code.
 
 **Brief structure.** Every brief follows the same sections, built with the `brief()`
 helper in `problems.ts`:
@@ -58,29 +78,46 @@ helper in `problems.ts`:
 4. `# How to check your work`: the shared `HOW_TO_CHECK` text (Run tests, preview
    and new tab, Reset).
 
-**The responsive problem's tests.** jsdom has no layout engine and ignores media
-queries, so `test-utils/layout.js` (shipped in the project) reads the stylesheets the
-page loaded, keeps rules whose media queries match a width, and applies the cascade
-(specificity, source order, `!important`, inline styles). The tests then check the
-result at 375, 768 and 1200px. Media-query and fluid solutions (`auto-fit`/`minmax`,
-`clamp()`, `min()`) both pass. Percentages are measured against the screen width, an
-approximation that suits page-level layout. A flexbox product grid is not counted,
-so the brief asks to keep the grid and footer as CSS Grid. The tests check rules,
-not pixels, so Task 3 asks for a visual check with the preview sizes.
+**The responsive problem's tests.** The project is styled only with Tailwind (v4
+browser build, loaded from `index.js`). jsdom has no layout engine and Tailwind doesn't
+run in the tests, so `test-utils/layout.js` (shipped in the project) reads the Tailwind
+classes on each rendered element and applies the ones whose breakpoint prefixes match a
+width (`sm`/`md`/`lg`/`xl`/`2xl`, `max-*`, `min-[..]`/`max-[..]`), using Tailwind's
+default scale and arbitrary values. It understands the layout utilities (display, flex
+direction and wrap, `grid-cols-*`, width/min/max/height/size, padding, gap, text size,
+overflow) and merges any ordinary CSS rules the page loaded (`@media` included). The
+tests find each part of the page by `data-section` and check it at 375, 768 and 1200px.
+Verified in a browser against the starter (fails all but desktop), a breakpoint
+solution, a fluid solution (`grid-cols-[repeat(auto-fit,minmax(..))]`,
+`text-[clamp(..)]`, `w-[min(..)]`) and a menu-button solution (`hidden md:flex` plus a
+`button[aria-expanded]`), all 12/12, and a half fix that fails exactly what it skipped.
+A real browser with Tailwind applied agreed in every case. Limits: percentages are
+measured against the screen width, a flex-wrap product grid isn't counted (the brief
+asks to keep grids), and the tests check classes, not pixels, so Task 3 asks for a
+visual check with the preview sizes.
 
 **Adding a problem:** add an entry to `CODE_PROBLEMS` (id, title, level, runtime id,
-summary, brief in the structure above, files including a test file). Larger file sets
+summary, brief in the structure above, files including a test file). Optional
+`openFile` picks the file opened first (default: the runtime's entry file) and `tabs`
+limits the editor tabs to the files the learner works on; every file stays in the
+explorer. The responsive problem opens on `App.js` and keeps `test-utils/` and setup
+files out of the tabs. Larger file sets
 can live in their own module (see `responsiveProblem.ts`, which uses `String.raw` so
 regexes keep their backslashes). Check in a browser that its tests **fail on the
 starter, pass on a correct fix, and pass when run straight after the fix is typed**.
 `lib/assessment/__tests__/problems.test.ts` checks the structure (ids, runtime, a test
 file, the entry file) but cannot run the tests.
 
-**Styling a problem.** Plain `.css` imports, CSS Modules (`.module.css`), Sass
-(`.scss`) and Less (`.less`) work in both stacks. Tailwind works only when its CDN
-script is added from JavaScript (a `<script>` tag in `index.html` is not executed,
-and the npm package didn't load). Its styles exist only in the preview, so tests
-cannot check them.
+**Styling a problem: use Tailwind CSS.** Problem projects are styled with Tailwind
+classes, not CSS files. Load Tailwind v4's browser build from `index.js`
+(`document.head.appendChild` of a script with
+`src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"`; see
+`responsiveProblem.ts`). A `<script>` tag in `index.html` is not executed by Sandpack,
+and installing `@tailwindcss/browser` as an npm package left the preview stuck.
+Tailwind's styles exist only in the preview, so tests that check styling must read the
+classes (as the responsive problem's `test-utils/layout.js` does; see
+[CODEBASE_PROBLEM_TESTS.md](./CODEBASE_PROBLEM_TESTS.md)). Plain `.css`, CSS Modules,
+Sass and Less also work in both stacks if a problem ever needs them.
 
 The sections below describe the larger **company flow** (authoring, links, one
 attempt, hidden tests, reviewer dashboard). It is built and tested, but it is hidden
@@ -95,6 +132,7 @@ This page is the overview. Related docs:
 | [CODEBASE_ASSESSMENT_RUNTIMES.md](./CODEBASE_ASSESSMENT_RUNTIMES.md) | The runtime-adapter contract and how to add a framework or language |
 | [CODEBASE_ASSESSMENT_REVIEW.md](./CODEBASE_ASSESSMENT_REVIEW.md) | What is captured, snapshots, derived stats, the reviewer dashboard |
 | [CODEBASE_ASSESSMENT_API.md](./CODEBASE_ASSESSMENT_API.md) | Routes, storage interface, links and security, the hidden-test runner |
+| [CODEBASE_PROBLEM_TESTS.md](./CODEBASE_PROBLEM_TESTS.md) | Every problem's tests, how the responsive layout tests work, the unit tests, and how they were verified |
 
 ## The three roles
 
@@ -155,7 +193,8 @@ lib/assessment/
   stats.ts            process statistics derived from snapshots
   runtime/            runtime adapters (registry.ts, examples.ts, types.ts)
   problems.ts         the /app code problems, brief() helper, shared brief text
-  responsiveProblem.ts  files for the responsive problem (incl. test-utils/layout.js)
+  reactApp.ts         the standard React app layout and the React problems' files
+  responsiveProblem.ts  files for the Tailwind responsive problem (incl. test-utils/layout.js)
   storage/            AssessmentStore interface + memory / file implementations
   server/             service.ts (all rules), link.ts, hiddenTests.ts, http.ts
 features/assessment/

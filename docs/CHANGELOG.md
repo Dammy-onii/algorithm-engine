@@ -7,6 +7,33 @@ world document.
 
 ## 2026-11-13 — Code problems: workspace fixes, responsive problem, and tour CLS fix
 
+### Standard React app layout (all React problems)
+
+- The four React problems (cart total, pagination, wrong product, responsive) now look
+  like a standard React app: `package.json`, `public/index.html`, `src/index.js`,
+  `src/index.css`, `src/App.js`, `src/App.css`, and `src/components|utils|data/` with
+  tests beside the code. All are styled with Tailwind (loaded in `src/index.js`); each
+  `App.css` holds one or two real custom rules.
+- New runtime `react-app` (`standalone: { entry: "/src/index.js" }`): no Sandpack
+  template is passed, so only the project's files exist (no template `/App.js`,
+  `/index.js`, `/styles.css`). Shared layout in `lib/assessment/reactApp.ts`. The
+  company flow's `react-js` runtime is unchanged.
+- Each problem opens on the file where the work starts (`openFile`) and shows a short
+  tab list (`tabs`).
+- Saved work from the old root layout is ignored (it lacks `/src/App.js`).
+- **Fixed: work reset on re-render.** `sandpackProviderSetup` built a new `customSetup`
+  object on every render, and SandpackProvider treats that as a new project, so
+  switching preview size (or resizing a panel) put every file back to the starting
+  code. Plain-JS problems had the same exposure. The setup objects are now cached per
+  runtime.
+- **Fixed: restored work missing from the preview.** Saved work is now applied once
+  every Sandpack frame has finished its first build (4 s fallback). Before, it was
+  applied on the first "done", often the test runner's, and the preview kept the
+  starting code.
+- Verified in a browser for all six problems: starter results, the fix typed and run
+  at once, edits kept after clicking Phone then Fit, and reload; responsive versions
+  match a real browser at all three sizes.
+
 ### Running tests
 
 - **A labelled ▶ Run tests button** sits next to the Tests heading and stays put.
@@ -59,19 +86,25 @@ world document.
 - Corrected: the pagination brief no longer claims a large page size "hangs" the
   page; it describes the real faults (Next never disables, size not capped).
 
-### New problem: Make the storefront responsive (medium, React)
+### New problem: Make the storefront responsive (medium, React + Tailwind)
 
-- `lib/assessment/responsiveProblem.ts`: a desktop-only shop page (fixed 1100px
-  page, fixed hero widths, fixed header height, non-wrapping nav, 56px heading,
-  three-column grids, no viewport meta tag).
-- **12 tests** check phone (375px), tablet (768px) and desktop (1200px). jsdom has
-  no layout, so `test-utils/layout.js` reads the loaded stylesheets (including
-  `@media`), matches media queries against a width, and applies the cascade
-  (specificity, order, `!important`, inline styles). `!raw-loader!` reads
-  `public/index.html` for the viewport check.
-- Verified: starter 3/12 (desktop only); a media-query solution 12/12; a fluid
-  solution (`auto-fit`/`minmax`, `clamp()`, `min()`) 12/12; a half fix fails just
-  what it skipped. A real browser agrees (sideways scrolling vs. 1/2/3 columns).
+- `lib/assessment/responsiveProblem.ts`: a desktop-only shop page styled only with
+  Tailwind classes (`w-[1100px]` page, fixed hero widths, `h-18` header,
+  non-wrapping nav, `text-6xl` heading, `grid-cols-3` grids, no viewport meta tag).
+  Tailwind v4's browser build is loaded from `index.js`. Opens on `App.js`; the
+  editor tabs leave out the test helper and setup files (new `openFile` / `tabs`
+  options on a problem).
+- **12 tests** check phone (375px), tablet (768px) and desktop (1200px). Tailwind
+  doesn't run in jsdom, so `test-utils/layout.js` reads each element's classes and
+  applies those whose breakpoint prefixes match the width, using Tailwind's default
+  scale and arbitrary values, merged with any ordinary CSS (`@media` included).
+  `!raw-loader!` reads `public/index.html` for the viewport check.
+- Verified: starter fails all but the 3 desktop tests; breakpoint, fluid
+  (arbitrary `auto-fit`/`clamp()`/`min()`) and menu-button solutions 12/12; a half
+  fix fails just what it skipped. A real browser with Tailwind applied agrees in
+  every case (sideways scrolling vs. 1/2/3 columns).
+- First built with a plain `App.css`, then rebuilt with Tailwind, the styling used
+  for problems.
 
 ### Styling support (tested)
 
@@ -94,6 +127,13 @@ world document.
 - Fix: both are positioned with `transform: translate(...)` and transition only
   `transform` (and the ring's size). Challenge pages now measure 0 on phone and
   desktop; the tour looks and behaves the same.
+
+### Docs
+
+- New [CODEBASE_PROBLEM_TESTS.md](./CODEBASE_PROBLEM_TESTS.md): every problem's
+  tests, the responsive layout helper, the unit tests and the verification steps.
+- [CODEBASE_ASSESSMENTS.md](./CODEBASE_ASSESSMENTS.md): problems are styled with
+  Tailwind, and how to load it.
 
 ### Verification
 

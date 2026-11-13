@@ -11,7 +11,8 @@ import {
 } from "@codesandbox/sandpack-react";
 
 import type { FileMap } from "@/lib/assessment/types";
-import { sandpackSetupFor } from "@/lib/assessment/runtime/registry";
+import { sandpackProviderSetup } from "@/lib/assessment/runtime/registry";
+import type { RuntimeAdapter } from "@/lib/assessment/runtime/types";
 import { Brief } from "./Brief";
 
 /** Drag-to-resize for a panel. `invert` grows the panel when dragging up/left. */
@@ -224,9 +225,12 @@ interface ShellProps {
   previewHref?: string;
   /** Markdown-subset brief shown in the left panel. */
   brief: string;
-  template: "react" | "vanilla";
+  /** The runtime: decides the Sandpack template / standalone setup. */
+  runtime: RuntimeAdapter;
   files: FileMap;
   activeFile: string;
+  /** Files shown as editor tabs (default: every file). The explorer always lists every file. */
+  tabs?: string[];
   /** Rendered inside the Sandpack context (recorders, savers). */
   children?: ReactNode;
 }
@@ -235,13 +239,13 @@ interface ShellProps {
  * The shared coding workspace: header, a resizable task brief on the left, and a
  * VS Code-style workbench (explorer, tabs, editor, Preview/Tests panel, status bar).
  */
-export function WorkspaceShell({ header, briefTop, previewHref, brief, template, files, activeFile, children }: ShellProps) {
+export function WorkspaceShell({ header, briefTop, previewHref, brief, runtime, files, activeFile, tabs, children }: ShellProps) {
   const [panelOpen, setPanelOpen] = useState(true);
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
   const left = useResize(420, 280, 720, "x");
   const bottom = useResize(300, 120, 600, "y", true);
   const dragging = left.dragging || bottom.dragging;
-  const visibleFiles = Object.keys(files);
+  const visibleFiles = tabs?.filter((path) => path in files) ?? Object.keys(files);
 
   return (
     <div className={`flex h-screen flex-col bg-white dark:bg-zinc-950 ${dragging ? "select-none" : ""}`}>
@@ -266,8 +270,7 @@ export function WorkspaceShell({ header, briefTop, previewHref, brief, template,
         />
         <div className="flex min-w-0 flex-1 flex-col bg-[#151515]">
           <SandpackProvider
-            template={template}
-            customSetup={sandpackSetupFor(template)}
+            {...sandpackProviderSetup(runtime)}
             theme="dark"
             files={files}
             options={{ activeFile: activeFile in files ? activeFile : visibleFiles[0], visibleFiles, recompileMode: "delayed", recompileDelay: 600, initMode: "immediate" }}

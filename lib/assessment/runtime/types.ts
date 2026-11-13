@@ -19,4 +19,11 @@ export interface RuntimeAdapter {
   entryFile: string;
   /** A small example project, offered as a starting point when authoring. */
   exampleProject: () => { files: FileMap; hiddenTests: FileMap; scenario: string };
+  /**
+   * Set when the project's own files are the whole project, laid out like a standard
+   * app (for React: public/, src/, package.json). Sandpack's template files are then not
+   * added, and `entry` is the file the bundler starts from. Dependencies come from the
+   * project's package.json.
+   */
+  standalone?: { entry: string };
 }

@@ -1,34 +1,24 @@
+import { reactApp } from "./reactApp";
 import type { FileMap } from "./types";
 
 /**
- * "Make the storefront responsive": a desktop-only React page the learner makes work on
- * phones and tablets.
+ * "Make the storefront responsive": a desktop-only React page styled with Tailwind CSS
+ * that the learner makes work on phones and tablets.
  *
- * Sandpack's tests run in jsdom, which has no layout engine and doesn't apply media
- * queries, so they can't measure the page. Instead test-utils/layout.js reads the CSS rules
- * the page loaded (jsdom keeps them, @media blocks included) and works out which
- * declarations apply to an element at a given screen width: it matches media queries
- * against that width and applies the cascade (specificity, source order, !important,
- * inline styles). The tests then check the result at 375px, 768px and 1200px. Both
- * media-query and fluid solutions (grid auto-fit/minmax, clamp()) are accepted.
+ * The project uses the standard React app layout (see reactApp.ts). Tailwind (v4 browser
+ * build) is loaded from src/index.js: Sandpack does not execute <script>
+ * tags written in index.html, but a script added from JavaScript runs. Its generated CSS
+ * exists only in the preview, so the tests can't read it. Instead test-utils/layout.js
+ * reads the Tailwind classes on each rendered element and works out which ones apply at a
+ * screen width (breakpoint prefixes, Tailwind's default scale, arbitrary values), merged
+ * with any ordinary CSS rules the page loaded (@media included). The tests check the result
+ * at 375px, 768px and 1200px. jsdom has no layout engine, so this is the only way to test
+ * a layout there.
  *
  * Files are String.raw so regexes keep their backslashes; they contain no backticks or
  * template placeholders.
  */
-export const responsiveFiles: FileMap = {
-  "/public/index.html": String.raw`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Northdesk</title>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
-`,
-  "/styles.css": String.raw`/* Loaded by index.js. The storefront's own styles are in App.css. */
-`,
+const src: FileMap = {
   "/App.js": String.raw`import "./App.css";
 import { Header } from "./components/Header";
 import { ProductCard } from "./components/ProductCard";
@@ -36,189 +26,70 @@ import { products } from "./data/products";
 
 export default function App() {
   return (
-    <div className="page">
+    <div data-section="page" className="mx-auto w-[1100px] px-6">
       <Header />
 
-      <section className="hero">
-        <div className="hero-text">
-          <h1>Gear for the way you work</h1>
-          <p>Desks, lamps and bags built to last. Free delivery on orders over $50.</p>
-          <a className="button" href="#shop">Shop the range</a>
+      <section data-section="hero" className="flex items-center gap-12 py-12">
+        <div data-section="hero-text" className="w-[520px]">
+          <h1 className="mb-4 text-6xl font-bold leading-tight">Gear for the way you work</h1>
+          <p className="mb-6 text-lg text-stone-600">
+            Desks, lamps and bags built to last. Free delivery on orders over $50.
+          </p>
+          <a className="inline-block rounded-full bg-gray-800 px-5 py-3 text-white" href="#shop">
+            Shop the range
+          </a>
         </div>
-        <div className="hero-art" role="img" aria-label="A tidy desk with a lamp" />
+        <div
+          data-section="hero-art"
+          role="img"
+          aria-label="A tidy desk with a lamp"
+          className="hero-art h-80 w-[480px] shrink-0 rounded-2xl"
+        />
       </section>
 
       <section id="shop">
-        <h2>Best sellers</h2>
-        <div className="grid">
+        <h2 className="mb-4 text-2xl font-semibold">Best sellers</h2>
+        <div data-section="grid" className="grid grid-cols-3 gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
 
-      <footer className="footer">
+      <footer data-section="footer" className="mt-12 grid grid-cols-3 gap-6 border-t border-stone-200 py-12">
         <div>
-          <h3>Shop</h3>
-          <p>Desks, lighting, bags</p>
+          <h3 className="font-semibold">Shop</h3>
+          <p className="text-stone-500">Desks, lighting, bags</p>
         </div>
         <div>
-          <h3>Help</h3>
-          <p>Delivery, returns, contact us</p>
+          <h3 className="font-semibold">Help</h3>
+          <p className="text-stone-500">Delivery, returns, contact us</p>
         </div>
         <div>
-          <h3>Company</h3>
-          <p>About, careers, press</p>
+          <h3 className="font-semibold">Company</h3>
+          <p className="text-stone-500">About, careers, press</p>
         </div>
       </footer>
     </div>
   );
 }
 `,
-  "/App.css": String.raw`* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  color: #1f2937;
-  background: #fafaf9;
-}
-
-.page {
-  width: 1100px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-/* Header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 72px;
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: 700;
-  color: inherit;
-  text-decoration: none;
-}
-
-.nav {
-  display: flex;
-  gap: 32px;
-}
-
-.nav a,
-.cart {
-  color: inherit;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-/* Hero */
-.hero {
-  display: flex;
-  align-items: center;
-  gap: 48px;
-  padding: 48px 0;
-}
-
-.hero-text {
-  width: 520px;
-}
-
-.hero h1 {
-  margin: 0 0 16px;
-  font-size: 56px;
-  line-height: 1.1;
-}
-
-.hero-art {
-  width: 480px;
-  height: 320px;
-  flex-shrink: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #fde68a, #f97316);
-}
-
-.button {
-  display: inline-block;
-  padding: 12px 20px;
-  border-radius: 999px;
-  background: #1f2937;
-  color: #fff;
-  text-decoration: none;
-}
-
-/* Products */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid #e7e5e4;
-  border-radius: 12px;
-  background: #fff;
-}
-
-.thumb {
-  height: 180px;
-  border-radius: 8px;
-}
-
-.card h3 {
-  margin: 12px 0 4px;
-  font-size: 16px;
-}
-
-.price {
-  margin: 0 0 12px;
-  color: #57534e;
-}
-
-.card button {
-  width: 100%;
-  padding: 10px;
-  border: 0;
-  border-radius: 8px;
-  background: #f97316;
-  color: #fff;
-  font-weight: 600;
-}
-
-/* Footer */
-.footer {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-top: 48px;
-  padding: 48px 0;
-  border-top: 1px solid #e7e5e4;
-}
-`,
   "/components/Header.js": String.raw`const links = ["New in", "Desks", "Lighting", "Bags", "Sale"];
 
 export function Header() {
   return (
-    <header className="header">
-      <a className="logo" href="/">
+    <header data-section="header" className="flex h-18 items-center justify-between">
+      <a className="text-xl font-bold" href="/">
         Northdesk
       </a>
-      <nav className="nav" aria-label="Main">
+      <nav data-section="nav" aria-label="Main" className="flex gap-8">
         {links.map((link) => (
-          <a key={link} href={"#" + link.toLowerCase().replace(" ", "-")}>
+          <a key={link} className="whitespace-nowrap hover:text-orange-600" href={"#" + link.toLowerCase().replace(" ", "-")}>
             {link}
           </a>
         ))}
       </nav>
-      <a className="cart" href="#cart">
+      <a className="whitespace-nowrap" href="#cart">
         Cart (2)
       </a>
     </header>
@@ -227,11 +98,13 @@ export function Header() {
 `,
   "/components/ProductCard.js": String.raw`export function ProductCard({ product }) {
   return (
-    <article className="card">
-      <div className="thumb" style={{ background: product.color }} />
-      <h3>{product.name}</h3>
-      <p className="price">{"$" + product.price.toFixed(2)}</p>
-      <button type="button">Add to cart</button>
+    <article className="rounded-xl border border-stone-200 bg-white p-4">
+      <div className="h-44 rounded-lg" style={{ background: product.color }} />
+      <h3 className="mt-3 mb-1 font-semibold">{product.name}</h3>
+      <p className="mb-3 text-stone-500">{"$" + product.price.toFixed(2)}</p>
+      <button type="button" className="w-full rounded-lg bg-orange-500 py-2.5 font-semibold text-white">
+        Add to cart
+      </button>
     </article>
   );
 }
@@ -246,27 +119,29 @@ export function Header() {
 ];
 `,
   "/responsive.test.js": String.raw`import { renderToStaticMarkup } from "react-dom/server";
-import indexHtml from "!raw-loader!./public/index.html";
+import indexHtml from "!raw-loader!../public/index.html";
 import App from "./App";
-import { columnsAt, isStacked, label, lengthPx, styleAt, PHONE, TABLET, DESKTOP } from "./test-utils/layout";
+import { columnsAt, isHidden, isStacked, label, lengthPx, styleAt, PHONE, TABLET, DESKTOP } from "./test-utils/layout";
 
 beforeAll(() => {
   document.body.innerHTML = renderToStaticMarkup(<App />);
 });
 
-const $ = (selector) => document.querySelector(selector);
+const section = (name) => document.querySelector('[data-section="' + name + '"]');
 
 describe("setup", () => {
   test("public/index.html has a viewport meta tag", () => {
-    const tag = indexHtml.match(/<meta[^>]*name=["']viewport["'][^>]*>/i);
-    expect(tag && tag[0]).toMatch(/width=device-width/);
-    expect(tag && tag[0]).toMatch(/initial-scale=1/);
+    const match = indexHtml.match(/<meta[^>]*name=["']viewport["'][^>]*>/i);
+    const tag = match ? match[0] : "(no viewport meta tag in public/index.html)";
+    expect(tag).toMatch(/width=device-width/);
+    expect(tag).toMatch(/initial-scale=1/);
   });
 });
 
 describe("phone (375px)", () => {
   test("nothing has a fixed width wider than the screen", () => {
     const tooWide = [...document.body.querySelectorAll("*")]
+      .filter((el) => !isHidden(el, PHONE))
       .filter((el) => {
         const style = styleAt(el, PHONE);
         return ["width", "min-width"].some((prop) => lengthPx(style[prop], PHONE) > PHONE);
@@ -276,13 +151,16 @@ describe("phone (375px)", () => {
   });
 
   test("the header has no fixed height, so it can grow when links wrap", () => {
-    const height = styleAt($(".header"), PHONE).height;
+    const height = styleAt(section("header"), PHONE).height;
     expect(Number.isFinite(lengthPx(height, PHONE)) ? height : "auto").toBe("auto");
   });
 
   test("nav links wrap or stack instead of running off the screen", () => {
-    const nav = styleAt($(".nav"), PHONE);
+    const nav = styleAt(section("nav"), PHONE);
+    const behindMenuButton =
+      isHidden(section("nav"), PHONE) && section("header").querySelector("button[aria-expanded]") !== null;
     const ok =
+      behindMenuButton ||
       /wrap/.test(nav["flex-wrap"] || "") ||
       /^column/.test(nav["flex-direction"] || "") ||
       /grid/.test(nav.display || "") ||
@@ -291,49 +169,53 @@ describe("phone (375px)", () => {
   });
 
   test("the hero stacks the text above the picture", () => {
-    expect(isStacked($(".hero"), PHONE)).toBe(true);
+    expect(isStacked(section("hero"), PHONE)).toBe(true);
   });
 
   test("the main heading is 36px or smaller (or scales with the screen)", () => {
-    const size = styleAt($("h1"), PHONE)["font-size"] || "";
+    const size = styleAt(document.querySelector("h1"), PHONE)["font-size"] || "";
     const fluid = /clamp\(|min\(|vw/.test(size);
     expect(fluid || lengthPx(size, PHONE) <= 36).toBe(true);
   });
 
   test("products are in one column", () => {
-    expect(columnsAt($(".grid"), PHONE)).toBe(1);
+    expect(columnsAt(section("grid"), PHONE)).toBe(1);
   });
 
   test("the footer is in one column", () => {
-    expect(columnsAt($(".footer"), PHONE)).toBe(1);
+    expect(columnsAt(section("footer"), PHONE)).toBe(1);
   });
 });
 
 describe("tablet (768px)", () => {
   test("products are in two columns", () => {
-    expect(columnsAt($(".grid"), TABLET)).toBe(2);
+    expect(columnsAt(section("grid"), TABLET)).toBe(2);
   });
 });
 
 describe("desktop (1200px) still looks as it did", () => {
   test("products are in three columns", () => {
-    expect(columnsAt($(".grid"), DESKTOP)).toBe(3);
+    expect(columnsAt(section("grid"), DESKTOP)).toBe(3);
   });
 
   test("the footer is in three columns", () => {
-    expect(columnsAt($(".footer"), DESKTOP)).toBe(3);
+    expect(columnsAt(section("footer"), DESKTOP)).toBe(3);
   });
 
   test("the hero text sits beside the picture", () => {
-    expect(isStacked($(".hero"), DESKTOP)).toBe(false);
+    expect(isStacked(section("hero"), DESKTOP)).toBe(false);
   });
 });
 `,
   "/test-utils/layout.js": String.raw`/*
- * Test helper: works out which CSS declarations apply to an element at a given screen
- * width. The test environment has no real layout, so this reads the stylesheets the page
- * loaded, keeps the rules whose media queries match the width, and applies the cascade
- * (specificity, source order, !important, inline styles). You don't need to change it.
+ * Test helper: works out the styles that apply to an element at a given screen width.
+ * The test environment has no real browser layout and doesn't load Tailwind, so this:
+ *   1. reads the element's Tailwind classes and applies the ones whose breakpoint
+ *      prefixes match the width, using Tailwind's default scale and arbitrary values;
+ *   2. merges any ordinary CSS rules the page loaded (media queries included).
+ * It understands Tailwind's layout utilities: display, flex direction and wrap, grid
+ * columns, width / min-width / max-width / height / size, padding, gap, text size and
+ * overflow. Other classes (colours, borders, ...) are ignored. You don't need to change it.
  */
 
 export const PHONE = 375;
@@ -396,7 +278,123 @@ function splitSpaces(text) {
   return out;
 }
 
-/* ---- media queries ---- */
+/* ---- Tailwind classes ---- */
+
+const BREAKPOINTS = { sm: 640, md: 768, lg: 1024, xl: 1280, "2xl": 1536 };
+const CONTAINER = {
+  "3xs": 256, "2xs": 288, xs: 320, sm: 384, md: 448, lg: 512, xl: 576,
+  "2xl": 672, "3xl": 768, "4xl": 896, "5xl": 1024, "6xl": 1152, "7xl": 1280,
+};
+const TEXT = {
+  xs: 12, sm: 14, base: 16, lg: 18, xl: 20, "2xl": 24, "3xl": 30, "4xl": 36,
+  "5xl": 48, "6xl": 60, "7xl": 72, "8xl": 96, "9xl": 128,
+};
+const DISPLAY = {
+  flex: "flex", "inline-flex": "inline-flex", grid: "grid", "inline-grid": "inline-grid",
+  block: "block", "inline-block": "inline-block", inline: "inline", hidden: "none", contents: "contents",
+};
+const DIRECTION = { "flex-row": "row", "flex-row-reverse": "row-reverse", "flex-col": "column", "flex-col-reverse": "column-reverse" };
+const SIZE_PROP = { w: "width", h: "height", "min-w": "min-width", "max-w": "max-width", "min-h": "min-height", "max-h": "max-height" };
+
+function arbitrary(v) {
+  const m = /^\[(.+)\]$/.exec(v);
+  return m ? m[1].replace(/_/g, " ") : null;
+}
+
+function sizeValue(v, axis) {
+  const arb = arbitrary(v);
+  if (arb !== null) return arb;
+  const named = { full: "100%", auto: "auto", none: "none", px: "1px", fit: "fit-content", min: "min-content", max: "max-content" };
+  if (v in named) return named[v];
+  if (v === "screen") return axis === "h" ? "100vh" : "100vw";
+  const frac = /^(\d+)\/(\d+)$/.exec(v);
+  if (frac) return (100 * Number(frac[1])) / Number(frac[2]) + "%";
+  if (/^\d+(\.\d+)?$/.test(v)) return parseFloat(v) * 4 + "px"; // spacing scale: 0.25rem per step
+  if (axis === "w" && v in CONTAINER) return CONTAINER[v] + "px";
+  return null;
+}
+
+/** The CSS declarations a Tailwind utility (without prefixes) sets, or null if not understood. */
+function utility(name) {
+  if (name in DISPLAY) return [["display", DISPLAY[name]]];
+  if (name in DIRECTION) return [["flex-direction", DIRECTION[name]]];
+  if (/^flex-(wrap|nowrap|wrap-reverse)$/.test(name)) return [["flex-wrap", name.slice(5)]];
+  let m;
+  if ((m = /^grid-cols-(.+)$/.exec(name))) {
+    const arb = arbitrary(m[1]);
+    if (arb !== null) return [["grid-template-columns", arb]];
+    if (m[1] === "none") return [["grid-template-columns", "none"]];
+    if (/^\d+$/.test(m[1])) return [["grid-template-columns", "repeat(" + m[1] + ", minmax(0, 1fr))"]];
+    return null;
+  }
+  if ((m = /^(min-w|max-w|min-h|max-h|w|h|size)-(.+)$/.exec(name))) {
+    const value = sizeValue(m[2], m[1].endsWith("h") ? "h" : "w");
+    if (value === null) return null;
+    return m[1] === "size" ? [["width", value], ["height", value]] : [[SIZE_PROP[m[1]], value]];
+  }
+  if ((m = /^p([xlr]?)-(.+)$/.exec(name))) {
+    const value = sizeValue(m[2], "w");
+    if (value === null) return null;
+    if (m[1] === "l") return [["padding-left", value]];
+    if (m[1] === "r") return [["padding-right", value]];
+    return [["padding-left", value], ["padding-right", value]];
+  }
+  if ((m = /^gap(-x)?-(.+)$/.exec(name))) {
+    const value = sizeValue(m[2], "w");
+    return value === null ? null : [["column-gap", value]];
+  }
+  if ((m = /^text-(.+)$/.exec(name))) {
+    if (m[1] in TEXT) return [["font-size", TEXT[m[1]] + "px"]];
+    const arb = arbitrary(m[1]);
+    if (arb !== null && (Number.isFinite(lengthPx(arb, 1000)) || /clamp\(|min\(|max\(|vw/.test(arb))) return [["font-size", arb]];
+    return null; // colours etc.
+  }
+  if ((m = /^overflow(-x)?-(auto|scroll|hidden|visible|clip)$/.exec(name))) return [["overflow-x", m[2]]];
+  return null;
+}
+
+function splitVariants(cls) {
+  const parts = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of cls) {
+    if (ch === "[") depth++;
+    if (ch === "]") depth--;
+    if (ch === ":" && depth === 0) {
+      parts.push(current);
+      current = "";
+    } else current += ch;
+  }
+  parts.push(current);
+  return parts;
+}
+
+function variantMatches(variant, width) {
+  if (variant in BREAKPOINTS) return width >= BREAKPOINTS[variant];
+  let m;
+  if ((m = /^max-(.+)$/.exec(variant)) && m[1] in BREAKPOINTS) return width < BREAKPOINTS[m[1]];
+  if ((m = /^min-\[(.+)\]$/.exec(variant))) return width >= lengthPx(m[1], width);
+  if ((m = /^max-\[(.+)\]$/.exec(variant))) return width < lengthPx(m[1], width);
+  return false; // hover:, focus:, dark:, ... don't apply in these checks
+}
+
+/** Tailwind declarations that apply to el at the given width, in the order Tailwind applies them. */
+function tailwindDeclarations(el, width) {
+  const found = [];
+  for (const cls of String(el.getAttribute("class") || "").split(/\s+/).filter(Boolean)) {
+    const parts = splitVariants(cls);
+    const name = parts.pop().replace(/^!|!$/g, "");
+    if (!parts.every((v) => variantMatches(v, width))) continue;
+    const decls = utility(name);
+    if (!decls) continue;
+    // Unprefixed first, then larger breakpoints (Tailwind's mobile-first order).
+    const order = parts.reduce((sum, v) => sum + (BREAKPOINTS[v] || 1), 0);
+    found.push({ order, decls });
+  }
+  return found.sort((a, b) => a.order - b.order).flatMap((f) => f.decls);
+}
+
+/* ---- ordinary CSS (media queries + cascade) ---- */
 
 const COMPARE = {
   "<": (a, b) => a < b,
@@ -411,7 +409,6 @@ function featureMatches(feature, width) {
     const limit = lengthPx(minMax[2], width);
     return minMax[1] === "min" ? width >= limit : width <= limit;
   }
-  // Range syntax: (width <= 600px), (600px < width <= 900px)
   const tokens = feature.split(/\s*(<=|>=|<|>)\s*/);
   if (tokens.length >= 3 && tokens.includes("width")) {
     const value = (t) => (t === "width" ? width : lengthPx(t, width));
@@ -420,7 +417,7 @@ function featureMatches(feature, width) {
     }
     return true;
   }
-  return false; // other features (orientation, hover, prefers-*) are treated as not matching
+  return false;
 }
 
 export function mediaMatches(mediaText, width) {
@@ -441,14 +438,12 @@ export function mediaMatches(mediaText, width) {
   });
 }
 
-/* ---- cascade ---- */
-
 function collectRules(rules, width, out) {
   for (const rule of Array.from(rules)) {
     if (rule.selectorText !== undefined && rule.style) out.push(rule);
     else if (rule.media && rule.cssRules) {
       if (mediaMatches(rule.media.mediaText, width)) collectRules(rule.cssRules, width, out);
-    } else if (rule.cssRules) collectRules(rule.cssRules, width, out); // @supports etc.
+    } else if (rule.cssRules) collectRules(rule.cssRules, width, out);
   }
   return out;
 }
@@ -482,7 +477,7 @@ function setProp(style, prop, value) {
   }
 }
 
-/** The declarations that apply to el when the screen is width px wide (property -> value). */
+/** The styles that apply to el when the screen is width px wide (property -> value). */
 export function styleAt(el, width) {
   const rules = [];
   for (const sheet of Array.from(document.styleSheets)) collectRules(sheet.cssRules, width, rules);
@@ -501,22 +496,34 @@ export function styleAt(el, width) {
   matched.sort((a, b) => a.spec - b.spec || a.order - b.order);
 
   const style = {};
-  const inline = String(el.getAttribute("style") || "")
-    .split(";")
-    .map((d) => d.split(":"))
-    .filter((d) => d.length >= 2)
-    .map(([p, ...v]) => [p.trim().toLowerCase(), v.join(":").trim()]);
-  for (const important of [false, true]) {
+  const applyRules = (important) => {
     for (const { style: decl } of matched) {
       for (let i = 0; i < decl.length; i++) {
         const prop = decl[i];
         if ((decl.getPropertyPriority(prop) === "important") === important) setProp(style, prop, decl.getPropertyValue(prop));
       }
     }
-    if (!important) for (const [p, v] of inline) setProp(style, p, v);
-  }
+  };
+  applyRules(false);
+  for (const [prop, value] of tailwindDeclarations(el, width)) setProp(style, prop, value);
+  const inline = String(el.getAttribute("style") || "")
+    .split(";")
+    .map((d) => d.split(":"))
+    .filter((d) => d.length >= 2);
+  for (const [p, ...v] of inline) setProp(style, p.trim().toLowerCase(), v.join(":").trim());
+  applyRules(true);
   return style;
 }
+
+/** Whether el (or any parent) is display: none at the given width. */
+export function isHidden(el, width) {
+  for (let node = el; node && node !== document.body; node = node.parentElement) {
+    if (styleAt(node, width).display === "none") return true;
+  }
+  return false;
+}
+
+/* ---- layout helpers used by the tests ---- */
 
 /** Width available to el's content, following fixed widths, max-widths and padding down from the page. */
 function contentWidth(el, width) {
@@ -586,8 +593,23 @@ export function isStacked(el, width) {
 
 /** A short readable name for an element, used in failure messages. */
 export function label(el) {
+  const section = el.getAttribute("data-section");
+  if (section) return el.tagName.toLowerCase() + '[data-section="' + section + '"]';
   const cls = el.getAttribute("class");
   return el.tagName.toLowerCase() + (cls ? "." + cls.trim().split(/\s+/).join(".") : "");
 }
 `,
 };
+
+export const responsiveFiles: FileMap = reactApp({
+  name: "northdesk-storefront",
+  title: "Northdesk",
+  withoutViewport: true,
+  bodyClass: "bg-stone-50 text-gray-800",
+  appCss: String.raw`/* The hero picture's gradient. Everything else is styled with Tailwind classes. */
+.hero-art {
+  background: linear-gradient(135deg, #fde68a, #f97316);
+}
+`,
+  src,
+});

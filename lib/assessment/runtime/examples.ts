@@ -1,3 +1,4 @@
+import { cartAppFiles, cartAppHiddenTests } from "../reactApp";
 import type { FileMap } from "../types";
 
 const reactFiles: FileMap = {
@@ -148,5 +149,14 @@ test("handles newlines and tabs", () => {
 });
 `,
     } as FileMap,
+  };
+}
+
+/** The cart example in the standard React app layout (runtime "react-app"). */
+export function reactAppExample() {
+  return {
+    scenario: reactExample().scenario.replace("`utils/cart.test.js`", "`src/utils/cart.test.js`"),
+    files: cartAppFiles,
+    hiddenTests: cartAppHiddenTests,
   };
 }

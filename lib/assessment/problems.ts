@@ -1,5 +1,6 @@
-import { vanillaExample, reactExample } from "./runtime/examples";
+import { cartAppFiles, paginationAppFiles, searchAppFiles } from "./reactApp";
 import { responsiveFiles } from "./responsiveProblem";
+import { vanillaExample } from "./runtime/examples";
 import type { FileMap } from "./types";
 
 /**
@@ -14,180 +15,19 @@ export interface CodeProblem {
   id: string;
   title: string;
   level: ProblemLevel;
-  runtimeId: "react-js" | "vanilla-js";
+  runtimeId: "react-app" | "vanilla-js";
   /** One or two lines for the list card. */
   summary: string;
   /** Shown in the brief panel (Markdown subset). */
   scenario: string;
   files: FileMap;
+  /** File opened first. Defaults to the runtime's entry file. */
+  openFile?: string;
+  /** Files shown as editor tabs. Defaults to every project file; all files stay in the explorer. */
+  tabs?: string[];
 }
 
-const cart = reactExample();
 const counter = vanillaExample();
-
-const paginationFiles: FileMap = {
-  "/App.js": `import { useState } from "react";
-import { paginate } from "./utils/paginate";
-import { orders } from "./data/orders";
-
-export default function App() {
-  const [page, setPage] = useState(1);
-  const result = paginate(orders, page, 5);
-
-  return (
-    <main style={{ fontFamily: "system-ui", padding: 24 }}>
-      <h1>My orders</h1>
-      <ul>
-        {result.items.map((order) => (
-          <li key={order.id}>
-            Order #{order.id} ({new Date(order.createdAt).toLocaleDateString()})
-          </li>
-        ))}
-      </ul>
-      <button onClick={() => setPage(page - 1)} disabled={page <= 1}>Previous</button>{" "}
-      <button onClick={() => setPage(page + 1)} disabled={page * result.limit >= result.total}>Next</button>
-      <p>Page {result.page}, {result.total} orders</p>
-    </main>
-  );
-}
-`,
-  "/data/orders.js": `// 23 orders. A higher id is a more recent order.
-export const orders = Array.from({ length: 23 }, (_, i) => ({
-  id: i + 1,
-  createdAt: Date.UTC(2026, 0, 1) + i * 86_400_000,
-}));
-`,
-  "/utils/paginate.js": `export const DEFAULT_LIMIT = 10;
-export const MAX_LIMIT = 50;
-
-// Customers say page 1 skips their newest orders and big page sizes hang the page.
-export function paginate(items, page, limit) {
-  const start = page * limit;
-  return { items: items.slice(start, start + limit), page, limit };
-}
-`,
-  "/utils/paginate.test.js": `import { paginate } from "./paginate";
-
-const orders = Array.from({ length: 25 }, (_, i) => ({ id: i + 1, createdAt: i + 1 }));
-
-test("page 1 returns the most recent orders first", () => {
-  const ids = paginate(orders, 1, 10).items.map((o) => o.id);
-  expect(ids).toEqual([25, 24, 23, 22, 21, 20, 19, 18, 17, 16]);
-});
-
-test("limit defaults to 10", () => {
-  const result = paginate(orders, 1);
-  expect(result.limit).toBe(10);
-  expect(result.items).toHaveLength(10);
-});
-
-test("limit is capped at 50", () => {
-  const many = Array.from({ length: 120 }, (_, i) => ({ id: i + 1, createdAt: i + 1 }));
-  const result = paginate(many, 1, 500);
-  expect(result.limit).toBe(50);
-  expect(result.items).toHaveLength(50);
-});
-
-test("returns items, page, limit and total", () => {
-  expect(paginate(orders, 2, 10)).toMatchObject({ page: 2, limit: 10, total: 25 });
-});
-
-test("a page past the end is empty", () => {
-  expect(paginate(orders, 9, 10).items).toEqual([]);
-});
-`,
-};
-
-const searchFiles: FileMap = {
-  "/App.js": `import { useState } from "react";
-import { products } from "./data/products";
-import { addToCart, searchProducts } from "./utils/cart";
-
-export default function App() {
-  const [query, setQuery] = useState("");
-  const [cart, setCart] = useState([]);
-  const visible = searchProducts(products, query);
-
-  return (
-    <main style={{ fontFamily: "system-ui", padding: 24 }}>
-      <h1>Shop</h1>
-      <input placeholder="Search products" value={query} onChange={(e) => setQuery(e.target.value)} />
-      <ul aria-label="Products">
-        {visible.map((product) => (
-          <li key={product.id}>
-            {product.name}{" "}
-            <button onClick={() => setCart(addToCart(cart, products, product.id))}>Add to cart</button>
-          </li>
-        ))}
-      </ul>
-      <h2>Cart</h2>
-      <ul aria-label="Cart">
-        {cart.map((line) => <li key={line.id}>{line.name} x{line.quantity}</li>)}
-      </ul>
-    </main>
-  );
-}
-`,
-  "/data/products.js": `export const products = [
-  { id: 1, name: "Backpack" },
-  { id: 2, name: "Water Bottle" },
-  { id: 3, name: "Notebook" },
-  { id: 4, name: "Desk Lamp" },
-];
-`,
-  "/utils/cart.js": `// Users say: "I searched for 'Backpack', clicked Add to cart, and a Water Bottle got added."
-export function searchProducts(products, query) {
-  return products.filter((product) => product.name.includes(query));
-}
-
-export function addToCart(cart, products, productId) {
-  const product = products[productId];
-  if (!product) return cart;
-  const existing = cart.find((line) => line.id === product.id);
-  if (existing) {
-    existing.quantity += 1;
-    return cart;
-  }
-  return [...cart, { id: product.id, name: product.name, quantity: 1 }];
-}
-`,
-  "/utils/cart.test.js": `import { addToCart, searchProducts } from "./cart";
-
-const products = [
-  { id: 1, name: "Backpack" },
-  { id: 2, name: "Water Bottle" },
-  { id: 3, name: "Notebook" },
-];
-
-test("adds the product with the clicked id", () => {
-  expect(addToCart([], products, 1)).toEqual([{ id: 1, name: "Backpack", quantity: 1 }]);
-});
-
-test("works on a filtered list", () => {
-  const filtered = searchProducts(products, "back");
-  expect(addToCart([], filtered, 1)[0].name).toBe("Backpack");
-});
-
-test("adding twice increases the quantity", () => {
-  const once = addToCart([], products, 2);
-  expect(addToCart(once, products, 2)).toEqual([{ id: 2, name: "Water Bottle", quantity: 2 }]);
-});
-
-test("does not change the cart it was given", () => {
-  const cart = [{ id: 3, name: "Notebook", quantity: 1 }];
-  addToCart(cart, products, 3);
-  expect(cart[0].quantity).toBe(1);
-});
-
-test("ignores an unknown product id", () => {
-  expect(addToCart([], products, 99)).toEqual([]);
-});
-
-test("search ignores letter case", () => {
-  expect(searchProducts(products, "WATER").map((p) => p.name)).toEqual(["Water Bottle"]);
-});
-`,
-};
 
 const checkoutFiles: FileMap = {
   "/index.html": `<!DOCTYPE html>
@@ -299,7 +139,22 @@ const HOW_TO_CHECK = [
 ];
 
 const REACT_SETUP =
-  "- `index.js`, `styles.css`, `public/index.html`, `package.json`: the React setup that starts the app. You don't need to change these.";
+  "- `package.json`, `public/index.html`, `src/index.js` and `src/index.css`: the standard React app setup. `src/index.js` starts the app and loads Tailwind CSS, and `src/index.css` holds the global styles. You don't need to change these.";
+
+/** File tree lines for a React problem: the standard layout plus the problem's own src/ files. */
+const reactTree = (...srcLines: string[]) => [
+  "```",
+  "package.json",
+  "public/",
+  "  index.html",
+  "src/",
+  "  index.js",
+  "  index.css",
+  "  App.js",
+  "  App.css",
+  ...srcLines.map((line) => "  " + line),
+  "```",
+];
 const VANILLA_SETUP = "- `styles.css`, `package.json`: project setup. You don't need to change these.";
 
 export const CODE_PROBLEMS: readonly CodeProblem[] = [
@@ -307,7 +162,7 @@ export const CODE_PROBLEMS: readonly CodeProblem[] = [
     id: "cart-total",
     title: "Fix the cart total",
     level: "easy",
-    runtimeId: "react-js",
+    runtimeId: "react-app",
     summary: "Customers say the total at checkout is too low. Find the bug in a small React cart.",
     scenario: brief(
       [
@@ -324,9 +179,9 @@ export const CODE_PROBLEMS: readonly CodeProblem[] = [
         "",
         "## Task 1: Fix the cart total",
         "",
-        "- Find out why `cartTotal` in `utils/cart.js` returns the wrong number, and fix it.",
+        "- Find out why `cartTotal` in `src/utils/cart.js` returns the wrong number, and fix it.",
         "- Each line costs its price times its quantity. The total is the sum of all lines.",
-        "- Make every test in `utils/cart.test.js` pass, and check that the preview shows **Total: $85.48**.",
+        "- Make every test in `src/utils/cart.test.js` pass, and check that the preview shows **Total: $85.48**.",
         "- The item lines show the price of one unit (for example `Desk lamp x2: $29.99`). That is intended and doesn't need to change.",
         "",
         "## Task 2: Review your own change",
@@ -336,24 +191,20 @@ export const CODE_PROBLEMS: readonly CodeProblem[] = [
       [
         "# Project files",
         "",
-        "```",
-        "App.js",
-        "components/",
-        "  CartSummary.js",
-        "utils/",
-        "  cart.js",
-        "  cart.test.js",
-        "```",
+        ...reactTree("components/", "  CartSummary.js", "utils/", "  cart.js", "  cart.test.js"),
         "",
-        "- `App.js`: the cart page. It holds the sample cart (three items) and renders the summary.",
-        "- `components/CartSummary.js`: lists each item and shows the total, using the helpers in `utils/cart.js`.",
-        "- `utils/cart.js`: the cart maths. `formatPrice` turns a number into `$0.00` text and `cartTotal` adds up the cart.",
-        "- `utils/cart.test.js`: the tests for `utils/cart.js`.",
+        "- `src/App.js`: the cart page. It holds the sample cart (three items) and renders the summary.",
+        "- `src/App.css`: one custom rule that keeps price digits lined up. Everything else is styled with Tailwind classes.",
+        "- `src/components/CartSummary.js`: lists each item and shows the total, using the helpers in `src/utils/cart.js`.",
+        "- `src/utils/cart.js`: the cart maths. `formatPrice` turns a number into `$0.00` text and `cartTotal` adds up the cart.",
+        "- `src/utils/cart.test.js`: the tests for `src/utils/cart.js`.",
         REACT_SETUP,
       ],
       HOW_TO_CHECK,
     ),
-    files: cart.files,
+    files: cartAppFiles,
+    openFile: "/src/utils/cart.js",
+    tabs: ["/src/utils/cart.js", "/src/utils/cart.test.js", "/src/components/CartSummary.js", "/src/App.js", "/src/App.css"],
   },
   {
     id: "word-counter",
@@ -434,7 +285,7 @@ test("blank text is zero words", () => {
     id: "order-history-pagination",
     title: "Order history pagination",
     level: "medium",
-    runtimeId: "react-js",
+    runtimeId: "react-app",
     summary: "Page 1 skips the newest orders, the Next button never stops, and page sizes aren't capped.",
     scenario: brief(
       [
@@ -453,7 +304,7 @@ test("blank text is zero words", () => {
         "",
         "## Task 1: Fix `paginate`",
         "",
-        "Fix `paginate(items, page, limit)` in `utils/paginate.js` so that:",
+        "Fix `paginate(items, page, limit)` in `src/utils/paginate.js` so that:",
         "",
         "- Pages are numbered from 1, and page 1 holds the **most recent** orders (newest `createdAt` first).",
         "- The array passed in is not reordered. Sort a copy.",
@@ -461,7 +312,7 @@ test("blank text is zero words", () => {
         "- The result is `{ items, page, limit, total }`, where `total` is the number of orders across all pages.",
         "- A page past the end has an empty `items` list.",
         "",
-        "Make every test in `utils/paginate.test.js` pass.",
+        "Make every test in `src/utils/paginate.test.js` pass.",
         "",
         "## Task 2: Check the page",
         "",
@@ -470,30 +321,26 @@ test("blank text is zero words", () => {
       [
         "# Project files",
         "",
-        "```",
-        "App.js",
-        "data/",
-        "  orders.js",
-        "utils/",
-        "  paginate.js",
-        "  paginate.test.js",
-        "```",
+        ...reactTree("data/", "  orders.js", "utils/", "  paginate.js", "  paginate.test.js"),
         "",
-        "- `App.js`: the My orders page. It keeps the current page number, asks `paginate` for 5 orders at a time and uses `total` to decide when Next is disabled.",
-        "- `data/orders.js`: 23 sample orders, each with an `id` and a `createdAt` timestamp. A higher id is a more recent order.",
-        "- `utils/paginate.js`: the paging helper and its `DEFAULT_LIMIT` / `MAX_LIMIT` constants.",
-        "- `utils/paginate.test.js`: the tests for `paginate`.",
+        "- `src/App.js`: the My orders page. It keeps the current page number, asks `paginate` for 5 orders at a time and uses `total` to decide when Next is disabled.",
+        "- `src/App.css`: one custom rule that keeps order numbers lined up. Everything else is styled with Tailwind classes.",
+        "- `src/data/orders.js`: 23 sample orders, each with an `id` and a `createdAt` timestamp. A higher id is a more recent order.",
+        "- `src/utils/paginate.js`: the paging helper and its `DEFAULT_LIMIT` / `MAX_LIMIT` constants.",
+        "- `src/utils/paginate.test.js`: the tests for `paginate`.",
         REACT_SETUP,
       ],
       HOW_TO_CHECK,
     ),
-    files: paginationFiles,
+    files: paginationAppFiles,
+    openFile: "/src/utils/paginate.js",
+    tabs: ["/src/utils/paginate.js", "/src/utils/paginate.test.js", "/src/App.js", "/src/data/orders.js", "/src/App.css"],
   },
   {
     id: "wrong-product-in-cart",
     title: "The wrong product gets added",
     level: "medium",
-    runtimeId: "react-js",
+    runtimeId: "react-app",
     summary: "Search for a product, click Add to cart, and a different one lands in the cart.",
     scenario: brief(
       [
@@ -510,7 +357,7 @@ test("blank text is zero words", () => {
         "",
         "## Task 1: Fix Add to cart",
         "",
-        "Fix `addToCart(cart, products, productId)` in `utils/cart.js` so that:",
+        "Fix `addToCart(cart, products, productId)` in `src/utils/cart.js` so that:",
         "",
         "- It adds the product whose `id` is `productId`, whether or not the product list has been filtered by a search.",
         "- Adding a product that is already in the cart increases its quantity by 1.",
@@ -521,7 +368,7 @@ test("blank text is zero words", () => {
         "",
         "`searchProducts` must ignore letter case: `water`, `WATER` and `Water` all find **Water Bottle**.",
         "",
-        "Make every test in `utils/cart.test.js` pass.",
+        "Make every test in `src/utils/cart.test.js` pass.",
         "",
         "## Task 3: Check the page",
         "",
@@ -530,24 +377,20 @@ test("blank text is zero words", () => {
       [
         "# Project files",
         "",
-        "```",
-        "App.js",
-        "data/",
-        "  products.js",
-        "utils/",
-        "  cart.js",
-        "  cart.test.js",
-        "```",
+        ...reactTree("data/", "  products.js", "utils/", "  cart.js", "  cart.test.js"),
         "",
-        "- `App.js`: the shop page. It holds the search text and the cart, shows the matching products with an Add to cart button each, and lists the cart.",
-        "- `data/products.js`: the four products for sale, each with an `id` and a `name`.",
-        "- `utils/cart.js`: `searchProducts` (filters products by name) and `addToCart` (returns the cart with a product added).",
-        "- `utils/cart.test.js`: the tests for both helpers.",
+        "- `src/App.js`: the shop page. It holds the search text and the cart, shows the matching products with an Add to cart button each, and lists the cart.",
+        "- `src/App.css`: the two-column layout (products beside the cart on wider screens). Everything else is styled with Tailwind classes.",
+        "- `src/data/products.js`: the four products for sale, each with an `id` and a `name`.",
+        "- `src/utils/cart.js`: `searchProducts` (filters products by name) and `addToCart` (returns the cart with a product added).",
+        "- `src/utils/cart.test.js`: the tests for both helpers.",
         REACT_SETUP,
       ],
       HOW_TO_CHECK,
     ),
-    files: searchFiles,
+    files: searchAppFiles,
+    openFile: "/src/utils/cart.js",
+    tabs: ["/src/utils/cart.js", "/src/utils/cart.test.js", "/src/App.js", "/src/data/products.js", "/src/App.css"],
   },
   {
     id: "checkout-all-or-nothing",
@@ -619,8 +462,8 @@ test("blank text is zero words", () => {
     id: "responsive-storefront",
     title: "Make the storefront responsive",
     level: "medium",
-    runtimeId: "react-js",
-    summary: "A shop page that only works on a laptop. Make it fit phones and tablets without breaking desktop.",
+    runtimeId: "react-app",
+    summary: "A Tailwind shop page that only works on a laptop. Make it fit phones and tablets without breaking desktop.",
     scenario: brief(
       [
         "# The situation",
@@ -644,21 +487,23 @@ test("blank text is zero words", () => {
         "",
         "## Task 2: Make the layout fit every screen",
         "",
-        "Update `App.css`. Use media queries, fluid techniques (such as `max-width`, grid `auto-fit` with `minmax()`, or `clamp()`), or a mix.",
+        "The page is styled with **Tailwind CSS**: the styles are classes in the components (`src/App.js`, `src/components/Header.js`, `src/components/ProductCard.js`). Change the classes. `src/App.css` holds one custom rule, and you can add plain CSS there if you need it; the tests read it too.",
         "",
-        "**Phone (up to 600px wide):**",
+        "Tailwind is mobile-first. A class with no prefix applies at every width, and a prefixed class applies from that width up: `sm:` from 640px, `md:` from 768px, `lg:` from 1024px, `xl:` from 1280px. `max-md:` and similar apply below a width. So write the phone layout without a prefix, then add `md:` and `lg:` classes for bigger screens. Arbitrary values such as `w-[480px]` or `max-w-[1100px]` work too.",
         "",
-        "- Nothing has a fixed width wider than the screen. Prefer `max-width` to `width` for the page and the hero.",
-        "- The header has no fixed height, and the menu links wrap onto a new line (or stack) instead of running off the edge.",
+        "**Phone (375px):**",
+        "",
+        "- Nothing has a fixed width wider than the screen. Prefer `max-w-*` (with `w-full`) to a fixed `w-*` for the page, or only apply fixed widths from a larger breakpoint.",
+        "- The header has no fixed height, and the menu links wrap onto a new line (or stack, or sit behind a menu button) instead of running off the edge.",
         "- The hero shows the text above the picture.",
-        "- The main heading is 36px or smaller, or scales with the screen using `clamp()`.",
+        "- The main heading is 36px (`text-4xl`) or smaller, or scales with the screen.",
         "- Products are in **one** column, and so is the footer.",
         "",
-        "**Tablet (601px to 900px):** products are in **two** columns.",
+        "**Tablet (768px):** products are in **two** columns.",
         "",
-        "**Desktop (wider than 900px):** keep it as it is now: products and footer in **three** columns, with the hero text beside the picture.",
+        "**Desktop (1200px):** keep it as it is now: products and footer in **three** columns, with the hero text beside the picture.",
         "",
-        "Keep the product list and the footer as CSS Grid, and keep the class names the tests look for (`.page`, `.header`, `.nav`, `.hero`, `.grid`, `.footer`). You can add your own classes and elements. Write your CSS in `App.css`: Tailwind isn't loaded in this project, and the tests read `App.css`.",
+        "Keep the product list and the footer as grids, and keep the `data-section` attributes: the tests use them to find each part of the page. You can add elements and classes.",
         "",
         "## Task 3: Check it by eye",
         "",
@@ -667,39 +512,32 @@ test("blank text is zero words", () => {
       [
         "# How the tests work",
         "",
-        "The tests can't see the preview. They read the CSS rules your page loads and work out which ones apply at 375px (phone), 768px (tablet) and 1200px (desktop), including your media queries. So they check the rules you wrote, not pixels on a screen. Always check the preview by eye too.",
+        "The tests can't see the preview, and Tailwind doesn't run inside them. Instead they read the Tailwind classes on each element and work out which apply at 375px (phone), 768px (tablet) and 1200px (desktop), using Tailwind's breakpoints and default sizes. So they check the classes you wrote, not pixels on a screen. Always check the preview by eye too.",
+        "",
+        "They understand Tailwind's layout classes: `flex`, `grid`, `hidden`, `block`, `flex-col` / `flex-row`, `flex-wrap`, `grid-cols-*`, `w-*`, `min-w-*`, `max-w-*`, `h-*`, `size-*`, `p-*` / `px-*`, `gap-*`, `text-<size>` and `overflow-x-*`, with any breakpoint prefix and arbitrary values. Colours, borders and other classes don't affect the tests.",
       ],
       [
         "# Project files",
         "",
-        "```",
-        "App.js",
-        "App.css",
-        "components/",
-        "  Header.js",
-        "  ProductCard.js",
-        "data/",
-        "  products.js",
-        "public/",
-        "  index.html",
-        "responsive.test.js",
-        "test-utils/",
-        "  layout.js",
-        "```",
+        ...reactTree("components/", "  Header.js", "  ProductCard.js", "data/", "  products.js", "responsive.test.js", "test-utils/", "  layout.js"),
         "",
-        "- `App.js`: the storefront page: header, hero, the best-sellers grid and the footer.",
-        "- `App.css`: all of the page's styles. Right now they only work on a wide screen. **This is where most of your work goes.**",
-        "- `components/Header.js`: the logo, the menu (`.nav`) and the cart link.",
-        "- `components/ProductCard.js`: one product: a colour block, the name, the price and an Add to cart button.",
-        "- `data/products.js`: the six products shown in the grid.",
-        "- `public/index.html`: the HTML page the app is loaded into.",
-        "- `responsive.test.js`: the tests, grouped by screen size.",
-        "- `test-utils/layout.js`: a helper the tests use to work out which CSS rules apply at a given screen width. You don't need to change it.",
-        "- `index.js`, `styles.css`, `package.json`: the React setup that starts the app. You don't need to change these.",
+        "- `src/App.js`: the storefront page and its Tailwind classes: the page wrapper, hero, best-sellers grid and footer. **Most of your work is here.**",
+        "- `src/App.css`: one custom rule (the hero picture's gradient). You can add your own CSS here too; the tests read it.",
+        "- `src/components/Header.js`: the logo, the menu (`data-section=\"nav\"`) and the cart link.",
+        "- `src/components/ProductCard.js`: one product card: a colour block, the name, the price and an Add to cart button.",
+        "- `src/data/products.js`: the six products shown in the grid.",
+        "- `public/index.html`: the HTML page the app is loaded into (the page background classes are on `<body>`). **Task 1 is here.**",
+        "- `src/responsive.test.js`: the tests, grouped by screen size.",
+        "- `src/test-utils/layout.js`: a helper the tests use to work out which Tailwind classes (and any CSS) apply at a given screen width. You don't need to change it.",
+        "- `package.json`, `src/index.js` and `src/index.css`: the standard React app setup. `src/index.js` starts the app and loads Tailwind CSS. You don't need to change these.",
       ],
       HOW_TO_CHECK,
     ),
     files: responsiveFiles,
+    // Open on the page's markup (where the Tailwind classes are); keep the test helper and
+    // setup files out of the tab bar.
+    openFile: "/src/App.js",
+    tabs: ["/src/App.js", "/src/components/Header.js", "/src/components/ProductCard.js", "/src/App.css", "/public/index.html", "/src/responsive.test.js"],
   },
 ];
 

@@ -72,6 +72,9 @@ CTRL records how their code changes.
   capture, snapshots, derived stats, the reviewer dashboard and rubric.
 - [CODEBASE_ASSESSMENT_API.md](./CODEBASE_ASSESSMENT_API.md) — routes, storage
   interface, signed links, session rules and the hidden-test runner.
+- [CODEBASE_PROBLEM_TESTS.md](./CODEBASE_PROBLEM_TESTS.md) — what each code
+  problem's tests check, how the Tailwind responsive tests work, the unit tests, and
+  how they were verified.
 
 - [MILESTONE2.md](./MILESTONE2.md) — Intelligence Authoring System.
 - [MILESTONE3.md](./MILESTONE3.md) — Intelligence Composition (derived conditions, objectives).

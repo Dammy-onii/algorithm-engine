@@ -5,7 +5,7 @@ import {
   useSandpack,
 } from "@codesandbox/sandpack-react";
 
-import { getRuntime } from "@/lib/assessment/runtime/registry";
+import { boilerplateTemplate, getRuntime } from "@/lib/assessment/runtime/registry";
 import type { FileMap, PublicAssessment } from "@/lib/assessment/types";
 import { Brief } from "./Brief";
 import { collectProjectFiles } from "./collect";
@@ -198,11 +198,11 @@ function Working({ token, assessment, session, onSubmitted }: {
   );
 
   return (
-    <WorkspaceShell header={header} brief={assessment.scenario} template={runtime.template} files={session.files} activeFile={runtime.entryFile}>
+    <WorkspaceShell header={header} brief={assessment.scenario} runtime={runtime} files={session.files} activeFile={runtime.entryFile}>
       <Recorder
         token={token}
         sessionId={session.sessionId}
-        runtimeTemplate={runtime.template}
+        runtimeTemplate={boilerplateTemplate(runtime)}
         initialKeys={initialKeys}
         setStatus={setStatus}
         registerSubmit={(fn) => { submitRef.current = fn; }}
@@ -214,7 +214,7 @@ function Working({ token, assessment, session, onSubmitted }: {
 
 /** Invisible component inside the Sandpack context: autosaves, records runs, submits. */
 function Recorder({ token, sessionId, runtimeTemplate, initialKeys, setStatus, registerSubmit, onSubmitted }: {
-  token: string; sessionId: string; runtimeTemplate: "react" | "vanilla"; initialKeys: string[];
+  token: string; sessionId: string; runtimeTemplate: "react" | "vanilla" | null; initialKeys: string[];
   setStatus: (s: "saved" | "saving" | "error" | "submitting") => void;
   registerSubmit: (fn: () => Promise<void>) => void;
   onSubmitted: (late: boolean) => void;
