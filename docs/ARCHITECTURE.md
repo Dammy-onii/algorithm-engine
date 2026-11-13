@@ -488,6 +488,9 @@ problem statement, hint, Add rule, the Conditions and Functions sections, Apply
 & Run, the simulation panel, Guide). The tour opens the Policy subview it is
 explaining through a window event, switches the Build/Run tab on narrow
 screens, and falls back to a centred card when an element is not on screen.
+The spotlight and card are positioned with `transform: translate(...)` (not
+`top`/`left`) so moving them is not counted as layout shift; see the CLS entry
+in [CHANGELOG.md](./CHANGELOG.md#2026-11-13--code-problems-workspace-fixes-responsive-problem-and-tour-cls-fix).
 
 The first time a challenge passes, a "You just learned" pop-up
 (`LearnedDialog.tsx`) names the concept and offers the next unlocked challenge.

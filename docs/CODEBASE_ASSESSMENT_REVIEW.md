@@ -10,7 +10,7 @@ stored, and what the reviewer sees. Source: `lib/assessment/files.ts`,
 |---|---|---|
 | Final files | Submit request | Stored as `session.files` |
 | Snapshots | Autosave (every 10 s when files changed), test runs, start and submit | Stored as diffs (below) |
-| Test runs | Sandpack test panel `onComplete` | One `run` snapshot each, recorded even if no files changed |
+| Test runs | Sandpack test panel `onComplete` | One `run` snapshot each, recorded even if no files changed. The **Run tests** button re-runs once if the test runner reloads mid-run, so a click can occasionally record two |
 | Identity | Name and email entered at start | Not verified |
 | Timing | Server clock: start, last save, submit | Late flag when submitted after the limit |
 

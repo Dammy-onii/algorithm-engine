@@ -14,14 +14,25 @@ assessments** section under the simulation worlds. Each card is an example
 problem; opening one (`/app/code/<id>`) shows:
 
 - the **task brief** on the left (Markdown subset: headings, bullets, quotes,
-  `code`), resizable;
+  `code`, fenced code), resizable, with the problem **title and level** at its top;
 - a **VS Code-style workbench** on the right: file explorer, tabbed editor, a
   **Preview** and a **Tests** panel side by side, and a status bar;
 - **Reset** to return to the starting code, and **← Problems** to go back.
 
 Work is saved **in the browser only** (local storage, every 2 seconds) and restored
 when the problem is reopened in the same browser. Nothing is sent to a server.
-Tests run when the learner presses ▶ in the Tests panel.
+
+**Tests** run when the learner presses **▶ Run tests** next to the Tests heading
+(they never run on their own). The button waits for the latest edit to compile and
+for the runner to be free, and re-runs once if the runner reloads mid-run (see
+[known limits](#known-limits-v1)). **Verbose** lists every test; off, it shows one
+line per file.
+
+**Preview:** **Fit / Phone 375 / Tablet 768 / Desktop 1200** set the preview's
+width. **Open in new tab ↗** (or **Copy link**) opens `/app/code/<id>/preview`, a
+full-window preview of the work saved in this browser that restarts (~1 s) whenever
+the workspace saves a change. Each problem has its own link and saved copy; the same
+problem open in two editor tabs shares one copy, and the last save wins.
 
 Problems live in `lib/assessment/problems.ts`. Each is a project with a fault, a
 brief and visible tests:
@@ -33,12 +44,43 @@ brief and visible tests:
 | Order history pagination | medium | React | pages are 0-based, no default or max limit, no total |
 | The wrong product gets added | medium | React | `addToCart` uses the id as an array position; search is case-sensitive |
 | Checkout must be all or nothing | hard | JavaScript | partial writes on failure; no input validation |
+| Make the storefront responsive | medium | React | desktop-only CSS: fixed widths and header height, non-wrapping nav, big heading, 3-column grids, no viewport meta |
+
+**Brief structure.** Every brief follows the same sections, built with the `brief()`
+helper in `problems.ts`:
+
+1. `# The situation`: who the learner is, what the product is, what is going wrong
+   and why it matters, followed by the user or team reports as `>` quotes.
+2. `# Your tasks`: `## Task n` sections with concrete rules, naming the files and
+   functions, plus what the learner should see in the preview when it works.
+3. `# Project files`: a fenced file tree, one line per file on what it does, and
+   the template setup files to leave alone (`REACT_SETUP` / `VANILLA_SETUP`).
+4. `# How to check your work`: the shared `HOW_TO_CHECK` text (Run tests, preview
+   and new tab, Reset).
+
+**The responsive problem's tests.** jsdom has no layout engine and ignores media
+queries, so `test-utils/layout.js` (shipped in the project) reads the stylesheets the
+page loaded, keeps rules whose media queries match a width, and applies the cascade
+(specificity, source order, `!important`, inline styles). The tests then check the
+result at 375, 768 and 1200px. Media-query and fluid solutions (`auto-fit`/`minmax`,
+`clamp()`, `min()`) both pass. Percentages are measured against the screen width, an
+approximation that suits page-level layout. A flexbox product grid is not counted,
+so the brief asks to keep the grid and footer as CSS Grid. The tests check rules,
+not pixels, so Task 3 asks for a visual check with the preview sizes.
 
 **Adding a problem:** add an entry to `CODE_PROBLEMS` (id, title, level, runtime id,
-summary, Markdown brief, files including a test file). Check that its tests **fail
-on the starter and pass on a correct fix**; `lib/assessment/__tests__/problems.test.ts`
-checks the structure (ids, runtime, a test file, the entry file) but cannot run the
-tests, so verify the behaviour yourself.
+summary, brief in the structure above, files including a test file). Larger file sets
+can live in their own module (see `responsiveProblem.ts`, which uses `String.raw` so
+regexes keep their backslashes). Check in a browser that its tests **fail on the
+starter, pass on a correct fix, and pass when run straight after the fix is typed**.
+`lib/assessment/__tests__/problems.test.ts` checks the structure (ids, runtime, a test
+file, the entry file) but cannot run the tests.
+
+**Styling a problem.** Plain `.css` imports, CSS Modules (`.module.css`), Sass
+(`.scss`) and Less (`.less`) work in both stacks. Tailwind works only when its CDN
+script is added from JavaScript (a `<script>` tag in `index.html` is not executed,
+and the npm package didn't load). Its styles exist only in the preview, so tests
+cannot check them.
 
 The sections below describe the larger **company flow** (authoring, links, one
 attempt, hidden tests, reviewer dashboard). It is built and tested, but it is hidden
@@ -88,8 +130,8 @@ Reviewer ──► /review/<token> ───► submissions ──► replay + s
    live preview, and a test panel (all from Sandpack, running in the browser).
    The brief stays available above the editor. A timer counts down; autosave
    status is always visible.
-3. **Tests** run when the candidate presses ▶ in the test panel. Each completed
-   run is recorded. They do not run on every keystroke, so the "test runs"
+3. **Tests** run when the candidate presses **▶ Run tests** next to the Tests
+   heading. Each completed run is recorded. They do not run on every keystroke, so the "test runs"
    statistic reflects deliberate runs.
 4. **Submit** asks for confirmation. When the time limit ends the workspace
    submits automatically.
@@ -112,15 +154,21 @@ lib/assessment/
   files.ts            path rules, folder upload, diff/replay, line diff
   stats.ts            process statistics derived from snapshots
   runtime/            runtime adapters (registry.ts, examples.ts, types.ts)
+  problems.ts         the /app code problems, brief() helper, shared brief text
+  responsiveProblem.ts  files for the responsive problem (incl. test-utils/layout.js)
   storage/            AssessmentStore interface + memory / file implementations
   server/             service.ts (all rules), link.ts, hiddenTests.ts, http.ts
 features/assessment/
   author/             AssessmentAuthorPage, FileEditor
   workspace/          AssessmentWorkspace (intro, editor, autosave, submit)
+                      WorkspaceShell (layout, Run tests, preview sizes and link)
+                      CodePracticeWorkspace, PracticePreview, practiceStorage
+                      (the /app problems, the new-tab preview, saved work)
   review/             SubmissionReplay, ReviewForm, format helpers
 app/
   assessments/new     authoring page
   a/[token]           candidate page
+  app/code/[id]       practice problem; /preview is the new-tab preview
   review/[token]      reviewer pages (index and per-submission)
   api/assessments     create, start/resume, autosave, submit
   api/review          save a review
@@ -168,4 +216,24 @@ parse the body and call the service.
   (`INTERVIEW_LINK_SECRET`) but not the token format, so one link cannot yet mix
   simulations and codebase tasks.
 - **Test-run counts** come from Sandpack's test panel. Pressing the preview
-  refresh or editing code does not count as a run.
+  refresh or editing code does not count as a run. When the Run tests button
+  re-runs after a runner reload, one click can record two runs.
+- **Sandpack test-runner quirks the Run tests button works around**
+  (`RunTestsButton` in `WorkspaceShell.tsx`): an edit reaches the runner only after
+  the recompile delay (600 ms) plus a compile; in React projects, after a run, the
+  test frame reloads itself shortly after each edit and drops the run in flight
+  (its messages don't come through Sandpack's `listen`, so the button watches
+  `window` messages); and a run sent the instant the runner reports ready is
+  ignored. If Sandpack changes these behaviours, re-check this button first.
+- **First run is slow.** The test runner needs about 3–6.5 s after page load
+  (it downloads Jest and the project's packages from CodeSandbox). Later runs take
+  0.5–2 s.
+- **Plain-JS projects use the React bundler.** Sandpack's `vanilla` bundler cannot
+  parse modern syntax, so vanilla projects run with
+  `customSetup: { environment: "create-react-app" }` (see
+  [the runtimes doc](./CODEBASE_ASSESSMENT_RUNTIMES.md#how-the-workspace-uses-an-adapter)).
+- **New-tab preview is per browser and practice-only.** It reads local storage, so
+  it doesn't work for company assessment links (`/a/<token>`), whose work is on the
+  server. Under React Strict Mode (dev), a preview-only Sandpack provider never
+  clears its loading overlay and ignores `updateFile`, so `PracticePreview` hides the
+  overlay and remounts on each change.

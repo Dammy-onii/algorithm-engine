@@ -5,6 +5,102 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-11-13 — Code problems: workspace fixes, responsive problem, and tour CLS fix
+
+### Running tests
+
+- **A labelled ▶ Run tests button** sits next to the Tests heading and stays put.
+  Sandpack's own ▶ icon was pinned to the bottom of the results, so after the
+  first run it scrolled out of view and people thought tests didn't run. That
+  icon (and the Watch toggle) is now hidden; the new button presses it.
+- **Runs wait for the latest edit.** Clicking straight after typing used to
+  test half-delivered code (empty results, or "hasn't been transpiled yet"). The
+  button now waits for Sandpack's "done" message after an edit ("Updating with
+  your latest changes…"), and for the runner to be free ("Waiting for the test
+  runner…").
+- **Automatic re-run after a runner reload.** In React projects, once tests have
+  run, the test frame reloads itself shortly after each edit and drops the run in
+  flight. The button watches the window's `postMessage` traffic for
+  `initialize_tests` within 5 s of a click and runs again (1 s after the runner is
+  ready; an immediate click is ignored). On assessment links such a click can
+  record two `run` snapshots.
+- **Plain JavaScript projects accept modern syntax.** Sandpack's `vanilla`
+  bundler uses an old Babel that rejects `??`, `?.`, `??=`, class fields and
+  `1_000` in tests and preview (a `.babelrc` doesn't help). Vanilla projects now
+  run on the Create React App bundler (`sandpackSetupFor` in
+  `lib/assessment/runtime/registry.ts`); the files candidates see are unchanged.
+- Verified for all six problems in a browser: run on the starter, apply the
+  real fix and run within 0.3 s, reload and run again (all correct).
+
+### Workspace
+
+- **Title and level in the brief.** The problem title and level badge moved from
+  the header to the top of the brief (`briefTop` prop on `WorkspaceShell`).
+- **Preview in a new tab.** Above the preview: **Open in new tab ↗** and **Copy
+  link**. The link (`/app/code/<id>/preview`, `PracticePreview.tsx`) shows the
+  work saved in this browser and follows edits through the `storage` event,
+  restarting the preview (~1 s) on each change. Practice problems only.
+- **Preview sizes.** **Fit / Phone 375 / Tablet 768 / Desktop 1200** buttons set
+  the preview frame's width (it scrolls sideways when wider than the panel).
+- **Blank new-tab preview (dev only).** Under React Strict Mode, Sandpack
+  registers a preview-only provider twice: its loading overlay never clears and
+  `updateFile` is ignored (the client stays `initializing`). The new-tab page
+  hides `.sp-loading` and remounts instead of calling `updateFile`. Production
+  builds were not affected.
+- **Brief parser:** two quotes separated by a blank line are now two blocks
+  (`markdown.ts`, with a test).
+
+### Problem statements
+
+- All briefs rewritten to one structure: **The situation** (who you are, what is
+  wrong, why it matters) → quoted reports → **Your tasks** (rules plus what to see
+  in the preview) → **Project files** (tree, what each file does, which setup files
+  to leave alone) → **How to check your work** (shared text).
+- Corrected: the pagination brief no longer claims a large page size "hangs" the
+  page; it describes the real faults (Next never disables, size not capped).
+
+### New problem: Make the storefront responsive (medium, React)
+
+- `lib/assessment/responsiveProblem.ts`: a desktop-only shop page (fixed 1100px
+  page, fixed hero widths, fixed header height, non-wrapping nav, 56px heading,
+  three-column grids, no viewport meta tag).
+- **12 tests** check phone (375px), tablet (768px) and desktop (1200px). jsdom has
+  no layout, so `test-utils/layout.js` reads the loaded stylesheets (including
+  `@media`), matches media queries against a width, and applies the cascade
+  (specificity, order, `!important`, inline styles). `!raw-loader!` reads
+  `public/index.html` for the viewport check.
+- Verified: starter 3/12 (desktop only); a media-query solution 12/12; a fluid
+  solution (`auto-fit`/`minmax`, `clamp()`, `min()`) 12/12; a half fix fails just
+  what it skipped. A real browser agrees (sideways scrolling vs. 1/2/3 columns).
+
+### Styling support (tested)
+
+- Plain `.css` imports, CSS Modules (`.module.css`), Sass (`.scss`) and Less
+  (`.less`) work in React and plain-JS projects.
+- **Tailwind:** a `<script>` tag in `index.html` does not run (Sandpack inserts
+  the HTML without executing scripts), and installing `@tailwindcss/browser` as
+  an npm package left the preview stuck. Adding the CDN script from JavaScript in
+  `index.js` works (tested in React). Tailwind's styles exist only in the preview,
+  so tests cannot check them.
+
+### Studio tour: layout shift (CLS) fix
+
+- Clarity reported CLS 1.9 ("poor"). Measured on a production build: challenge
+  pages scored 2.0–10.5 on a phone-sized screen (Load the Truck the worst) and
+  0.05–0.07 on desktop; other pages 0.
+- Cause: `ChallengeWalkthrough.tsx` animated the spotlight and card with
+  `top`/`left` (`transition-all`), and re-measured on every scroll event while a
+  step scrolled into view. Each frame counted as a layout shift.
+- Fix: both are positioned with `transform: translate(...)` and transition only
+  `transform` (and the ring's size). Challenge pages now measure 0 on phone and
+  desktop; the tour looks and behaves the same.
+
+### Verification
+
+- `npx vitest run`: 229 tests; lint and type-check pass.
+- Browser checks with headless Chrome against the dev server and a production
+  build (scripts kept outside the repo).
+
 ## 2026-11-08 — Codebase assessments (new assessment type)
 
 - **Live now: code problems in `/app`.** A "Code assessments" section lists five

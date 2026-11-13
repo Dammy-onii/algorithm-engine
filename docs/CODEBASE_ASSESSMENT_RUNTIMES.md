@@ -26,7 +26,7 @@ interface RuntimeAdapter {
 | id | Stack | Template | Tests |
 |---|---|---|---|
 | `react-js` | React 18, JavaScript | Sandpack `react` | `*.test.js` / `*.spec.js` (Jest, in browser) |
-| `vanilla-js` | Plain JavaScript and HTML | Sandpack `vanilla` | same |
+| `vanilla-js` | Plain JavaScript and HTML | Sandpack `vanilla`, run on the `create-react-app` environment | same |
 
 The ids are stored in saved assessments, so they must stay stable.
 
@@ -34,6 +34,14 @@ The ids are stored in saved assessments, so they must stay stable.
 
 - `template` configures `SandpackProvider`, which supplies the bundler, preview
   and Jest runner for that stack.
+- `sandpackSetupFor(template)` (`runtime/registry.ts`) picks the bundler
+  environment, and every `SandpackProvider` (the workspace and the new-tab preview)
+  must pass it as `customSetup`. The `vanilla` template's own bundler ships an old
+  Babel that rejects `??`, `?.`, `??=`, class fields and numeric separators in both
+  preview and tests, and a `.babelrc` can't fix it (it either can't install plugins
+  or doesn't change the parser). Vanilla projects therefore run on the
+  `create-react-app` environment, which handles plain JavaScript and a root
+  `index.html` too. The candidate's files are unchanged.
 - The assessment's files are passed as the project. Sandpack adds its own
   template boilerplate (`/index.js`, `/styles.css`, `/package.json`, …). When
   saving, the workspace **drops boilerplate the candidate never touched** (it
@@ -63,8 +71,11 @@ The ids are stored in saved assessments, so they must stay stable.
 ```
 
 Checklist: a unique stable `id`; an example whose starter has at least one failing
-visible test; a hidden test file; and a check that the snapshot filter in
-`AssessmentWorkspace.tsx` (`collect`) works with that template's default files.
+visible test; a hidden test file; a check that the snapshot filter
+(`collectProjectFiles` in `features/assessment/workspace/collect.ts`) works with
+that template's default files; and a browser check that modern syntax (`??`, `?.`,
+class fields) works in its tests and preview. If it doesn't, add the template to
+`sandpackSetupFor`.
 
 **A different execution engine** (server-side containers for Python, Java, Go, a
 database, real APIs): `engine` is a union so a new value can be added. The work is:
@@ -82,5 +93,13 @@ database, real APIs): `engine` is a union so a new value can be added. The work 
 
 - Sandpack projects are JavaScript-ecosystem only (npm dependencies resolve
   through its bundler).
+- **What tests can use** (checked in the browser): JSX in React test files,
+  `react-dom/server` (`renderToStaticMarkup`), CSS imported by the code under test
+  (the rules, `@media` included, are in `document.styleSheets`, though jsdom does not
+  lay them out), and `import text from "!raw-loader!./file"` to read any project file
+  as text.
+- **Styling:** `.css`, `.module.css`, `.scss` and `.less` work in both stacks.
+  `<script>` tags in `index.html` are not executed, so CDN libraries such as
+  Tailwind must be added from JavaScript (`document.head.appendChild(script)`).
 - Files are text only; the per-assessment limits are 200 files, 200 KB per file and
   1.5 MB total (`lib/assessment/files.ts`).
