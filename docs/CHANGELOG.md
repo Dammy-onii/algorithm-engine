@@ -5,6 +5,36 @@ updated with each implemented feature. For detailed contracts, use
 [ARCHITECTURE.md](./ARCHITECTURE.md), [RULES.md](./RULES.md), and the relevant
 world document.
 
+## 2026-11-08 — Codebase assessments (new assessment type)
+
+- **Live now: code problems in `/app`.** A "Code assessments" section lists five
+  example problems (cart total, word counter, order pagination, wrong product in
+  cart, all-or-nothing checkout). Each opens a browser workspace (brief, explorer,
+  editor, live preview, in-browser tests) at `/app/code/<id>`. Progress is saved in
+  the browser only; no account, link or backend. Docs:
+  [CODEBASE_ASSESSMENTS.md](./CODEBASE_ASSESSMENTS.md).
+- **Built but hidden: the company flow** described below (hidden unless
+  `NEXT_PUBLIC_CODEBASE_ASSESSMENTS=true`; no nav link).
+
+- **What.** Companies create a real-project assessment (scenario, starter files,
+  visible and hidden tests); candidates edit it in a browser workspace with a live
+  preview and in-browser tests; CTRL stores snapshots of their work and shows
+  reviewers a replay, process stats and a rubric. Overview:
+  [CODEBASE_ASSESSMENTS.md](./CODEBASE_ASSESSMENTS.md).
+- **Routes.** `/assessments/new` (author), `/a/<token>` (candidate),
+  `/review/<token>` (reviewer), `/api/assessments/…`, `/api/review/…`.
+- **Runtime.** Pluggable adapters (`lib/assessment/runtime/`): React (JavaScript)
+  and plain JavaScript on Sandpack. New dependency: `@codesandbox/sandpack-react`.
+- **Rules.** One attempt per link with same-browser resume, optional time limit
+  with server-side deadline, autosave every 10 s, snapshots stored as diffs.
+- **Not yet done.** Accounts, a database (storage is a stub: `ASSESSMENT_STORE`),
+  a hidden-test runner (hidden tests are stored and shown for manual running),
+  rubric editing in the authoring UI, and `/i/` link integration. See
+  [CODEBASE_ASSESSMENT_API.md](./CODEBASE_ASSESSMENT_API.md).
+- **Verification.** `npx vitest run lib/assessment` (17 tests); full suite, lint and
+  type-check pass; flow exercised against a running server and in a headless
+  browser.
+
 ## 2026-10-04 — Warehouse world, first 3D renderer
 
 ### New world: Warehouse (one level, for review)
