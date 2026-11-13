@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { SandpackPreview, SandpackProvider } from "@codesandbox/sandpack-react";
 
-import { getRuntime } from "@/lib/assessment/runtime/registry";
+import { getRuntime, sandpackSetupFor } from "@/lib/assessment/runtime/registry";
 import type { CodeProblem } from "@/lib/assessment/problems";
 import type { FileMap } from "@/lib/assessment/types";
 import { loadPracticeFiles, parseSaved, practiceStorageKey } from "./practiceStorage";
@@ -44,7 +44,7 @@ export function PracticePreview({ problem }: { problem: CodeProblem }) {
           tab looks blank even though the app has rendered underneath. The iframe shows the
           app as soon as it is ready, so the overlay isn't needed here. */}
       <style>{`.sp-wrapper, .sp-preview-container, .sp-preview-iframe { height: 100vh; background: #fff; } .sp-loading { display: none !important; }`}</style>
-      <SandpackProvider key={project.version} template={runtime.template} files={project.files} options={{ initMode: "immediate" }}>
+      <SandpackProvider key={project.version} template={runtime.template} customSetup={sandpackSetupFor(runtime.template)} files={project.files} options={{ initMode: "immediate" }}>
         <SandpackPreview style={{ height: "100vh" }} showNavigator={false} showOpenInCodeSandbox={false} />
       </SandpackProvider>
     </div>

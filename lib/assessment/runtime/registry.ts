@@ -28,6 +28,17 @@ export const RUNTIMES: readonly RuntimeAdapter[] = [
 
 export const DEFAULT_RUNTIME_ID = "react-js";
 
+/**
+ * Which bundler Sandpack uses for a template. The "vanilla" template's own bundler ships an
+ * old Babel that rejects modern syntax (`??`, `?.`, `??=`, class fields, `1_000`) in both
+ * the preview and the tests, and it can't be fixed with a .babelrc. The Create React App
+ * bundler handles plain JavaScript projects too (including a root index.html), so vanilla
+ * projects run on it. The files the candidate sees are unchanged.
+ */
+export function sandpackSetupFor(template: "react" | "vanilla") {
+  return template === "vanilla" ? { environment: "create-react-app" as const } : undefined;
+}
+
 export function getRuntime(id: string): RuntimeAdapter | undefined {
   return RUNTIMES.find((runtime) => runtime.id === id);
 }
