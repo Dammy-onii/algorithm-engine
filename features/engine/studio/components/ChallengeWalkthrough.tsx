@@ -133,7 +133,11 @@ export function ChallengeWalkthrough({
   }, [onFinish, next, back]);
 
   const cardWidth = Math.min(CARD_WIDTH, viewport.width - EDGE * 2);
-  let cardStyle: React.CSSProperties;
+  // The spotlight and card are placed with `transform`, not top/left. Browsers count every
+  // frame of an animated top/left as a layout shift (CLS), and the spotlight re-animates on
+  // each scroll event while a step scrolls into view: on phones that added up to a CLS of
+  // 2-10 on every challenge page. Moves made with transform are not layout shifts.
+  let cardPosition: { top: number; left: number; width: number };
   if (box) {
     // Prefer below, then above, then beside the spotlight; a target too large
     // for any of those gets the card tucked inside its top edge.
@@ -146,27 +150,34 @@ export function ChallengeWalkthrough({
     const leftSide = box.left - PAD - GAP - cardWidth;
     const rightSide = box.left + box.width + PAD + GAP;
     if (below + cardHeight <= viewport.height - EDGE) {
-      cardStyle = { top: below, left: clampLeft(box.left), width: cardWidth };
+      cardPosition = { top: below, left: clampLeft(box.left), width: cardWidth };
     } else if (above >= EDGE) {
-      cardStyle = { top: above, left: clampLeft(box.left), width: cardWidth };
+      cardPosition = { top: above, left: clampLeft(box.left), width: cardWidth };
     } else if (leftSide >= EDGE) {
-      cardStyle = { top: clampTop(box.top), left: leftSide, width: cardWidth };
+      cardPosition = { top: clampTop(box.top), left: leftSide, width: cardWidth };
     } else if (rightSide + cardWidth <= viewport.width - EDGE) {
-      cardStyle = { top: clampTop(box.top), left: rightSide, width: cardWidth };
+      cardPosition = { top: clampTop(box.top), left: rightSide, width: cardWidth };
     } else {
-      cardStyle = {
+      cardPosition = {
         top: clampTop(box.top + GAP),
         left: clampLeft(box.left + GAP),
         width: cardWidth,
       };
     }
   } else {
-    cardStyle = {
+    cardPosition = {
       top: Math.max(EDGE, (viewport.height - cardHeight) / 2),
       left: (viewport.width - cardWidth) / 2,
       width: cardWidth,
     };
   }
+
+  const cardStyle: React.CSSProperties = {
+    top: 0,
+    left: 0,
+    width: cardPosition.width,
+    transform: `translate(${cardPosition.left}px, ${cardPosition.top}px)`,
+  };
 
   return (
     <div className="fixed inset-0 z-[70]" role="presentation">
@@ -179,10 +190,9 @@ export function ChallengeWalkthrough({
       {box && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute rounded-xl ring-2 ring-emerald-400 transition-all duration-300"
+          className="pointer-events-none absolute left-0 top-0 rounded-xl ring-2 ring-emerald-400 transition-[transform,width,height] duration-300"
           style={{
-            top: box.top - PAD,
-            left: box.left - PAD,
+            transform: `translate(${box.left - PAD}px, ${box.top - PAD}px)`,
             width: box.width + PAD * 2,
             height: box.height + PAD * 2,
             boxShadow: "0 0 0 9999px rgba(9, 9, 11, 0.6)",
@@ -195,7 +205,7 @@ export function ChallengeWalkthrough({
         role="dialog"
         aria-modal="true"
         aria-labelledby="challenge-walkthrough-title"
-        className="absolute rounded-xl border border-zinc-200 bg-white p-4 shadow-2xl transition-all duration-300 dark:border-zinc-700 dark:bg-[#181818]"
+        className="absolute rounded-xl border border-zinc-200 bg-white p-4 shadow-2xl transition-transform duration-300 dark:border-zinc-700 dark:bg-[#181818]"
         style={cardStyle}
       >
         <div className="flex items-center justify-between gap-3">

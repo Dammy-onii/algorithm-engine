@@ -58,6 +58,21 @@ were removed, and older docs below may still describe them.
   references, visible/hidden resolution, and persistence limits.
 
 ## Milestone design docs
+
+## Codebase assessments
+
+A second assessment type: candidates work in a real project in the browser and
+CTRL records how their code changes.
+
+- [CODEBASE_ASSESSMENTS.md](./CODEBASE_ASSESSMENTS.md) — overview: the three
+  roles (company, candidate, reviewer), code map, decisions, and known limits.
+- [CODEBASE_ASSESSMENT_RUNTIMES.md](./CODEBASE_ASSESSMENT_RUNTIMES.md) — runtime
+  adapters and how to add a framework or language.
+- [CODEBASE_ASSESSMENT_REVIEW.md](./CODEBASE_ASSESSMENT_REVIEW.md) — process
+  capture, snapshots, derived stats, the reviewer dashboard and rubric.
+- [CODEBASE_ASSESSMENT_API.md](./CODEBASE_ASSESSMENT_API.md) — routes, storage
+  interface, signed links, session rules and the hidden-test runner.
+
 - [MILESTONE2.md](./MILESTONE2.md) — Intelligence Authoring System.
 - [MILESTONE3.md](./MILESTONE3.md) — Intelligence Composition (derived conditions, objectives).
 - [MILESTONE4.md](./MILESTONE4.md) — Learning & Progression (curriculum).
